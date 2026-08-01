@@ -1,0 +1,25 @@
+[project]
+name = "openjarvis"
+version = "0.2.0"
+description = "OpenJarvis — client-side orchestrator routing requests across a team of LLMs over any OpenAI-compatible API"
+readme = "README.md"
+requires-python = ">=3.14"
+# Deliberately minimal. OpenJarvis is a CLIENT: it speaks HTTP to whatever
+# backend the config names -- jarvis, Ollama, OpenAI, anything OpenAI-compatible.
+# It must never depend on torch, and never on the `jarvis` package. CI installs
+# this package alone and runs its tests, so a crossing import fails loudly.
+dependencies = [
+    "httpx>=0.28.0",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+openjarvis = "openjarvis.cli:run_cli"
+oj = "openjarvis.cli:run_cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/openjarvis"]

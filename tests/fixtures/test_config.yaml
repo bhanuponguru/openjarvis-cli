@@ -1,0 +1,38 @@
+# tests/fixtures/test_config.yaml
+generalist:
+  name: "generalist"
+  system_prompt: "You are OpenJarvis, a helpful AI assistant."
+  provider: "openai"
+  base_url: "http://test-server/v1"
+  model: "test-model"
+  temperature: 0.7
+
+specialists:
+  math:
+    name: "math"
+    system_prompt: "You are a math specialist."
+    provider: "openai"
+    base_url: "http://test-server/v1"
+    model: "test-model"
+    temperature: 0.3
+    delegates_to:
+      - "tool_use"
+
+  code:
+    name: "code"
+    system_prompt: "You are a code specialist."
+    provider: "openai"
+    base_url: "http://test-server/v1"
+    model: "test-model"
+    temperature: 0.2
+    delegates_to:
+      - "math"
+      - "tool_use"
+
+  tool_use:
+    name: "tool_use"
+    system_prompt: "You are a tool-use specialist."
+    provider: "openai"
+    base_url: "http://test-server/v1"
+    model: "test-model"
+    temperature: 0.1
