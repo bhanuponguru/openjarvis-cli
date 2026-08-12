@@ -81,3 +81,31 @@ def test_call_llm_with_tools_returns_message_object(monkeypatch):
     res = call_llm([], config, tools=[{"type": "function"}])
     # When tools are supplied, expect a message-like object (dict or object)
     assert isinstance(res, (dict, MagicMock))
+
+
+def test_call_llm_stream_with_tools_yields_no_content(monkeypatch):
+    # Streaming client returns content chunks, but when tools are supplied
+    # the streaming path should not yield those content deltas.
+    class StreamingOpenAI:
+        def __init__(self, chunks):
+            self.chunks = chunks
+            self.chat = MagicMock()
+            self.chat.completions = MagicMock()
+            self.chat.completions.create = self._create
+
+        def _create(self, **kwargs):
+            for c in self.chunks:
+                chunk = MagicMock()
+                chunk.choices = [MagicMock()]
+                chunk.choices[0].delta.content = c
+                yield chunk
+
+    def make_client(**kwargs):
+        return StreamingOpenAI(["Hello", " world"])
+
+    monkeypatch.setattr("openjarvis.providers.OpenAI", make_client)
+
+    config = SpecialistConfig(name="g", system_prompt="p")
+    from openjarvis.providers import call_llm_stream
+    out = list(call_llm_stream([], config, tools=[{"type": "function"}]))
+    assert out == []

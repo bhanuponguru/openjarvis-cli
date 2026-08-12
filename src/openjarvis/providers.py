@@ -170,7 +170,6 @@ def call_llm_stream(
         kwargs["tools"] = tools
 
     stream = client.chat.completions.create(**kwargs)
-
     for chunk in stream:
         # Extract content defensively without calling mapping methods on
         # arbitrary objects (MagicMock implements .get and would confuse
@@ -201,6 +200,13 @@ def call_llm_stream(
                     content = delta.get("content")
             except Exception:
                 content = None
+
+        if tools is not None:
+            # When tools are supplied, the model may return tool-calls instead
+            # of content. The streaming path should not yield partial content
+            # in that case; callers should use the non-streaming `call_llm`
+            # to receive the final message object.
+            continue
 
         if content:
             yield content
