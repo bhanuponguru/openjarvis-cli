@@ -217,7 +217,12 @@ class ToolRegistry:
             except json.JSONDecodeError as exc:
                 return {"error": f"Invalid JSON arguments: {exc}"}
         else:
-            args = dict(args_raw)
+            # Ensure we end up with a plain dict; if the provided value is
+            # not mapping-like, return a clear error instead of raising later.
+            if isinstance(args_raw, dict):
+                args = dict(args_raw)
+            else:
+                return {"error": f"Arguments must be an object/dict, got {type(args_raw).__name__}"}
 
         tool_obj = self._tools.get(name)
         if tool_obj is None:
