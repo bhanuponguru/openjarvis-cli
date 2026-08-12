@@ -2,11 +2,15 @@ import json
 import re
 from collections.abc import Generator, Iterator
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from openjarvis.config_loader import get_delegation_mask, load_config
 from openjarvis.parser import is_route_tag, parse_route_tag
 from openjarvis.providers import call_llm, call_llm_stream
 from openjarvis.types import ConductorConfig, SpecialistConfig
+
+if TYPE_CHECKING:
+    from openjarvis.tools import ToolRegistry
 
 # A routing tag always starts at the beginning of a line.
 _TAG_START = re.compile(r"(?:^|(?<=\n))[ \t]*\[[^\n]*$")
@@ -41,8 +45,12 @@ def _stream_without_tag(deltas: Iterator[str]) -> Iterator[tuple[str, str]]:
 
         yield delta, emit
 
-    # End of stream: release the tail unless it is the routing tag itself.
-    if pending and not is_route_tag(pending):
+    # End of stream: release the tail unless it is the routing tag itself
+    # or a candidate (line-starting) tag fragment which should be withheld.
+    if pending:
+        # If the tail is a complete tag or looks like the start of one, suppress it.
+        if is_route_tag(pending) or _TAG_START.search(pending):
+            return
         yield "", pending
 
 
@@ -62,13 +70,16 @@ class Conductor:
         self,
         config_path: str | None = None,
         config: ConductorConfig | None = None,
+        tools: ToolRegistry | None = None,
     ) -> None:
         """Initialize conductor with either a config path or a ConductorConfig.
 
         Args:
             config_path: Path to a YAML config file (loaded via load_config).
             config: A pre-built ConductorConfig instance.
+            tools: Optional ToolRegistry for tool-calling support.
         """
+        self._tools = tools
         if config_path:
             self.config = load_config(config_path)
         elif config:
@@ -114,6 +125,19 @@ class Conductor:
             role, content = msg["role"], msg["content"]
             if role in ("user", "system"):
                 messages.append({"role": role, "content": content})
+            elif role == "tool":
+                tool_msg = {"role": "tool", "content": content}
+                if "tool_call_id" in msg:
+                    tool_msg["tool_call_id"] = msg["tool_call_id"]
+                messages.append(tool_msg)
+            elif role == "assistant" and "tool_calls" in msg:
+                messages.append(
+                    {
+                        "role": "assistant",
+                        "content": content,
+                        "tool_calls": msg["tool_calls"],
+                    }
+                )
             else:
                 messages.append({"role": "assistant", "content": f"[{role}]: {content}"})
         return messages
@@ -142,9 +166,90 @@ class Conductor:
         except Exception as exc:
             return "", f"{error_prefix}: {exc}"
 
-        content, _ = parse_route_tag(response)
+        raw = getattr(response, "content", response) or ""
+        content, _ = parse_route_tag(raw)
         self.history.append({"role": "generalist", "content": content, "route": "return"})
         return content, None
+
+    # ------------------------------------------------------------------
+    # Tool-calling support
+    # ------------------------------------------------------------------
+
+    def _call_with_tools(
+        self,
+        messages: list[dict],
+        config: SpecialistConfig,
+        api_key: str | None,
+    ) -> tuple[str, list[dict]]:
+        """Call LLM with tools, looping until a text response arrives.
+
+        Executes each tool call the model returns, appends the results as
+        ``tool`` role messages, then re-calls the model with the augmented
+        context.  Loops up to 5 rounds to prevent infinite tool-call cycles.
+
+        Returns (final_text, extra_history) where extra_history contains only
+        the assistant tool-call messages and tool results appended during this
+        call. The caller records the final text as the current specialist's
+        normal model turn after routing tags are stripped.
+        """
+        openai_tools = self._tools.to_openai_format() if self._tools else []
+        max_rounds = 5
+        extra: list[dict] = []
+
+        for _ in range(max_rounds):
+            completion = call_llm(
+                messages + extra, config, api_key=api_key, tools=openai_tools or None
+            )
+
+            raw_content = getattr(completion, "content", None) or ""
+            tool_calls: list = getattr(completion, "tool_calls", None) or []
+
+            if not tool_calls:
+                return raw_content, extra
+
+            # Record the assistant's tool-call message
+            extra.append({
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": getattr(tc, "id", ""),
+                        "type": "function",
+                        "function": {
+                            "name": getattr(getattr(tc, "function", None) or {}, "name", ""),
+                            "arguments": getattr(getattr(tc, "function", None) or {}, "arguments", "{}"),
+                        },
+                    }
+                    for tc in tool_calls
+                ],
+            })
+
+            # Execute each tool and record the result
+            for tc in tool_calls:
+                func = getattr(tc, "function", None) or {}
+                name = getattr(func, "name", "")
+                raw_args = getattr(func, "arguments", "{}")
+                result = (
+                    self._tools.execute({"name": name, "arguments": raw_args})
+                    if self._tools else {"error": "No tool registry"}
+                )
+                extra.append({
+                    "role": "tool",
+                    "tool_call_id": getattr(tc, "id", ""),
+                    "content": json.dumps(result),
+                })
+
+        # Loop limit: one final call with a nudge
+        nudge = {
+            "role": "system",
+            "content": (
+                "Too many tool-call rounds. Summarise the results above and give "
+                "the user a direct answer."
+            ),
+        }
+        final_completion = call_llm(messages + extra + [nudge], config, api_key=api_key)
+        final_text = getattr(final_completion, "content", None) or ""
+        return final_text, extra
 
     # ------------------------------------------------------------------
     # Public API
@@ -209,10 +314,16 @@ class Conductor:
             # Build conversation history for this turn
             messages = self._format_history()
 
-            # Call the LLM
+            # Call the LLM (with tool support when a registry is present)
             try:
                 api_key = self._get_api_key(current_role)
-                response = call_llm(messages, specialist_config, api_key=api_key)
+                extra: list[dict] = []
+                if self._tools:
+                    response, extra = self._call_with_tools(messages, specialist_config, api_key)
+                    for m in extra:
+                        self.history.append({**m, "route": None})
+                else:
+                    response = call_llm(messages, specialist_config, api_key=api_key)
             except Exception as exc:
                 error_msg = f"Error calling {current_role}: {exc}"
                 yield {"type": "error", "content": error_msg}
@@ -350,7 +461,16 @@ class Conductor:
             api_key = self._get_api_key(current_role)
 
             try:
-                if is_generalist:
+                if self._tools:
+                    extra: list[dict]
+                    response, extra = self._call_with_tools(messages, specialist_config, api_key)
+                    for m in extra:
+                        self.history.append({**m, "route": None})
+                    if is_generalist:
+                        cleaned_preview, _ = parse_route_tag(response)
+                        if cleaned_preview:
+                            yield cleaned_preview
+                elif is_generalist:
                     chunks: list[str] = []
                     for delta, emit in _stream_without_tag(
                         call_llm_stream(messages, specialist_config, api_key=api_key)

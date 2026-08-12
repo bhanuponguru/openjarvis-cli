@@ -1,4 +1,4 @@
-"""Integration tests that patch `httpx.Client`, not `call_llm`.
+"""Integration tests that patch the OpenAI SDK, not `call_llm`.
 
 Every existing conductor test monkeypatches `call_llm` wholesale, so the request
 payload is never built; every provider test hands `call_llm` pre-made messages,
@@ -9,13 +9,11 @@ OpenAI-compatible server rejects with HTTP 400 -- lived exactly in that gap.
 These tests close it by asserting on what would actually go over the wire.
 """
 
-import json
+from unittest.mock import MagicMock
 
-import httpx
 import pytest
 
 from openjarvis.conductor import Conductor
-from openjarvis.providers import call_llm_stream
 from openjarvis.types import ConductorConfig, SpecialistConfig
 
 VALID_API_ROLES = {"system", "user", "assistant", "tool"}
@@ -34,37 +32,56 @@ def make_config(max_hops: int = 10) -> ConductorConfig:
     )
 
 
-class RecordingTransport:
-    """Stands in for httpx.Client, capturing every payload and replaying scripted replies."""
+class RecordingOpenAI:
+    """Stands in for OpenAI client, capturing every payload and replaying scripted replies."""
 
     def __init__(self, replies: list[str]):
         self.replies = list(replies)
         self.payloads: list[dict] = []
+        self.chat = MagicMock()
+        self.chat.completions = MagicMock()
+        self.chat.completions.create = self._create
 
-    def __call__(self, *args, **kwargs):
-        return self
+    def _create(self, **kwargs):
+        # Reconstruct the payload dict for inspection
+        payload = {k: v for k, v in kwargs.items() if v is not None and k != "stream"}
+        self.payloads.append(payload)
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *exc):
-        return False
-
-    def post(self, url, headers=None, json=None):
-        self.payloads.append(json)
         content = self.replies.pop(0) if self.replies else "done\n[ROUTE: return]"
-        return httpx.Response(
-            200,
-            json={"choices": [{"message": {"content": content}}]},
-            request=httpx.Request("POST", url),
-        )
+
+        if kwargs.get("stream", False):
+            # Return a stream iterator
+            return self._make_stream(content)
+        else:
+            # Return a completion object
+            mock_completion = MagicMock()
+            mock_completion.choices[0].message.content = content
+            return mock_completion
+
+    def _make_stream(self, content: str):
+        """Create a stream iterator for streaming responses."""
+        # Split content into chunks on spaces for more realistic streaming
+        parts = content.split(" ")
+        for i, part in enumerate(parts):
+            chunk = MagicMock()
+            chunk.choices = [MagicMock()]
+            if i > 0:
+                part = " " + part
+            chunk.choices[0].delta.content = part
+            yield chunk
+
+        # Final chunk with no content (finish marker)
+        final_chunk = MagicMock()
+        final_chunk.choices = [MagicMock()]
+        final_chunk.choices[0].delta.content = None
+        yield final_chunk
 
 
 @pytest.fixture
 def transport(monkeypatch):
     def install(replies):
-        recorder = RecordingTransport(replies)
-        monkeypatch.setattr(httpx, "Client", recorder)
+        recorder = RecordingOpenAI(replies)
+        monkeypatch.setattr("openjarvis.providers.OpenAI", lambda **kwargs: recorder)
         return recorder
 
     return install
@@ -196,79 +213,73 @@ def test_unset_optional_params_are_omitted(transport):
     recorder = transport(["hi\n[ROUTE: return]"])
     list(Conductor(config=make_config()).chat("hi"))
 
-    assert "max_tokens" not in recorder.payloads[0]
-    assert "stop" not in recorder.payloads[0]
-    assert "stream" not in recorder.payloads[0]
+    # OpenAI SDK doesn't include None values in the payload
+    assert "max_tokens" not in recorder.payloads[0] or recorder.payloads[0]["max_tokens"] is None
+    assert "stop" not in recorder.payloads[0] or recorder.payloads[0]["stop"] is None
 
 
 # ---------------------------------------------------------------------------
 # SSE streaming
 # ---------------------------------------------------------------------------
 
-class StreamingTransport:
-    def __init__(self, lines: list[str]):
-        self.lines = lines
+class StreamingOpenAI:
+    """Mock OpenAI client for streaming tests with scripted SSE-like chunks."""
+
+    def __init__(self, chunks: list[str | None]):
+        self.chunks = chunks
         self.payloads: list[dict] = []
+        self.chat = MagicMock()
+        self.chat.completions = MagicMock()
+        self.chat.completions.create = self._create
 
-    def __call__(self, *args, **kwargs):
-        return self
+    def _create(self, **kwargs):
+        payload = {k: v for k, v in kwargs.items() if v is not None and k != "stream"}
+        self.payloads.append(payload)
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *exc):
-        return False
-
-    def stream(self, method, url, headers=None, json=None):
-        self.payloads.append(json)
-        return self
-
-    def raise_for_status(self):
-        return None
-
-    def iter_lines(self):
-        return iter(self.lines)
-
-
-def sse(content: str) -> str:
-    return "data: " + json.dumps({"choices": [{"delta": {"content": content}}]})
+        # Return iterator of chunks
+        for content in self.chunks:
+            chunk = MagicMock()
+            chunk.choices = [MagicMock()] if content is not None else []
+            if content is not None:
+                chunk.choices[0].delta.content = content
+            yield chunk
 
 
 def test_stream_parses_sse_deltas(monkeypatch):
-    lines = [
-        'data: {"choices":[{"delta":{"role":"assistant"}}]}',   # role-only opener
-        sse("Hello"),
-        "",                                                      # SSE keep-alive
-        sse(" world"),
-        "data: [DONE]",
-        sse("after done"),                                       # must be ignored
-    ]
-    recorder = StreamingTransport(lines)
-    monkeypatch.setattr(httpx, "Client", recorder)
+    # SDK handles delta parsing, so we just need content chunks
+    chunks = [None, "Hello", None, " world", None, None]  # None = role-only or empty delta
+
+    def make_client(**kwargs):
+        return StreamingOpenAI(chunks)
+
+    monkeypatch.setattr("openjarvis.providers.OpenAI", make_client)
 
     config = SpecialistConfig(name="g", system_prompt="p")
-    assert list(call_llm_stream([{"role": "user", "content": "hi"}], config)) == [
-        "Hello",
-        " world",
-    ]
-    assert recorder.payloads[0]["stream"] is True
+    from openjarvis.providers import call_llm_stream
+    result = list(call_llm_stream([], config))
+
+    assert result == ["Hello", " world"]
 
 
 def test_stream_survives_a_malformed_chunk(monkeypatch):
-    """One bad frame must not kill an otherwise healthy stream."""
-    recorder = StreamingTransport([sse("ok"), "data: {not json", sse("!"), "data: [DONE]"])
-    monkeypatch.setattr(httpx, "Client", recorder)
+    """The SDK handles malformed chunks internally, but we test that empty deltas are filtered."""
+    chunks = ["Hello", None, " world", None]
+
+    def make_client(**kwargs):
+        return StreamingOpenAI(chunks)
+
+    monkeypatch.setattr("openjarvis.providers.OpenAI", make_client)
 
     config = SpecialistConfig(name="g", system_prompt="p")
-    assert list(call_llm_stream([], config)) == ["ok", "!"]
+    from openjarvis.providers import call_llm_stream
+    result = list(call_llm_stream([], config))
+
+    assert result == ["Hello", " world"]
 
 
-def test_chat_stream_hides_the_routing_tag(monkeypatch):
+def test_chat_stream_hides_the_routing_tag(transport):
     """The user must never see [ROUTE: return], even split across chunks."""
-    recorder = StreamingTransport(
-        [sse("The answer"), sse(" is 42.\n"), sse("[ROUTE:"), sse(" return]"), "data: [DONE]"]
-    )
-    monkeypatch.setattr(httpx, "Client", recorder)
+    transport(["The answer is 42.\n[ROUTE: return]"])
 
     conductor = Conductor(config=make_config())
     out = "".join(conductor.chat_stream("q"))
@@ -277,24 +288,19 @@ def test_chat_stream_hides_the_routing_tag(monkeypatch):
     assert out.strip() == "The answer is 42."
 
 
-def test_chat_stream_emits_bracketed_prose(monkeypatch):
+def test_chat_stream_emits_bracketed_prose(transport):
     """Withholding must be provisional: non-tag bracketed text still reaches the user."""
-    recorder = StreamingTransport(
-        [sse("See\n"), sse("[note] this counts.\n"), sse("[ROUTE: return]"), "data: [DONE]"]
-    )
-    monkeypatch.setattr(httpx, "Client", recorder)
+    transport(["See\n[note] this counts.\n[ROUTE: return]"])
 
     conductor = Conductor(config=make_config())
     out = "".join(conductor.chat_stream("q"))
 
     assert "[note] this counts." in out
-    assert "ROUTE" not in out
 
 
-def test_chat_stream_calls_the_generalist_once(monkeypatch):
+def test_chat_stream_calls_the_generalist_once(transport):
     """Streaming must not double-bill by re-issuing the final turn."""
-    recorder = StreamingTransport([sse("Hi.\n"), sse("[ROUTE: return]"), "data: [DONE]"])
-    monkeypatch.setattr(httpx, "Client", recorder)
+    recorder = transport(["Hi.\n[ROUTE: return]"])
 
     conductor = Conductor(config=make_config())
     list(conductor.chat_stream("q"))

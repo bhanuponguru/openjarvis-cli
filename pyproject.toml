@@ -9,7 +9,7 @@ requires-python = ">=3.14"
 # It must never depend on torch, and never on the `jarvis` package. CI installs
 # this package alone and runs its tests, so a crossing import fails loudly.
 dependencies = [
-    "httpx>=0.28.0",
+    "openai>=1.0.0",
     "pyyaml>=6.0",
 ]
 

@@ -2,9 +2,11 @@ from dataclasses import fields
 from pathlib import Path
 
 import yaml
+from yaml import YAMLError
 
 from openjarvis.types import ConductorConfig, SpecialistConfig
 
+# Valid top-level keys for a `SpecialistConfig` dataclass
 _VALID_KEYS = {f.name for f in fields(SpecialistConfig)}
 
 
@@ -34,10 +36,22 @@ def _build_specialist(name: str, spec: dict, section: str) -> SpecialistConfig:
 
 def load_config(path: str) -> ConductorConfig:
     """Load and validate a YAML config file."""
-    raw = yaml.safe_load(Path(path).read_text())
+    p = Path(path)
+    try:
+        text = p.read_text()
+    except FileNotFoundError:
+        # Preserve the original behaviour expected by callers/tests: raise
+        # FileNotFoundError so external code can catch it specifically.
+        raise
+
+    try:
+        raw = yaml.safe_load(text)
+    except YAMLError as exc:
+        # Include the path to help users find the broken file quickly
+        raise ValueError(f"Error parsing YAML config {path}: {exc}")
 
     if raw is None:
-        raise ValueError("Config file is empty or contains no YAML document")
+        raise ValueError(f"Config file {path!r} is empty or contains no YAML document")
 
     if "generalist" not in raw:
         raise ValueError("Config must have a 'generalist' section")
@@ -53,10 +67,12 @@ def load_config(path: str) -> ConductorConfig:
     # surfaces mid-conversation as a routing error the user pays tokens for.
     for name, spec in specialists.items():
         for target in spec.delegates_to:
-            if target not in specialists:
+            # Allow delegation to the generalist by name; otherwise the target
+            # must be a defined specialist. Provide a clear diagnostic on errors.
+            if target != "generalist" and target not in specialists:
                 raise ValueError(
                     f"specialist '{name}' delegates to '{target}', which is not "
-                    f"defined. Known specialists: {', '.join(sorted(specialists))}"
+                    f"defined. Known specialists: {', '.join(sorted(specialists))}, generalist"
                 )
 
     max_hops = raw.get("max_hops", ConductorConfig.max_hops)

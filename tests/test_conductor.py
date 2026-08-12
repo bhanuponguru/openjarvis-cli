@@ -1,8 +1,10 @@
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
 
 from openjarvis.conductor import Conductor
+from openjarvis.tools import ToolRegistry
 from openjarvis.types import ConductorConfig, SpecialistConfig
 
 
@@ -176,3 +178,92 @@ def test_chat_stream_yields_content(config):
         assert "".join(tokens).strip() == "Hello!"
         # It is a real stream, not one buffered string replayed.
         assert len([t for t in tokens if t]) > 1
+
+
+def test_tool_result_is_sent_to_followup_llm_call(config):
+    """A tool result must be visible to the model call that writes the answer."""
+    registry = ToolRegistry()
+
+    @registry.tool()
+    def double(n: int) -> int:
+        return n * 2
+
+    tool_call = SimpleNamespace(
+        id="call_1",
+        function=SimpleNamespace(name="double", arguments='{"n": 21}'),
+    )
+    first = SimpleNamespace(content=None, tool_calls=[tool_call])
+    second = SimpleNamespace(content="The result is 42.\n[ROUTE: return]", tool_calls=[])
+
+    with patch("openjarvis.conductor.call_llm") as mock_call:
+        mock_call.side_effect = [first, second]
+        c = Conductor(config=config, tools=registry)
+        steps = list(c.chat("Double 21"))
+
+    assert steps[-1]["type"] == "final"
+    assert steps[-1]["content"] == "The result is 42."
+
+    followup_messages = mock_call.call_args_list[1].args[0]
+    assert any(m.get("role") == "assistant" and m.get("tool_calls") for m in followup_messages)
+    assert any(
+        m.get("role") == "tool"
+        and m.get("tool_call_id") == "call_1"
+        and m.get("content") == "42"
+        for m in followup_messages
+    )
+
+
+def test_malformed_tool_arguments_are_reported_to_model(config):
+    """Bad model JSON should become a tool error message, not abort chat."""
+    registry = ToolRegistry()
+
+    @registry.tool()
+    def double(n: int) -> int:
+        return n * 2
+
+    tool_call = SimpleNamespace(
+        id="call_bad",
+        function=SimpleNamespace(name="double", arguments="{not json"),
+    )
+    first = SimpleNamespace(content=None, tool_calls=[tool_call])
+    second = SimpleNamespace(content="I could not parse the tool call.\n[ROUTE: return]", tool_calls=[])
+
+    with patch("openjarvis.conductor.call_llm") as mock_call:
+        mock_call.side_effect = [first, second]
+        c = Conductor(config=config, tools=registry)
+        steps = list(c.chat("Double this"))
+
+    assert steps[-1]["type"] == "final"
+    followup_messages = mock_call.call_args_list[1].args[0]
+    tool_messages = [m for m in followup_messages if m.get("role") == "tool"]
+    assert len(tool_messages) == 1
+    assert "Invalid JSON arguments" in tool_messages[0]["content"]
+
+
+def test_chat_stream_uses_tool_aware_non_streaming_path(config):
+    """Streaming callers should not silently drop the registered tools."""
+    registry = ToolRegistry()
+
+    @registry.tool()
+    def double(n: int) -> int:
+        return n * 2
+
+    tool_call = SimpleNamespace(
+        id="call_stream",
+        function=SimpleNamespace(name="double", arguments='{"n": 4}'),
+    )
+    first = SimpleNamespace(content=None, tool_calls=[tool_call])
+    second = SimpleNamespace(content="Eight.\n[ROUTE: return]", tool_calls=[])
+
+    with (
+        patch("openjarvis.conductor.call_llm") as mock_call,
+        patch("openjarvis.conductor.call_llm_stream") as mock_stream,
+    ):
+        mock_call.side_effect = [first, second]
+        c = Conductor(config=config, tools=registry)
+        out = "".join(c.chat_stream("Double 4"))
+
+    assert out == "Eight."
+    assert mock_call.call_count == 2
+    mock_stream.assert_not_called()
+    assert mock_call.call_args_list[0].kwargs["tools"] == registry.to_openai_format()
