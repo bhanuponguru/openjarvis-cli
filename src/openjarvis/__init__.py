@@ -7,5 +7,6 @@ nothing here knows or cares whether the backend is jarvis, Ollama, or OpenAI.
 
 from openjarvis.conductor import Conductor
 from openjarvis.types import ConductorConfig, SpecialistConfig
+from openjarvis.builtin_tools import create_builtin_registry
 
-__all__ = ["Conductor", "ConductorConfig", "SpecialistConfig"]
+__all__ = ["Conductor", "ConductorConfig", "SpecialistConfig", "create_builtin_registry"]
