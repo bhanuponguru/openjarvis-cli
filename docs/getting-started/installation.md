@@ -4,11 +4,11 @@ OpenJarvis is distributed as a pre-built binary for your platform — no Python 
 
 ### Download
 
-Visit the [GitHub Releases page](https://github.com/bhanuponguru/OpenJarvis/releases) and download the latest version for your platform:
+Download the latest version for your platform from [bhanuponguru.tech/openjarvis/release](https://bhanuponguru.tech/openjarvis/release):
 
-- **Linux:** `openjarvis-X.X.X-linux-x86_64.tar.gz`
-- **macOS:** `openjarvis-X.X.X-macos-x86_64.tar.gz`
-- **Windows:** `openjarvis-X.X.X-windows-x86_64.zip`
+- **Linux:** `openjarvis-linux-x86_64.tar.gz`
+- **macOS:** `openjarvis-macos-x86_64.tar.gz`
+- **Windows:** `openjarvis-windows-x86_64.zip`
 
 ### Linux / macOS
 

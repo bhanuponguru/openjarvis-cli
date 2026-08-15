@@ -333,17 +333,9 @@ Yes, the project is under active development.
 
 MIT License — see the LICENSE file in the installation directory
 
-### Where can I report bugs?
+### Where can I report bugs or request features?
 
 [GitHub Issues](https://github.com/bhanuponguru/OpenJarvis/issues)
-
-### Where can I request features?
-
-[GitHub Issues](https://github.com/bhanuponguru/OpenJarvis/issues) with the "enhancement" label
-
-### What's the roadmap?
-
-See the [main README](https://github.com/bhanuponguru/OpenJarvis#roadmap) for planned features.
 
 ---
 

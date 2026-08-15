@@ -116,8 +116,7 @@ Users can open `docs/index.html` in their browser to view the full documentation
 ### Online (Future)
 
 When deployed online, this documentation will be at a user-facing URL like:
-- `https://openjarvis.dev` or
-- `https://docs.openjarvis.dev`
+- `https://bhanuponguru.tech/openjarvis`
 
 ---
 

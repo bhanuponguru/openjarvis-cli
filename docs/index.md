@@ -212,6 +212,7 @@ Ready to try OpenJarvis? Here's what's next:
 
 ## Support & Community
 
+- **Website:** [bhanuponguru.tech/openjarvis](https://bhanuponguru.tech/openjarvis)
 - **GitHub:** [github.com/bhanuponguru/OpenJarvis](https://github.com/bhanuponguru/OpenJarvis)
 - **Issues:** [Report bugs or request features](https://github.com/bhanuponguru/OpenJarvis/issues)
 - **Documentation:** You're reading it!
