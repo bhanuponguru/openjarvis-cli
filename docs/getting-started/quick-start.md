@@ -337,7 +337,7 @@ The **knowledge** specialist automatically uses the `web_search` tool.
 - **[Configuration Guide →](../configuration/overview.md)** — Customize your setup
 - **[Built-in Tools →](../tools/overview.md)** — See all 29 available tools
 - **[Routing Protocol →](../usage/routing.md)** — Understand how routing works
-- **[Python API →](../usage/python-api.md)** — Use OpenJarvis in your code
+- **[Routing Protocol →](../usage/routing.md)** — Understand how specialists communicate
 
 ---
 

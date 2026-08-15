@@ -232,5 +232,5 @@ Planned additions:
 ## See Also
 
 - [Configuration](../configuration/overview.md) — Configure specialist tool access
-- [Python API](../usage/python-api.md) — Use tools programmatically
+- [Routing Protocol](../usage/routing.md) — How specialists invoke tools
 - [Troubleshooting](../troubleshooting.md) — Common tool issues
