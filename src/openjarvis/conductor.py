@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Generator, Iterator
+from collections.abc import Callable, Generator, Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -115,10 +115,9 @@ class Conductor:
 
         Internally each turn is tagged with its *speaker* ("generalist", "math",
         ...), which is what the routing state machine needs. Chat APIs accept
-        only system/user/assistant/tool, so every model turn maps to
-        ``assistant`` with the speaker preserved as a ``[name]:`` content prefix.
-        That keeps multi-participant identity legible to the next model without
-        sending a role the server will reject.
+        only system/user/assistant/tool, so every model turn maps to a system
+        annotation (speaker identity) followed by a clean assistant message.
+        This avoids models echoing back ``[role]:`` prefixes they see in context.
 
         The ``route`` key is metadata and is never sent.
         """
@@ -141,8 +140,22 @@ class Conductor:
                     }
                 )
             else:
-                messages.append({"role": "assistant", "content": f"[{role}]: {content}"})
+                # Separate speaker identity from content so models don't echo
+                # the "[role]:" prefix back in their own responses.
+                messages.append(
+                    {"role": "system", "content": f"(Response from {role} specialist:)"}
+                )
+                messages.append({"role": "assistant", "content": content})
         return messages
+
+    # Matches an echoed "[rolename]: " prefix that models sometimes parrot back
+    # when they see it in their context. Strip exactly one occurrence from the
+    # start of the content so the history stays clean.
+    _ROLE_ECHO_RE = re.compile(r"^\[[\w]+\]:\s*")
+
+    def _strip_role_echo(self, content: str) -> str:
+        """Remove any echoed [role]: prefix from model output."""
+        return self._ROLE_ECHO_RE.sub("", content, count=1)
 
     def _final_answer_prompt(self) -> str:
         return (
@@ -182,6 +195,7 @@ class Conductor:
         messages: list[dict],
         config: SpecialistConfig,
         api_key: str | None,
+        on_event: Callable[[dict], None] | None = None,
     ) -> tuple[str, list[dict]]:
         """Call LLM with tools, looping until a text response arrives.
 
@@ -193,6 +207,11 @@ class Conductor:
         the assistant tool-call messages and tool results appended during this
         call. The caller records the final text as the current specialist's
         normal model turn after routing tags are stripped.
+
+        Args:
+            on_event: Optional callback for tool_call / tool_result events so
+                the caller (e.g. the CLI) can surface them to the user in real
+                time without buffering.
         """
         openai_tools = self._tools.to_openai_format() if self._tools else []
         max_rounds = 5
@@ -231,10 +250,14 @@ class Conductor:
                 func = getattr(tc, "function", None) or {}
                 name = getattr(func, "name", "")
                 raw_args = getattr(func, "arguments", "{}")
+                if on_event:
+                    on_event({"type": "tool_call", "name": name, "arguments": raw_args})
                 result = (
                     self._tools.execute({"name": name, "arguments": raw_args})
                     if self._tools else {"error": "No tool registry"}
                 )
+                if on_event:
+                    on_event({"type": "tool_result", "name": name, "result": result})
                 extra.append({
                     "role": "tool",
                     "tool_call_id": getattr(tc, "id", ""),
@@ -290,6 +313,7 @@ class Conductor:
 
         current_role = "generalist"
         hops = 0
+        visited_specialists: set[str] = set()
 
         while True:
             if hops >= self.config.max_hops:
@@ -321,7 +345,12 @@ class Conductor:
                 api_key = self._get_api_key(current_role)
                 extra: list[dict] = []
                 if self._tools:
-                    response, extra = self._call_with_tools(messages, specialist_config, api_key)
+                    tool_events: list[dict] = []
+                    response, extra = self._call_with_tools(
+                        messages, specialist_config, api_key,
+                        on_event=tool_events.append,
+                    )
+                    yield from tool_events
                     for m in extra:
                         self.history.append({**m, "route": None})
                 else:
@@ -335,6 +364,7 @@ class Conductor:
             # Parse the routing tag from the response
             is_generalist = current_role == "generalist"
             cleaned_content, route_target = parse_route_tag(response)
+            cleaned_content = self._strip_role_echo(cleaned_content)
 
             # Append the model's response to conversation history
             self.history.append(
@@ -351,6 +381,7 @@ class Conductor:
                     yield {"type": "final", "content": cleaned_content, "role": current_role}
                     return cleaned_content
                 else:
+                    visited_specialists.add(current_role)
                     yield {"type": "route", "from_role": current_role, "to_role": "generalist"}
                     yield {"type": "intermediate", "role": current_role, "content": cleaned_content}
                     current_role = "generalist"
@@ -412,6 +443,23 @@ class Conductor:
                     yield {"type": "route", "from_role": previous_role, "to_role": "generalist"}
                     continue
 
+            # --- Block re-routing to a specialist that already answered ---
+            if target_role in visited_specialists:
+                self.history.append(
+                    {
+                        "role": "system",
+                        "content": (
+                            f"[You already received an answer from the '{target_role}' "
+                            "specialist for this question. Do NOT route again. "
+                            "Synthesize a final response using everything discussed "
+                            "so far and end with [ROUTE: return].]"
+                        ),
+                        "route": None,
+                    }
+                )
+                current_role = "generalist"
+                continue
+
             # --- Route to the target ---
             yield {"type": "route", "from_role": current_role, "to_role": target_role}
             yield {"type": "intermediate", "role": current_role, "content": cleaned_content}
@@ -446,6 +494,7 @@ class Conductor:
 
         current_role = "generalist"
         hops = 0
+        visited_specialists: set[str] = set()
 
         while True:
             if hops >= self.config.max_hops:
@@ -465,7 +514,9 @@ class Conductor:
             try:
                 if self._tools:
                     extra: list[dict]
-                    response, extra = self._call_with_tools(messages, specialist_config, api_key)
+                    response, extra = self._call_with_tools(
+                        messages, specialist_config, api_key
+                    )
                     for m in extra:
                         self.history.append({**m, "route": None})
                     if is_generalist:
@@ -489,6 +540,7 @@ class Conductor:
             hops += 1
 
             cleaned_content, route_target = parse_route_tag(response)
+            cleaned_content = self._strip_role_echo(cleaned_content)
             self.history.append(
                 {"role": current_role, "content": cleaned_content, "route": route_target}
             )
@@ -496,6 +548,7 @@ class Conductor:
             if route_target == "return":
                 if is_generalist:
                     return
+                visited_specialists.add(current_role)
                 current_role = "generalist"
                 continue
 
@@ -524,6 +577,23 @@ class Conductor:
                             f"[The {current_role} specialist attempted to delegate to "
                             f"{route_target}, which is not permitted. You are the "
                             "generalist — handle this.]"
+                        ),
+                        "route": None,
+                    }
+                )
+                current_role = "generalist"
+                continue
+
+            # Block re-routing to a specialist that already answered
+            if route_target in visited_specialists:
+                self.history.append(
+                    {
+                        "role": "system",
+                        "content": (
+                            f"[You already received an answer from the '{route_target}' "
+                            "specialist for this question. Do NOT route again. "
+                            "Synthesize a final response using everything discussed "
+                            "so far and end with [ROUTE: return].]"
                         ),
                         "route": None,
                     }

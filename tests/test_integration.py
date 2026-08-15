@@ -112,8 +112,12 @@ def test_every_outbound_role_is_api_valid(transport):
             assert msg["role"] in VALID_API_ROLES, f"invalid role: {msg['role']}"
 
 
-def test_speaker_identity_is_preserved_in_content(transport):
-    """Mapping to `assistant` must not erase who said what."""
+def test_speaker_identity_is_preserved_in_context(transport):
+    """Speaker identity must survive history round-trips without polluting content.
+
+    The conductor now uses a system annotation message (not a [role]: prefix)
+    so models can tell who said what without being primed to echo the format.
+    """
     recorder = transport([
         "asking math\n[ROUTE: math]",
         "42\n[RETURN]",
@@ -124,9 +128,18 @@ def test_speaker_identity_is_preserved_in_content(transport):
     list(conductor.chat("what is 6*7?"))
 
     final_messages = recorder.payloads[-1]["messages"]
-    assistant_content = [m["content"] for m in final_messages if m["role"] == "assistant"]
-    assert any(c.startswith("[generalist]:") for c in assistant_content)
-    assert any(c.startswith("[math]:") for c in assistant_content)
+
+    # Speaker identity is communicated via system annotations, NOT by prefixing
+    # assistant content.  Every non-user turn produces a system message followed
+    # by a clean assistant message.
+    system_contents = [m["content"] for m in final_messages if m["role"] == "system"]
+    assert any("generalist" in c for c in system_contents)
+    assert any("math" in c for c in system_contents)
+
+    # The assistant content itself must NOT carry a [role]: prefix.
+    assistant_content = [m["content"] or "" for m in final_messages if m["role"] == "assistant"]
+    assert not any(c.startswith("[generalist]:") for c in assistant_content)
+    assert not any(c.startswith("[math]:") for c in assistant_content)
 
 
 def test_user_and_system_roles_pass_through_unprefixed(transport):
@@ -160,20 +173,26 @@ def test_system_prompt_is_the_callees_own(transport):
 # ---------------------------------------------------------------------------
 
 def test_hop_cap_terminates_with_a_real_answer(transport):
-    """A ping-pong loop must stop at max_hops and still answer the user."""
-    # Exactly max_hops routing replies, then the reply to the forced final call.
-    recorder = transport(
-        ["route\n[ROUTE: math]", "back\n[RETURN]"] * 2 + ["Final answer.\n[ROUTE: return]"]
-    )
+    """When max_hops is reached the conductor forces a final generalist answer.
 
-    conductor = Conductor(config=make_config(max_hops=4))
+    Uses max_hops=2 so exactly 2 normal hops exhaust the cap before the
+    visited_specialists guard has a chance to fire.
+    """
+    # 2 normal hops (generalist → math → RETURN), then the forced final call.
+    recorder = transport([
+        "going to math\n[ROUTE: math]",
+        "done\n[RETURN]",
+        "Final answer.\n[ROUTE: return]",
+    ])
+
+    conductor = Conductor(config=make_config(max_hops=2))
     events = list(conductor.chat("loop please"))
 
     finals = [e for e in events if e["type"] == "final"]
     assert len(finals) == 1
     assert finals[0]["content"] == "Final answer."
-    # 4 capped hops + 1 forced final call.
-    assert len(recorder.payloads) == 5
+    # 2 capped hops + 1 forced final call.
+    assert len(recorder.payloads) == 3
 
     last_messages = recorder.payloads[-1]["messages"]
     assert any("Hop limit reached" in m["content"] for m in last_messages)

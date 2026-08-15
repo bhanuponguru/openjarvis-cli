@@ -201,11 +201,11 @@ def call_llm_stream(
             except Exception:
                 content = None
 
-        if tools is not None:
-            # When tools are supplied, the model may return tool-calls instead
-            # of content. The streaming path should not yield partial content
-            # in that case; callers should use the non-streaming `call_llm`
-            # to receive the final message object.
+        if tools is not None and not content:
+            # Skip tool-call-only deltas (no text content). Chunks that carry
+            # actual text are still yielded so the stream isn't silently empty.
+            # Callers that need structured tool-call objects should use the
+            # non-streaming `call_llm` instead.
             continue
 
         if content:

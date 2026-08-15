@@ -240,6 +240,92 @@ def test_malformed_tool_arguments_are_reported_to_model(config):
     assert "Invalid JSON arguments" in tool_messages[0]["content"]
 
 
+def test_strip_role_echo_removes_prefix(config):
+    """_strip_role_echo removes a leading [role]: prefix."""
+    c = Conductor(config=config)
+    assert c._strip_role_echo("[knowledge]: Some answer") == "Some answer"
+    assert c._strip_role_echo("[generalist]: Hello") == "Hello"
+    assert c._strip_role_echo("No prefix here") == "No prefix here"
+    assert c._strip_role_echo("") == ""
+
+
+def test_format_history_uses_system_annotation(config):
+    """_format_history should emit a (Response from X specialist:) system msg, not [role]: prefix."""
+    c = Conductor(config=config)
+    c.history = [
+        {"role": "user", "content": "hello", "route": None},
+        {"role": "knowledge", "content": "Some facts.", "route": "return"},
+    ]
+    messages = c._format_history()
+    # Should be: user msg, system annotation, assistant msg
+    assert messages[0] == {"role": "user", "content": "hello"}
+    assert messages[1]["role"] == "system"
+    assert "knowledge" in messages[1]["content"]
+    assert messages[2] == {"role": "assistant", "content": "Some facts."}
+    # No [knowledge]: prefix in the assistant message
+    assert "[knowledge]" not in messages[2]["content"]
+
+
+def test_routing_loop_prevention_injects_synthesis_prompt(config):
+    """If the generalist tries to re-route to a specialist that already answered,
+    a system message should be injected telling it to synthesise instead."""
+    call_responses = [
+        "Let me ask knowledge.\n[ROUTE: math]",       # Generalist → math
+        "The answer is 42.\n[RETURN]",                  # Math returns
+        "Let me ask again.\n[ROUTE: math]",             # Generalist tries math AGAIN
+        "Here is the answer.\n[ROUTE: return]",         # Generalist forced to synthesise
+    ]
+
+    with patch("openjarvis.conductor.call_llm") as mock_call:
+        mock_call.side_effect = call_responses
+        c = Conductor(config=config)
+        steps = list(c.chat("What is 6*7?"))
+
+    # Only 3 call_llm calls should happen: first route to math, math returns,
+    # generalist tries re-route → loop prevention injects system msg → generalist
+    # called once more with the synthesis prompt.
+    assert mock_call.call_count == 4
+
+    # A system message about not re-routing should have been injected
+    sys_msgs = [
+        m for m in c.history
+        if m["role"] == "system" and "already received an answer" in m.get("content", "")
+    ]
+    assert len(sys_msgs) == 1
+
+    # Final answer should still be produced
+    final_events = [s for s in steps if s["type"] == "final"]
+    assert len(final_events) == 1
+
+
+def test_tool_events_yielded_from_chat(config):
+    """tool_call and tool_result events must be yielded from chat() for the CLI to show them."""
+    registry = ToolRegistry()
+
+    @registry.tool()
+    def double(n: int) -> int:
+        return n * 2
+
+    tool_call = SimpleNamespace(
+        id="call_tc",
+        function=SimpleNamespace(name="double", arguments='{"n": 5}'),
+    )
+    first = SimpleNamespace(content=None, tool_calls=[tool_call])
+    second = SimpleNamespace(content="Result is 10.\n[ROUTE: return]", tool_calls=[])
+
+    with patch("openjarvis.conductor.call_llm") as mock_call:
+        mock_call.side_effect = [first, second]
+        c = Conductor(config=config, tools=registry)
+        steps = list(c.chat("Double 5"))
+
+    tool_call_events = [s for s in steps if s["type"] == "tool_call"]
+    tool_result_events = [s for s in steps if s["type"] == "tool_result"]
+    assert len(tool_call_events) == 1
+    assert tool_call_events[0]["name"] == "double"
+    assert len(tool_result_events) == 1
+    assert tool_result_events[0]["result"] == 10
+
+
 def test_chat_stream_uses_tool_aware_non_streaming_path(config):
     """Streaming callers should not silently drop the registered tools."""
     registry = ToolRegistry()
