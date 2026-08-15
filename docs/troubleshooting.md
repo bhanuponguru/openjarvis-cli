@@ -345,20 +345,15 @@ echo "What is 2 + 2?" | openjarvis
 
 ### GitHub Issues
 
-Search existing issues or create a new one:
+Report issues or get help:
 [github.com/bhanuponguru/OpenJarvis/issues](https://github.com/bhanuponguru/OpenJarvis/issues)
 
 **When reporting issues, include:**
 1. OpenJarvis version (`openjarvis --version`)
-2. Operating system
+2. Operating system and architecture
 3. Configuration file (remove API keys!)
 4. Error message
 5. Steps to reproduce
-
-### Community
-
-- GitHub Discussions (coming soon)
-- Discord server (coming soon)
 
 ---
 

@@ -244,14 +244,11 @@ See [Built-in Tools](../tools/overview.md) for the complete reference.
 
 ## Command-Line Usage
 
-### Single Query Mode
+### Piping Queries
 
 ```bash
 # Run a single query and exit
 echo "What is 2 + 2?" | openjarvis
-
-# Or use here-string
-openjarvis <<< "What is the capital of France?"
 ```
 
 ### Custom Config File
@@ -277,25 +274,6 @@ openjarvis --verbose
 
 ---
 
-## Python API Usage
-
-You can also use OpenJarvis in your Python code:
-
-```python
-from openjarvis import Conductor, load_config
-
-# Load configuration
-config = load_config("specialists.yaml")
-
-# Create conductor
-conductor = Conductor(config=config)
-
-# Run a query
-response = conductor.chat("What is 15 squared?")
-print(response["content"])
-```
-
-See [Python API](../usage/python-api.md) for more details.
 
 ---
 

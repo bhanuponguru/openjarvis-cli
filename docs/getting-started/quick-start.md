@@ -6,7 +6,7 @@ Get OpenJarvis up and running in 5 minutes.
 
 ## Step 1: Install OpenJarvis
 
-If you haven't already, [install OpenJarvis](installation.md) via binary or source.
+If you haven't already, [install OpenJarvis](installation.md).
 
 ---
 

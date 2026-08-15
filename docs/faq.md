@@ -52,9 +52,7 @@ specialists:
 
 ### Do I need Python installed?
 
-**For binary installation:** No, the pre-built binaries include everything.
-
-**For source installation:** Yes, Python ≥ 3.13 required.
+No! OpenJarvis is distributed as a pre-built binary that includes everything you need.
 
 ### How do I get API keys?
 
@@ -67,12 +65,12 @@ specialists:
 
 **Minimum:**
 - 8 GB RAM
-- 10 GB disk space
+- 10 GB disk space (for models)
 
 **Recommended:**
 - 16+ GB RAM
-- NVIDIA GPU with 6+ GB VRAM (for faster inference)
-- 50+ GB disk space (for multiple models)
+- NVIDIA GPU with 6+ GB VRAM (faster inference)
+- 50+ GB disk space (multiple models)
 
 ### Which models should I use?
 
@@ -295,22 +293,6 @@ Use just Ollama if you want:
 
 ## Advanced Questions
 
-### Can I use OpenJarvis programmatically?
-
-Yes! Use the Python API:
-
-```python
-from openjarvis import Conductor, load_config
-
-config = load_config("specialists.yaml")
-conductor = Conductor(config=config)
-
-response = conductor.chat("What is 2 + 2?")
-print(response["content"])
-```
-
-See [Python API documentation](usage/python-api.md).
-
 ### Can I add custom tools?
 
 Not currently, but a plugin system is planned for a future release.
@@ -347,13 +329,9 @@ Except for delegation (specialist → specialist) via `delegates_to`.
 
 Yes, the project is under active development.
 
-### Can I contribute?
-
-Yes! See the [Developer Guide](https://github.com/bhanuponguru/OpenJarvis/blob/main/docs/DEVELOPER_GUIDE.md) for contribution guidelines.
-
 ### What's the license?
 
-[Check the LICENSE file in the repository](https://github.com/bhanuponguru/OpenJarvis/blob/main/LICENSE)
+MIT License — see the LICENSE file in the installation directory
 
 ### Where can I report bugs?
 

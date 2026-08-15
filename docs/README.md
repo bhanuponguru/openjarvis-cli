@@ -39,32 +39,11 @@ docs/
 
 ---
 
-## Building the Documentation
+## Viewing the Documentation
 
-### Install Dependencies
+This documentation is pre-built and included in the binary distribution as HTML. Simply open `docs/index.html` in your web browser after extracting the binary package.
 
-```bash
-# From project root
-uv sync --group docs
-```
-
-### Local Development Server
-
-```bash
-cd packages/openjarvis/docs
-uv run mkdocs serve
-```
-
-Open http://localhost:8000 to view the documentation.
-
-### Build Static Site
-
-```bash
-cd packages/openjarvis/docs
-uv run mkdocs build --strict
-```
-
-The built HTML will be in `site/`.
+For development/editing, see the main repository documentation.
 
 ---
 
@@ -142,110 +121,15 @@ When deployed online, this documentation will be at a user-facing URL like:
 
 ---
 
-## Maintenance
+## Notes for Users
 
-### When to Update
+This documentation is included in your OpenJarvis distribution. It provides:
 
-Update this documentation when:
-- Adding/removing features
-- Changing configuration format
-- Adding/removing tools
-- Fixing bugs that affect user experience
-- Improving installation process
+- **Installation:** Already done! You have the binary.
+- **Configuration:** Setting up `specialists.yaml`
+- **Usage:** Command-line options and features
+- **Troubleshooting:** Common issues and solutions
+- **Tools Reference:** All 29 built-in tools
+- **FAQ:** Answers to common questions
 
-### What to Update
-
-- **Configuration examples:** Keep in sync with `specialists.yaml` format
-- **Command-line options:** Match `cli.py` implementation
-- **Tool list:** Match tools in `builtin_tools/`
-- **Error messages:** Reflect actual error text from code
-- **Troubleshooting:** Add solutions for common issues
-
-### Testing
-
-Before committing documentation changes:
-
-1. **Build test:** `mkdocs build --strict` must succeed
-2. **Link test:** Check all internal links work
-3. **Example test:** Verify configuration examples are valid YAML
-4. **Command test:** Verify command-line examples work
-
----
-
-## Style Guide
-
-### Headings
-
-- Use `#` for page title
-- Use `##` for main sections
-- Use `###` for subsections
-- Use `---` horizontal rules between major sections
-
-### Code Blocks
-
-Always specify language:
-
-````markdown
-```bash
-openjarvis --help
-```
-
-```yaml
-generalist:
-  model: "gpt-4o-mini"
-```
-
-```python
-from openjarvis import Conductor
-```
-````
-
-### Examples
-
-Show both command and expected output:
-
-````markdown
-```bash
-$ openjarvis --version
-OpenJarvis version 0.1.0
-```
-````
-
-### Admonitions
-
-Use for important notes:
-
-```markdown
-!!! warning "Security Warning"
-    Code execution runs on your machine. Only execute trusted code.
-
-!!! info "Tip"
-    Use Ollama for completely local, private AI assistance.
-
-!!! note "Note"
-    This feature requires version 0.2.0 or later.
-```
-
-### File Paths
-
-Use inline code for file paths:
-- `specialists.yaml`
-- `/usr/local/bin/openjarvis`
-- `~/.config/openjarvis/specialists.yaml`
-
-### UI Elements
-
-Use inline code for UI elements:
-- Click "Run anyway"
-- Type `exit` or `quit`
-- Press **Ctrl+C**
-
----
-
-## Questions?
-
-For questions about this documentation structure, see:
-- Main repository [DEVELOPER_GUIDE.md](../../../docs/DEVELOPER_GUIDE.md)
-- Project [AGENTS.md](../../../AGENTS.md)
-
-For questions about content, create an issue on GitHub.
+Everything you need is self-contained in this documentation.

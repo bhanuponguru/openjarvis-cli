@@ -65,24 +65,14 @@ Each specialist focuses on what it does best.
 
 ### Provider Agnostic
 
-Configure each specialist independently:
+Configure each specialist independently to use different AI providers:
 
-```yaml
-generalist:
-  base_url: "https://api.openai.com/v1"
-  model: "gpt-4o-mini"
+- **Ollama** (local, free)
+- **OpenAI** (GPT-4, GPT-4o-mini)
+- **Groq** (fast inference)
+- **Anthropic Claude** (via OpenRouter)
 
-specialists:
-  math:
-    base_url: "http://localhost:11434/v1"  # Ollama (local)
-    model: "llama3"
-  
-  code:
-    base_url: "https://api.groq.com/v1"  # Groq (fast)
-    model: "llama-3.1-70b"
-```
-
-Mix cloud and local models freely.
+Mix cloud and local models freely in a single conversation.
 
 ### 29 Built-In Tools
 
@@ -213,9 +203,9 @@ User Input
 
 Ready to try OpenJarvis? Here's what's next:
 
-1. **[Install OpenJarvis →](getting-started/installation.md)** — Binary or source installation
+1. **[Install OpenJarvis →](getting-started/installation.md)** — Download and run
 2. **[Quick Start Guide →](getting-started/quick-start.md)** — Get up and running in 5 minutes
-3. **[Configure Specialists →](configuration/specialists.md)** — Set up your AI providers
+3. **[Configure Specialists →](configuration/overview.md)** — Set up your AI providers
 4. **[Explore Built-in Tools →](tools/overview.md)** — See what OpenJarvis can do
 
 ---

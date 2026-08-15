@@ -4,6 +4,9 @@ site_url: https://openjarvis.dev
 repo_url: https://github.com/bhanuponguru/OpenJarvis
 repo_name: OpenJarvis
 
+docs_dir: docs
+site_dir: site
+
 theme:
   name: material
   palette:
@@ -76,7 +79,7 @@ nav:
       - Memory: tools/memory.md
   - Usage:
       - Command Line: usage/cli.md
-      - Python API: usage/python-api.md
+      # - Python API: usage/python-api.md
       - Routing Protocol: usage/routing.md
   - Troubleshooting: troubleshooting.md
   - FAQ: faq.md
