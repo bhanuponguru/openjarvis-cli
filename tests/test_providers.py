@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from openjarvis.model_types import SpecialistConfig
 from openjarvis.providers import call_llm, call_llm_stream
-from openjarvis.types import SpecialistConfig
 
 
 @pytest.fixture

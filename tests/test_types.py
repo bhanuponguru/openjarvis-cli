@@ -1,4 +1,4 @@
-from openjarvis.types import ConductorConfig, SpecialistConfig
+from openjarvis.model_types import ConductorConfig, SpecialistConfig
 
 
 def test_specialist_config():

@@ -1,6 +1,6 @@
 from openjarvis.tools import tool
 
-_session_notes = {}
+_session_notes: dict[str, str] = {}
 
 @tool()
 def store_note(key: str, content: str) -> str:

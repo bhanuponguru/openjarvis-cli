@@ -1,5 +1,4 @@
 import builtins
-import os
 
 from openjarvis import cli
 
@@ -17,20 +16,22 @@ def test_run_cli_missing_config(monkeypatch):
 
 
 def test_run_cli_with_existing_config_and_exit(monkeypatch, tmp_path, capsys):
-    # Create a dummy config file so os.path.exists passes
-    cfg = tmp_path / "specialists.yaml"
-    cfg.write_text("# minimal config placeholder\n")
+    from openjarvis.model_types import ConductorConfig, SpecialistConfig
 
-    # Replace the Conductor with a lightweight dummy to avoid loading real configs
+    dummy_config = ConductorConfig(
+        generalist=SpecialistConfig(name="generalist", system_prompt="You are helpful.")
+    )
+
+    # Stub config loading and Conductor so the test doesn't need a real server.
     class DummyConductor:
-        def __init__(self, config_path=None):
-            self.config_path = config_path
+        def __init__(self, config=None):
+            self.config = config
 
         def chat(self, user_input):
             # Should not be called in this test since input returns 'exit'
             yield {"type": "final", "content": "noop", "role": "generalist"}
 
-    monkeypatch.setenv("OJ_CONFIG", str(cfg))
+    monkeypatch.setattr(cli, "load_config", lambda: dummy_config)
     monkeypatch.setattr(cli, "Conductor", DummyConductor)
 
     # Simulate user typing 'exit' immediately

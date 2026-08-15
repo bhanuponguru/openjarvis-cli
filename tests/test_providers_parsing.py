@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from openjarvis.types import SpecialistConfig
+from openjarvis.model_types import SpecialistConfig
 
 
 def make_attr_completion(content: str):

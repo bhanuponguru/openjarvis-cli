@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from openjarvis.conductor import Conductor
-from openjarvis.types import ConductorConfig, SpecialistConfig
+from openjarvis.model_types import ConductorConfig, SpecialistConfig
 
 VALID_API_ROLES = {"system", "user", "assistant", "tool"}
 

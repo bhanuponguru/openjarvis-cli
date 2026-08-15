@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import re
 from collections.abc import Generator, Iterator
@@ -5,9 +7,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from openjarvis.config_loader import get_delegation_mask, load_config
+from openjarvis.model_types import ConductorConfig, SpecialistConfig
 from openjarvis.parser import is_route_tag, parse_route_tag
 from openjarvis.providers import call_llm, call_llm_stream
-from openjarvis.types import ConductorConfig, SpecialistConfig
 
 if TYPE_CHECKING:
     from openjarvis.tools import ToolRegistry

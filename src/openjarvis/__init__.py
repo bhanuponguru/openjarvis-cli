@@ -5,8 +5,8 @@ reached over an OpenAI-compatible HTTP API. It is deliberately model-agnostic:
 nothing here knows or cares whether the backend is jarvis, Ollama, or OpenAI.
 """
 
-from openjarvis.conductor import Conductor
-from openjarvis.types import ConductorConfig, SpecialistConfig
 from openjarvis.builtin_tools import create_builtin_registry
+from openjarvis.conductor import Conductor
+from openjarvis.model_types import ConductorConfig, SpecialistConfig
 
 __all__ = ["Conductor", "ConductorConfig", "SpecialistConfig", "create_builtin_registry"]

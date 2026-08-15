@@ -1,10 +1,12 @@
+import os
+import sys
 from dataclasses import fields
 from pathlib import Path
 
 import yaml
 from yaml import YAMLError
 
-from openjarvis.types import ConductorConfig, SpecialistConfig
+from openjarvis.model_types import ConductorConfig, SpecialistConfig
 
 # Valid top-level keys for a `SpecialistConfig` dataclass
 _VALID_KEYS = {f.name for f in fields(SpecialistConfig)}
@@ -34,9 +36,69 @@ def _build_specialist(name: str, spec: dict, section: str) -> SpecialistConfig:
     return SpecialistConfig(**spec)
 
 
-def load_config(path: str) -> ConductorConfig:
-    """Load and validate a YAML config file."""
-    p = Path(path)
+def locate_config() -> Path:
+    """Locate config file in standard search locations.
+
+    Search order:
+    1. OJ_CONFIG environment variable (highest priority)
+    2. Current directory: ./specialists.yaml
+    3. User config: ~/.config/openjarvis/specialists.yaml
+    4. System config: /etc/openjarvis/specialists.yaml (Linux/macOS only)
+
+    Raises:
+        SystemExit: If config not found in any location.
+    """
+    # 1. OJ_CONFIG env var (highest priority)
+    if env_config := os.getenv("OJ_CONFIG"):
+        config_path = Path(env_config)
+        if config_path.exists():
+            return config_path
+        print(f"Error: OJ_CONFIG points to non-existent file: {env_config}", file=sys.stderr)
+        sys.exit(1)
+
+    # 2. Current directory
+    cwd_config = Path.cwd() / "specialists.yaml"
+    if cwd_config.exists():
+        return cwd_config
+
+    # 3. User config directory (~/.config/openjarvis/)
+    user_config = Path.home() / ".config" / "openjarvis" / "specialists.yaml"
+    if user_config.exists():
+        return user_config
+
+    # 4. System config (Linux/macOS only)
+    if os.name != "nt":
+        system_config = Path("/etc/openjarvis/specialists.yaml")
+        if system_config.exists():
+            return system_config
+
+    # Config not found - show helpful error
+    print("Error: specialists.yaml not found!", file=sys.stderr)
+    print("\nSearched locations:", file=sys.stderr)
+    print("  1. OJ_CONFIG environment variable (not set)", file=sys.stderr)
+    print(f"  2. {cwd_config}", file=sys.stderr)
+    print(f"  3. {user_config}", file=sys.stderr)
+    if os.name != "nt":
+        print(f"  4. {system_config}", file=sys.stderr)
+    print("\nCreate specialists.yaml or set OJ_CONFIG=/path/to/config.yaml", file=sys.stderr)
+    sys.exit(1)
+
+
+def load_config(path: str | None = None) -> ConductorConfig:
+    """Load and validate a YAML config file.
+
+    Args:
+        path: Path to config file. If None, searches standard locations.
+
+    Returns:
+        ConductorConfig object.
+
+    Raises:
+        FileNotFoundError: If config file not found.
+        ValueError: If config file is invalid.
+    """
+    p = locate_config() if path is None else Path(path)
+
     try:
         text = p.read_text()
     except FileNotFoundError:
@@ -48,7 +110,7 @@ def load_config(path: str) -> ConductorConfig:
         raw = yaml.safe_load(text)
     except YAMLError as exc:
         # Include the path to help users find the broken file quickly
-        raise ValueError(f"Error parsing YAML config {path}: {exc}")
+        raise ValueError(f"Error parsing YAML config {path}: {exc}") from exc
 
     if raw is None:
         raise ValueError(f"Config file {path!r} is empty or contains no YAML document")

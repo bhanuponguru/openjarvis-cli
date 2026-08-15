@@ -4,8 +4,8 @@ from unittest.mock import patch
 import pytest
 
 from openjarvis.conductor import Conductor
+from openjarvis.model_types import ConductorConfig, SpecialistConfig
 from openjarvis.tools import ToolRegistry
-from openjarvis.types import ConductorConfig, SpecialistConfig
 
 
 @pytest.fixture

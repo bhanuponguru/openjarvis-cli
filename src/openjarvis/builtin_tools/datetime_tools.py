@@ -1,8 +1,10 @@
 import datetime as dt
+
 import pytz
+
 from openjarvis.tools import tool
 
-_registry = {}
+_registry: dict[str, object] = {}
 
 def get_registry():
     from openjarvis.tools import ToolRegistry
@@ -86,6 +88,9 @@ def days_between(date_a: str, date_b: str) -> int:
 
     Returns:
         Number of days between the dates (positive if date_b > date_a).
+
+    Raises:
+        ValueError: If either date string is not a valid ISO 8601 format.
     """
     try:
         if "T" in date_a:
@@ -97,8 +102,7 @@ def days_between(date_a: str, date_b: str) -> int:
             dt_b = dt.datetime.fromisoformat(date_b)
         else:
             dt_b = dt.datetime.fromisoformat(date_b + "T00:00:00")
-    except ValueError:
-        return "Error: Invalid date format"
+    except ValueError as exc:
+        raise ValueError(f"Invalid date format: {exc}") from exc
 
-    delta = (dt_b - dt_a).days
-    return delta
+    return (dt_b - dt_a).days

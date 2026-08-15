@@ -1,8 +1,11 @@
 import ast
-import operator
+from collections.abc import Callable
+
 from openjarvis.tools import tool
 
-UNIT_CONVERSIONS = {
+_ConvFactor = float | Callable[[float], float]
+
+UNIT_CONVERSIONS: dict[str, _ConvFactor] = {
     "m_to_km": 0.001,
     "km_to_m": 1000,
     "ft_to_m": 0.3048,
@@ -91,14 +94,11 @@ def convert_units(value: float, from_unit: str, to_unit: str) -> str:
     key = f"{from_unit}_to_{to_unit}"
 
     if key not in UNIT_CONVERSIONS:
-        available = ", ".join(sorted(set(k.split("_to_")[0] for k in UNIT_CONVERSIONS.keys())))
+        available = ", ".join(sorted(set(k.split("_to_")[0] for k in UNIT_CONVERSIONS)))
         return f"Error: Conversion '{key}' not found. Available: {available}"
 
     factor = UNIT_CONVERSIONS[key]
-    if callable(factor):
-        result = factor(value)
-    else:
-        result = value * factor
+    result = factor(value) if callable(factor) else value * factor
 
     return str(result)
 

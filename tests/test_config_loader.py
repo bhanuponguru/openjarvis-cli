@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from openjarvis.config_loader import get_delegation_mask, load_config
-from openjarvis.types import ConductorConfig, SpecialistConfig
+from openjarvis.model_types import ConductorConfig, SpecialistConfig
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

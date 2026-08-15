@@ -1,7 +1,10 @@
-import httpx
 import re
 from html.parser import HTMLParser
+
+import httpx
+
 from openjarvis.tools import tool
+
 
 class HTMLStripper(HTMLParser):
     def __init__(self):
@@ -76,7 +79,7 @@ def search_web(query: str, num_results: int = 5) -> list[dict]:
         num_results = 20
 
     try:
-        from duckduckgo_search import DDGS
+        from ddgs import DDGS
 
         results = []
         ddgs = DDGS(timeout=10)

@@ -3,7 +3,7 @@ from openjarvis.conductor import _stream_without_tag
 
 def collect_emitted(deltas):
     emitted = []
-    for delta, emit in _stream_without_tag(iter(deltas)):
+    for _delta, emit in _stream_without_tag(iter(deltas)):
         if emit:
             emitted.append(emit)
     return "".join(emitted)

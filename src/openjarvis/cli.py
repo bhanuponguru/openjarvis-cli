@@ -1,9 +1,9 @@
 """Interactive CLI for the OpenJarvis Conductor."""
 
-import os
 import sys
 
 from openjarvis.conductor import Conductor
+from openjarvis.config_loader import load_config
 
 
 def run_cli(args: list[str] | None = None) -> None:
@@ -11,17 +11,16 @@ def run_cli(args: list[str] | None = None) -> None:
 
     Args:
         args: Optional command-line arguments (unused, reserved for future
-              expansion). The config path is read from the ``OJ_CONFIG``
-              environment variable (default: ``specialists.yaml``).
+              expansion). The config path is searched in standard locations
+              or via OJ_CONFIG environment variable.
     """
-    config_path = os.environ.get("OJ_CONFIG", "specialists.yaml")
-
-    if not os.path.exists(config_path):
-        print(f"Config not found: {config_path}")
-        print("Set OJ_CONFIG env var or create specialists.yaml")
+    try:
+        config = load_config()
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)
 
-    conductor = Conductor(config_path=config_path)
+    conductor = Conductor(config=config)
 
     print("OpenJarvis — type 'exit' or 'quit' to stop")
 

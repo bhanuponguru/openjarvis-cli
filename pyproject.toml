@@ -3,7 +3,7 @@ name = "openjarvis"
 version = "0.2.0"
 description = "OpenJarvis — client-side orchestrator routing requests across a team of LLMs over any OpenAI-compatible API"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 # Deliberately minimal. OpenJarvis is a CLIENT: it speaks HTTP to whatever
 # backend the config names -- jarvis, Ollama, OpenAI, anything OpenAI-compatible.
 # It must never depend on torch, and never on the `jarvis` package. CI installs
@@ -12,7 +12,7 @@ dependencies = [
     "openai>=1.0.0",
     "pyyaml>=6.0",
     "httpx>=0.25",
-    "duckduckgo-search>=6.0",
+    "ddgs>=9.0",
     "pytz>=2024.1",
 ]
 

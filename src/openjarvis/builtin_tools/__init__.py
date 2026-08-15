@@ -10,7 +10,7 @@ This module provides a pre-configured registry of tools that agents can use:
 - memory_tools: Session-scoped note storage
 """
 
-from openjarvis.tools import ToolRegistry, DEFAULT_REGISTRY
+from openjarvis.tools import DEFAULT_REGISTRY, ToolRegistry
 
 
 def create_builtin_registry(
@@ -48,10 +48,7 @@ def create_builtin_registry(
         "memory_tools",
     }
 
-    if include is not None:
-        modules_to_load = include & all_modules
-    else:
-        modules_to_load = all_modules
+    modules_to_load = include & all_modules if include is not None else all_modules
 
     if exclude is not None:
         modules_to_load = modules_to_load - exclude

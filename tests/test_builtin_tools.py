@@ -1,8 +1,8 @@
 """Tests for builtin_tools package."""
 
 import json
-import tempfile
 import os
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -81,6 +81,7 @@ class TestMathTools:
         assert result == [7]
 
     def test_solve_equation(self, registry):
+        pytest.importorskip("sympy")
         result = registry.execute({
             "name": "solve_equation",
             "arguments": {"equation": "x**2 - 4", "variable": "x"}

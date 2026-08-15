@@ -3,7 +3,7 @@ from typing import Any
 
 from openai import OpenAI
 
-from openjarvis.types import SpecialistConfig
+from openjarvis.model_types import SpecialistConfig
 
 
 def _get_choice_message(choice: Any) -> Any:

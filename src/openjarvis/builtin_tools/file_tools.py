@@ -1,8 +1,9 @@
-import os
 import glob as glob_module
+import os
 import re
-from pathlib import Path
+
 from openjarvis.tools import tool
+
 
 @tool()
 def read_file(path: str, max_chars: int = 8000) -> str:
@@ -16,7 +17,7 @@ def read_file(path: str, max_chars: int = 8000) -> str:
         File contents, truncated if necessary.
     """
     try:
-        with open(path, "r", encoding="utf-8", errors="replace") as f:
+        with open(path, encoding="utf-8", errors="replace") as f:
             content = f.read(max_chars)
         if len(content) == max_chars:
             content += f"\n... [truncated at {max_chars} chars]"
@@ -85,7 +86,7 @@ def search_in_files(path: str, pattern: str, glob: str = "**/*") -> list[dict]:
                 continue
 
             try:
-                with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+                with open(file_path, encoding="utf-8", errors="replace") as f:
                     for line_num, line in enumerate(f, 1):
                         for match in regex.finditer(line):
                             results.append({
