@@ -2,6 +2,18 @@
 
 OpenJarvis is a sophisticated AI assistant that orchestrates conversations across multiple specialized language models. Instead of relying on a single model for all tasks, OpenJarvis intelligently routes your requests through a team of specialist models — each fine-tuned for specific domains like mathematics, code generation, knowledge retrieval, and creative writing.
 
+---
+
+## 📖 Documentation
+
+This package includes complete standalone user documentation:
+
+- **Binary releases:** Includes `docs/` folder with full HTML documentation
+- **Source:** See [docs/](docs/) directory — run `cd docs && mkdocs serve` to view locally
+- **Quick start:** [docs/getting-started/quick-start.md](docs/getting-started/quick-start.md)
+
+The documentation covers installation, configuration, all 29 built-in tools, troubleshooting, and usage examples.
+
 ## Why OpenJarvis?
 
 **🎯 Specialized Intelligence**

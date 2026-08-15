@@ -1,0 +1,82 @@
+site_name: OpenJarvis
+site_description: Intelligent AI orchestrator with multi-model routing
+site_url: https://openjarvis.dev
+repo_url: https://github.com/bhanuponguru/OpenJarvis
+repo_name: OpenJarvis
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
+      - First Steps: getting-started/first-steps.md
+  - Configuration:
+      - Overview: configuration/overview.md
+      - Specialists: configuration/specialists.md
+      - Providers: configuration/providers.md
+      - Advanced: configuration/advanced.md
+  - Built-in Tools:
+      - Overview: tools/overview.md
+      - Web Tools: tools/web.md
+      - Math Tools: tools/math.md
+      - File Tools: tools/files.md
+      - Code Execution: tools/code.md
+      - Date & Time: tools/datetime.md
+      - Text Processing: tools/text.md
+      - System Tools: tools/system.md
+      - Memory: tools/memory.md
+  - Usage:
+      - Command Line: usage/cli.md
+      - Python API: usage/python-api.md
+      - Routing Protocol: usage/routing.md
+  - Troubleshooting: troubleshooting.md
+  - FAQ: faq.md
