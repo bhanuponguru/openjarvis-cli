@@ -1,5 +1,4 @@
 import os
-import sys
 from dataclasses import fields
 from pathlib import Path
 
@@ -46,15 +45,16 @@ def locate_config() -> Path:
     4. System config: /etc/openjarvis/specialists.yaml (Linux/macOS only)
 
     Raises:
-        SystemExit: If config not found in any location.
+        FileNotFoundError: If config not found in any location.
     """
     # 1. OJ_CONFIG env var (highest priority)
     if env_config := os.getenv("OJ_CONFIG"):
         config_path = Path(env_config)
         if config_path.exists():
             return config_path
-        print(f"Error: OJ_CONFIG points to non-existent file: {env_config}", file=sys.stderr)
-        sys.exit(1)
+        raise FileNotFoundError(
+            f"OJ_CONFIG points to non-existent file: {env_config}"
+        )
 
     # 2. Current directory
     cwd_config = Path.cwd() / "specialists.yaml"
@@ -72,16 +72,19 @@ def locate_config() -> Path:
         if system_config.exists():
             return system_config
 
-    # Config not found - show helpful error
-    print("Error: specialists.yaml not found!", file=sys.stderr)
-    print("\nSearched locations:", file=sys.stderr)
-    print("  1. OJ_CONFIG environment variable (not set)", file=sys.stderr)
-    print(f"  2. {cwd_config}", file=sys.stderr)
-    print(f"  3. {user_config}", file=sys.stderr)
+    # Config not found — build a helpful message listing all searched paths
+    searched = [
+        "  1. OJ_CONFIG environment variable (not set)",
+        f"  2. {cwd_config}",
+        f"  3. {user_config}",
+    ]
     if os.name != "nt":
-        print(f"  4. {system_config}", file=sys.stderr)
-    print("\nCreate specialists.yaml or set OJ_CONFIG=/path/to/config.yaml", file=sys.stderr)
-    sys.exit(1)
+        searched.append(f"  4. {system_config}")
+    searched_str = "\n".join(searched)
+    raise FileNotFoundError(
+        f"specialists.yaml not found!\n\nSearched locations:\n{searched_str}\n\n"
+        "Run 'openjarvis' to launch the setup wizard, or set OJ_CONFIG=/path/to/config.yaml"
+    )
 
 
 def load_config(path: str | None = None) -> ConductorConfig:

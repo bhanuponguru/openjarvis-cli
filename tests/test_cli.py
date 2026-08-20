@@ -1,21 +1,43 @@
-import builtins
+"""Tests for the CLI entry point."""
 
 from openjarvis import cli
 
 
-def test_run_cli_missing_config(monkeypatch):
-    # Ensure a non-existent config causes sys.exit(1)
+def test_run_cli_missing_config_launches_wizard(monkeypatch, tmp_path):
+    """When no config is found, the setup wizard is launched."""
+    from openjarvis.model_types import ConductorConfig, SpecialistConfig
+    from openjarvis.tools import ToolRegistry
+
+    dummy_config = ConductorConfig(
+        generalist=SpecialistConfig(name="generalist", system_prompt="You are helpful.")
+    )
+    config_file = tmp_path / "specialists.yaml"
+
     monkeypatch.setenv("OJ_CONFIG", "this-file-does-not-exist.yaml")
+    monkeypatch.setattr(cli, "run_wizard", lambda: config_file)
+    monkeypatch.setattr(cli, "load_config", lambda path=None: dummy_config)
+    monkeypatch.setattr(cli, "Conductor", lambda config=None, tools=None: None)
+    monkeypatch.setattr(cli, "create_builtin_registry", lambda: ToolRegistry())
+    monkeypatch.setattr(cli, "run_repl", lambda conductor, console: None)
+
+    cli.run_cli([])
+
+
+def test_run_cli_missing_config_wizard_cancelled_exits(monkeypatch):
+    """When wizard is cancelled (Ctrl-C), exit with code 0."""
+    monkeypatch.setenv("OJ_CONFIG", "this-file-does-not-exist.yaml")
+    monkeypatch.setattr(cli, "run_wizard", lambda: (_ for _ in ()).throw(KeyboardInterrupt()))
+
     try:
         cli.run_cli([])
         raised = False
     except SystemExit as e:
         raised = True
-        assert e.code == 1
+        assert e.code == 0
     assert raised
 
 
-def test_run_cli_with_existing_config_and_exit(monkeypatch, tmp_path, capsys):
+def test_run_cli_with_existing_config_and_exit(monkeypatch, capsys):
     from openjarvis.model_types import ConductorConfig, SpecialistConfig
     from openjarvis.tools import ToolRegistry
 
@@ -23,28 +45,22 @@ def test_run_cli_with_existing_config_and_exit(monkeypatch, tmp_path, capsys):
         generalist=SpecialistConfig(name="generalist", system_prompt="You are helpful.")
     )
 
-    # Stub config loading and Conductor so the test doesn't need a real server.
     class DummyConductor:
         def __init__(self, config=None, tools=None):
             self.config = config
             self.tools = tools
 
         def chat(self, user_input):
-            # Should not be called in this test since input returns 'exit'
             yield {"type": "final", "content": "noop", "role": "generalist"}
 
-    monkeypatch.setattr(cli, "load_config", lambda: dummy_config)
+    monkeypatch.setattr(cli, "load_config", lambda path=None: dummy_config)
     monkeypatch.setattr(cli, "Conductor", DummyConductor)
     monkeypatch.setattr(cli, "create_builtin_registry", lambda: ToolRegistry())
-
-    # Simulate user typing 'exit' immediately
-    monkeypatch.setattr(builtins, "input", lambda prompt="": "exit")
+    monkeypatch.setattr(cli, "run_repl", lambda conductor, console: None)
 
     cli.run_cli([])
 
-    out = capsys.readouterr().out
-    # Rich strips markup in non-terminal contexts; check for plain text content.
-    assert "OpenJarvis" in out
+    # Should complete without error (run_repl is a no-op in this test).
 
 
 def test_run_cli_passes_tools_to_conductor(monkeypatch):
@@ -65,10 +81,10 @@ def test_run_cli_passes_tools_to_conductor(monkeypatch):
         def chat(self, user_input):
             yield {"type": "final", "content": "ok", "role": "generalist"}
 
-    monkeypatch.setattr(cli, "load_config", lambda: dummy_config)
+    monkeypatch.setattr(cli, "load_config", lambda path=None: dummy_config)
     monkeypatch.setattr(cli, "Conductor", CapturingConductor)
     monkeypatch.setattr(cli, "create_builtin_registry", lambda: dummy_registry)
-    monkeypatch.setattr(builtins, "input", lambda prompt="": "exit")
+    monkeypatch.setattr(cli, "run_repl", lambda conductor, console: None)
 
     cli.run_cli([])
 

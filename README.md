@@ -375,6 +375,7 @@ OpenJarvis has minimal dependencies:
 - **openai** ≥ 1.0.0 — OpenAI Python SDK (works with all compatible APIs)
 - **pyyaml** ≥ 6.0 — YAML configuration parsing
 - **rich** ≥ 13.0 — Terminal formatting and Markdown rendering
+- **prompt-toolkit** ≥ 3.0 — Interactive REPL input (history, completion, key bindings)
 - **ddgs** ≥ 9.0 — DuckDuckGo search for `web_search` tool
 - **pytz** ≥ 2024.1 — Timezone support for date/time tools
 

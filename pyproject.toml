@@ -15,6 +15,7 @@ dependencies = [
     "ddgs>=9.0",
     "pytz>=2024.1",
     "rich>=13.0",
+    "prompt-toolkit>=3.0",
 ]
 
 [project.scripts]
