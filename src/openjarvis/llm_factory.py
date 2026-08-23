@@ -27,11 +27,14 @@ def create_chat_model(config: SpecialistConfig, api_key: str | None = None, **ex
             return os.environ[config.api_key_env]
         return None
 
-    if provider == "openai":
+    if provider in ("openai", "custom"):
         from langchain_openai import ChatOpenAI
         resolved_key = resolve_api_key()
         if resolved_key:
             kwargs["api_key"] = resolved_key
+        elif "api_key" not in kwargs:
+            env_key = os.environ.get("OPENAI_API_KEY")
+            kwargs["api_key"] = env_key if env_key else "dummy"
         if config.base_url:
             kwargs["base_url"] = config.base_url
         return ChatOpenAI(**kwargs)
@@ -54,13 +57,5 @@ def create_chat_model(config: SpecialistConfig, api_key: str | None = None, **ex
         if config.base_url:
             kwargs["base_url"] = config.base_url
         return ChatOllama(**kwargs)
-    elif provider == "custom":
-        from langchain_openai import ChatOpenAI
-        resolved_key = resolve_api_key()
-        if resolved_key:
-            kwargs["api_key"] = resolved_key
-        if config.base_url:
-            kwargs["base_url"] = config.base_url
-        return ChatOpenAI(**kwargs)
     else:
         raise ValueError(f"Unknown provider: {provider}")
