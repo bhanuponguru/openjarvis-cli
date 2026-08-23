@@ -1,222 +1,75 @@
-# OpenJarvis
+# OpenJarvis User Manual
 
-> **Intelligent AI orchestrator with multi-model routing**
+> **Intelligent AI Orchestrator with Multi-Model Routing**
 
-OpenJarvis is an AI assistant that routes conversations through specialized language models. Instead of using a single model for everything, OpenJarvis conducts a team of specialists — each optimized for specific domains like mathematics, code generation, knowledge retrieval, and creative writing — then synthesizes their responses into coherent answers.
+OpenJarvis coordinates a team of specialized language models across any OpenAI-compatible API. Instead of relying on one model to handle everything, OpenJarvis routes each part of your conversation to dedicated specialists (such as code, mathematics, factual knowledge, and planning) and executes built-in tools when needed.
 
 ---
 
 ## Why OpenJarvis?
 
-Traditional AI assistants use one model for all tasks. OpenJarvis is different:
+Traditional AI assistants send all requests to a single model. OpenJarvis enables:
 
-- **Smarter routing** — Complex queries automatically chain through the most appropriate specialists
-- **Provider flexibility** — Mix and match AI providers (Ollama, OpenAI, Claude, Groq) in a single conversation
-- **Production-ready tools** — 29 built-in tools for web search, math, code execution, file operations, and more
-- **Full transparency** — See exactly which specialists handled each part of your request
-- **Privacy-first option** — Run completely local with Ollama (no cloud dependencies)
+- 🎯 **Specialized Precision**: Direct calculations to a math specialist, programming questions to a code specialist, and research to a knowledge specialist.
+- 🔌 **Provider Freedom**: Mix and match Ollama (free & private local models), OpenAI, Groq, OpenRouter, or custom OpenAI-compatible endpoints in one session.
+- 🛠️ **29 Production-Ready Built-In Tools**: Automated tools for web searches, math solving, code execution, file I/O, datetime operations, data processing, and session memory.
+- 🪄 **Zero-Fuss Onboarding**: First-run interactive setup wizard creates your configuration automatically.
+- 🔍 **Full Visibility**: See every routing decision and tool invocation as your request is being processed.
 
 ---
 
 ## Quick Example
 
-```
+```text
 $ openjarvis
 
-OpenJarvis  (type 'exit' or 'quit' to stop)
+oj> Calculate 15% of 80 and write a Python helper function for it
 
-> Calculate 15% of Japan's GDP
+  ↳ routing: generalist → math
+  ⚙ tool: evaluate_expression {"expression": "0.15 * 80"}
+    → 12.0
+  ↳ routing: math → code
 
-  routing: generalist → knowledge → tool_use
-  routing: tool_use → knowledge → math → tool_use  
-  routing: tool_use → math → generalist
+15% of 80 is **12.0**.
 
-Japan's GDP is approximately $4.2 trillion. 
-15% of that is $630 billion.
+Here is a Python function to calculate percentage values:
+
+```python
+def calculate_percentage(part_percent: float, total: float) -> float:
+    """Calculate the given percentage of a total value."""
+    return (part_percent / 100.0) * total
 ```
-
-Behind the scenes:
-1. **Generalist** routes to **knowledge** specialist
-2. **Knowledge** uses **web_search** tool to find Japan's GDP
-3. **Knowledge** delegates to **math** specialist for calculation
-4. **Math** uses **calculate** tool for the percentage
-5. **Generalist** synthesizes the final answer
-
----
-
-## Key Features
-
-### Multi-Model Orchestration
-
-Route conversations through specialized models:
-
-```
-User: "Write Python code to solve 2x + 5 = 15"
-
-  routing: generalist → code
-  routing: code → math
-  routing: math → tool_use
-  routing: tool_use → math
-  routing: math → code
-  routing: code → generalist
-```
-
-Each specialist focuses on what it does best.
-
-### Provider Agnostic
-
-Configure each specialist independently to use different AI providers:
-
-- **Ollama** (local, free)
-- **OpenAI** (GPT-4, GPT-4o-mini)
-- **Groq** (fast inference)
-- **Anthropic Claude** (via OpenRouter)
-
-Mix cloud and local models freely in a single conversation.
-
-### 29 Built-In Tools
-
-Production-ready tools that specialists can invoke automatically:
-
-| Category | Tools |
-|----------|-------|
-| **Web** | Search, fetch URLs, HTTP requests |
-| **Math** | Calculate, solve equations, convert units |
-| **Files** | Read, write, list, file info |
-| **Code** | Execute Python and shell commands |
-| **Date/Time** | Get time, calculate dates, format |
-| **Text** | Count words, extract JSON, format, replace |
-| **System** | Environment variables, system info |
-| **Memory** | Save and retrieve notes across conversations |
-
-### Transparent Routing
-
-See the decision-making process in real-time:
-
-```
-> Debug this error: TypeError: cannot concatenate 'str' and 'int'
-
-  routing: generalist → code
-  routing: code → knowledge
-
-The error occurs when you try to use + between a string and integer.
-Use str(number) to convert the integer first: result = "Value: " + str(42)
 ```
 
 ---
 
-## What You Can Do
+## Key Capabilities
 
-### Personal Assistant
+### 1. Multi-Model Orchestration
+The **generalist** coordinates conversations, deciding whether to answer directly or route to a specialist. Specialists complete their domain task, call required tools, and return results to synthesize a final answer.
 
-```
-> What's the current time in Tokyo?
-> Remind me to call John at 3 PM
-> Search for the latest AI research papers
-```
+### 2. Built-In Tools Suite (29 Tools)
 
-### Development Helper
+| Category | Count | Highlight Capabilities |
+| :--- | :--- | :--- |
+| **[Date & Time](tools/datetime.md)** | 4 | ISO timestamps, timezone conversions, date arithmetic, days between dates |
+| **[Math](tools/math.md)** | 4 | Safe expression evaluation, unit conversions, algebraic equation solving, prime factorization |
+| **[File I/O](tools/files.md)** | 6 | Read/write text files, directory listing, regex search across files, file metadata |
+| **[Web](tools/web.md)** | 3 | Web search via DuckDuckGo, web page text extraction, Wikipedia lookups |
+| **[Code Execution](tools/code.md)** | 3 | Sandboxed subprocess Python execution, shell command execution, Python syntax linting |
+| **[Data Processing](tools/data.md)** | 5 | JSON pretty-printing, jq-style dot queries, CSV table formatting, regex search/replace |
+| **[Session Memory](tools/memory.md)** | 4 | Store notes, recall notes, list keys, and delete session notes |
 
-```
-> Write a Python function to validate email addresses
-> Explain how quicksort works
-> Debug this TypeScript error: [paste error]
-```
-
-### Research Assistant
-
-```
-> What are the latest developments in quantum computing?
-> Compare the GDP of the top 5 economies
-> Find papers on transformer attention mechanisms
-```
-
-### Learning & Education
-
-```
-> Teach me how to solve quadratic equations
-> Explain async vs sync in JavaScript
-> What's the difference between ML and deep learning?
-```
+### 3. Provider Agnostic
+Configure each specialist to point to different endpoints, models, temperatures, and timeouts in your `specialists.yaml` file.
 
 ---
 
-## How It Works
+## Next Steps
 
-### The Routing Protocol
+1. **[Installation Guide →](getting-started/installation.md)** — Download pre-built binaries or install from source
+2. **[Quick Start Guide →](getting-started/quick-start.md)** — Run the setup wizard and start chatting
+3. **[Configuration Overview →](configuration/overview.md)** — Learn the `specialists.yaml` format
+4. **[Built-in Tools Manual →](tools/overview.md)** — Explore all 29 tools in detail
+5. **[Command-Line Usage →](usage/cli.md)** — Terminal shortcuts and REPL commands
 
-OpenJarvis uses simple text-based routing tags:
-
-**Generalist (the conductor):**
-- `[ROUTE: return]` — Send this as the final answer
-- `[ROUTE: math]` — Route to math specialist
-- `[ROUTE: code]` — Route to code specialist
-- `[ROUTE: knowledge]` — Route to knowledge specialist
-
-**Specialists:**
-- `[RETURN]` — Send back to generalist
-- `[DELEGATE: specialist]` — Delegate to another specialist
-
-Tags are automatically stripped from the final output you see.
-
-### Specialist Roles
-
-| Specialist | Purpose | Delegates To |
-|-----------|---------|--------------|
-| **generalist** | Orchestrator and final synthesis | All specialists |
-| **math** | Calculations, proofs, math reasoning | tool_use |
-| **code** | Code generation, debugging | math, tool_use |
-| **knowledge** | Facts, explanations, research | tool_use |
-| **creative** | Writing, brainstorming | — |
-| **planning** | Task decomposition | knowledge, math |
-| **tool_use** | External tool invocation | — |
-
-### Architecture
-
-```
-User Input
-    │
-    ▼
-┌──────────────────────────────┐
-│   Generalist (Conductor)     │  Decides: Answer or route?
-└──────────────────────────────┘
-    │           │           │
-    ▼           ▼           ▼
-┌────────┐ ┌────────┐ ┌──────────┐
-│  Math  │ │  Code  │ │Knowledge │
-└────────┘ └────────┘ └──────────┘
-    │           │           │
-    ▼           ▼           ▼
-┌────────────────────────────────┐
-│    Tool Execution Layer        │
-└────────────────────────────────┘
-    │
-    ▼
-┌──────────────────────────────┐
-│   Generalist Synthesis        │
-└──────────────────────────────┘
-```
-
----
-
-## Getting Started
-
-Ready to try OpenJarvis? Here's what's next:
-
-1. **[Install OpenJarvis →](getting-started/installation.md)** — Download and run
-2. **[Quick Start Guide →](getting-started/quick-start.md)** — Get up and running in 5 minutes
-3. **[Configure Specialists →](configuration/overview.md)** — Set up your AI providers
-4. **[Explore Built-in Tools →](tools/overview.md)** — See what OpenJarvis can do
-
----
-
-## Support & Community
-
-- **Website:** [bhanuponguru.tech/openjarvis](https://bhanuponguru.tech/openjarvis)
-- **GitHub:** [github.com/bhanuponguru/OpenJarvis](https://github.com/bhanuponguru/OpenJarvis)
-- **Issues:** [Report bugs or request features](https://github.com/bhanuponguru/OpenJarvis/issues)
-- **Documentation:** You're reading it!
-
----
-
-*OpenJarvis — Intelligent AI orchestration, open source and yours.*

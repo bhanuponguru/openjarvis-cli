@@ -77,9 +77,8 @@ nav:
       - File Tools: tools/files.md
       - Code Execution: tools/code.md
       - Date & Time: tools/datetime.md
-      - Text Processing: tools/text.md
-      - System Tools: tools/system.md
-      - Memory: tools/memory.md
+      - Data Processing: tools/data.md
+      - Session Memory: tools/memory.md
   - Usage:
       - Command Line: usage/cli.md
       # - Python API: usage/python-api.md

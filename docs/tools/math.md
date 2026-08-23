@@ -106,72 +106,52 @@ Factorize a positive integer into its prime factors.
 
 ## Usage Examples
 
-### Arithmetic
+### Arithmetic & Calculation
 
-```
-> How much is a 20% tip on a $85 restaurant bill?
+```text
+oj> How much is a 20% tip on a $85 restaurant bill?
 
-  ↳ routing: generalist → math → tool_use
-  ⚙ tool: evaluate_expression
+  ↳ routing: generalist → math
+  ⚙ tool: evaluate_expression {"expression": "0.20 * 85"}
     → 17.0
-  ↳ routing: tool_use → math → generalist
 
-A 20% tip on an $85 bill is $17.00.
+A 20% tip on an $85 bill is **$17.00**.
 ```
 
 ### Unit Conversion
 
-```
-> I need to run a 10K race. How many miles is that?
+```text
+oj> How many miles is a 10K run?
 
-  ↳ routing: generalist → math → tool_use
-  ⚙ tool: convert_units
+  ↳ routing: generalist → math
+  ⚙ tool: convert_units {"value": 10, "from_unit": "km", "to_unit": "mi"}
     → 6.2137...
-  ↳ routing: tool_use → math → generalist
 
-A 10K race is approximately 6.21 miles.
+A 10K race is approximately **6.21 miles**.
 ```
 
 ### Equation Solving
 
-```
-> Solve for x: 3x + 12 = 0
+```text
+oj> Solve for x: 3*x + 12 = 0
 
-  ↳ routing: generalist → math → tool_use
-  ⚙ tool: solve_equation
-    → x = -4
-  ↳ routing: tool_use → math → generalist
+  ↳ routing: generalist → math
+  ⚙ tool: solve_equation {"equation": "3*x + 12 = 0", "variable": "x"}
+    → "[-4]"
 
-The solution is x = -4.
-```
-
----
-
-## Tool Access Requirements
-
-Math tools require the `tool_use` specialist:
-
-```yaml
-specialists:
-  math:
-    delegates_to: ["tool_use"]   # Required
-
-  tool_use:
-    system_prompt: "Tool specialist. End with [RETURN]."
-    base_url: "..."
-    model: "..."
+The solution is **x = -4**.
 ```
 
 ---
 
-## Safety
+## Safety & Security
 
-`evaluate_expression` validates the expression before evaluation — it cannot execute arbitrary code, access files, or make network requests. Only mathematical operations are permitted.
+`evaluate_expression` validates expressions via AST parsing before execution — it cannot execute arbitrary Python code, access the filesystem, or make network calls.
 
 ---
 
 ## See Also
 
-- [Tools Overview](overview.md) — All 29 tools
-- [Date & Time Tools](datetime.md) — Date calculations
-- [Text Processing](text.md) — Parsing and transformation
+- [Tools Overview](overview.md) — All 29 built-in tools
+- [Date & Time Tools](datetime.md) — Date calculations and timestamps
+- [Data Processing](data.md) — Parsing and data transformations

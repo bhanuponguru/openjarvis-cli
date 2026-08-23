@@ -99,3 +99,37 @@ def test_load_config_missing_generalist():
         path = f.name
     with pytest.raises(ValueError, match="generalist"):
         load_config(path)
+
+def test_merge_configs():
+    from openjarvis.config_loader import merge_configs
+    from openjarvis.model_types import ConductorConfig, SpecialistConfig, ToolRetrievalConfig
+
+    base = ConductorConfig(
+        generalist=SpecialistConfig(name="generalist", system_prompt="base g", model="base-model"),
+        specialists={
+            "math": SpecialistConfig(name="math", system_prompt="base m"),
+            "code": SpecialistConfig(name="code", system_prompt="base c"),
+        },
+        max_hops=10,
+    )
+
+    override = ConductorConfig(
+        generalist=SpecialistConfig(name="generalist", system_prompt="local g", model="local-model"),
+        specialists={
+            "math": SpecialistConfig(name="math", system_prompt="local m", temperature=0.1),
+            "custom": SpecialistConfig(name="custom", system_prompt="local custom"),
+        },
+        max_hops=15,
+        tool_retrieval=ToolRetrievalConfig(enabled=True, top_k=3),
+    )
+
+    merged = merge_configs(base, override)
+    assert merged.generalist.system_prompt == "local g"
+    assert merged.generalist.model == "local-model"
+    assert merged.specialists["math"].system_prompt == "local m"
+    assert merged.specialists["math"].temperature == 0.1
+    assert merged.specialists["code"].system_prompt == "base c"
+    assert merged.specialists["custom"].system_prompt == "local custom"
+    assert merged.max_hops == 15
+    assert merged.tool_retrieval.enabled is True
+    assert merged.tool_retrieval.top_k == 3

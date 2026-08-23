@@ -1,44 +1,51 @@
+"""Conductor orchestrator using LangGraph state machine and LangChain chat models."""
+
 from __future__ import annotations
 
+import contextlib
 import json
+import logging
 import re
 from collections.abc import Callable, Generator, Iterator
+from dataclasses import replace
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypedDict
+
+from langchain_core.messages import (
+    AIMessage,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
+from langgraph.graph import END, StateGraph
 
 from openjarvis.config_loader import get_delegation_mask, load_config
+from openjarvis.llm_factory import create_chat_model
 from openjarvis.model_types import ConductorConfig, SpecialistConfig
 from openjarvis.parser import is_route_tag, parse_route_tag
-from openjarvis.providers import call_llm, call_llm_stream
+from openjarvis.permissions import PermissionManager
+from openjarvis.safety_classifier import SafetyClassifier
+from openjarvis.tool_retriever import ToolRetriever
+from openjarvis.workspace import Workspace, discover_workspace, set_current_workspace
 
 if TYPE_CHECKING:
     from openjarvis.tools import ToolRegistry
 
-# A routing tag always starts at the beginning of a line.
+logger = logging.getLogger(__name__)
+
 _TAG_START = re.compile(r"(?:^|(?<=\n))[ \t]*\[[^\n]*$")
 
 
 def _stream_without_tag(deltas: Iterator[str]) -> Iterator[tuple[str, str]]:
-    """Pass deltas through while withholding a possibly-incomplete routing tag.
-
-    Tags arrive at the very end of a stream and split across arbitrary chunk
-    boundaries, so a naive filter shows the user ``[ROUTE: ma`` before it can
-    tell what it is. The invariant here: never emit text from the last
-    line-initial ``[`` onward until the line completes. If the completed line is
-    a tag it is dropped; otherwise it is released intact.
-
-    Yields ``(raw_delta, text_to_emit)``; ``text_to_emit`` is ``""`` when the
-    chunk is entirely withheld. The caller reassembles the raw text for parsing.
-    """
-    pending = ""   # accumulated-but-unemitted tail
+    """Pass deltas through while withholding a possibly-incomplete routing tag."""
+    pending = ""
     for delta in deltas:
         pending += delta
         match = _TAG_START.search(pending)
-        # Everything before a candidate tag start is safe to show now.
         safe_upto = match.start() if match else len(pending)
         emit, pending = pending[:safe_upto], pending[safe_upto:]
 
-        # A withheld line that has completed and is NOT a tag gets released.
         if pending and "\n" in pending:
             line, rest = pending.split("\n", 1)
             if not is_route_tag(line):
@@ -47,56 +54,96 @@ def _stream_without_tag(deltas: Iterator[str]) -> Iterator[tuple[str, str]]:
 
         yield delta, emit
 
-    # End of stream: release the tail unless it is the routing tag itself
-    # or a candidate (line-starting) tag fragment which should be withheld.
     if pending:
-        # If the tail is a complete tag or looks like the start of one, suppress it.
         if is_route_tag(pending) or _TAG_START.search(pending):
             return
         yield "", pending
 
 
-class Conductor:
-    """OpenJarvis Conductor — state machine routing through generalist + specialists.
+class ConductorState(TypedDict, total=False):
+    """Conversation state manipulated by LangGraph nodes."""
 
-    The conductor is the main loop of the OpenJarvis system:
-      1. User sends a message
-      2. Generalist LLM responds with a routing tag ([ROUTE: return] or [ROUTE: specialist])
-      3. If routed, a specialist LLM handles the request and can return ([RETURN])
-         or delegate ([DELEGATE: X]) to another specialist
-      4. Delegation is enforced against the delegation mask from config
-      5. The whole exchange is capped at ``config.max_hops`` LLM calls
-    """
+    messages: list[dict]
+    current_role: str
+    previous_role: str | None
+    target_role: str | None
+    hops: int
+    visited_specialists: list[str]
+    last_response: str
+    last_tool_calls: list[dict]
+    final_output: str
+    error: str | None
+    events: list[dict]
+
+
+
+def _extract_text(content: Any) -> str:
+    if isinstance(content, str):
+        return content
+    elif isinstance(content, list):
+        parts = []
+        for part in content:
+            if isinstance(part, str):
+                parts.append(part)
+            elif isinstance(part, dict) and "text" in part:
+                parts.append(str(part["text"]))
+        return "".join(parts)
+    return str(content or "")
+
+
+class Conductor:
+    """OpenJarvis Conductor — LangGraph state machine routing through specialists."""
+
+    _ROLE_ECHO_RE = re.compile(r"^\[[\w]+\]:\s*")
 
     def __init__(
         self,
         config_path: str | None = None,
         config: ConductorConfig | None = None,
         tools: ToolRegistry | None = None,
+        workspace: Workspace | None = None,
+        confirm_callback: Callable[[str, dict[str, Any], str], bool] | None = None,
     ) -> None:
-        """Initialize conductor with either a config path or a ConductorConfig.
-
-        Args:
-            config_path: Path to a YAML config file (loaded via load_config).
-            config: A pre-built ConductorConfig instance.
-            tools: Optional ToolRegistry for tool-calling support.
-        """
+        self.workspace = workspace or discover_workspace()
+        set_current_workspace(self.workspace)
         self._tools = tools
+        self.confirm_callback = confirm_callback
+
         if config_path:
-            self.config = load_config(config_path)
+            self.config = load_config(config_path, workspace=self.workspace)
         elif config:
             self.config = config
         else:
-            self.config = load_config("specialists.yaml")
+            self.config = load_config(workspace=self.workspace)
+
+        self.classifier = SafetyClassifier(
+            model_dir=self.workspace.global_path("models", "safety-classifier")
+        )
+        self.permissions = PermissionManager(
+            config=self.config.tool_permissions,
+            workspace=self.workspace,
+            confirm_callback=self.confirm_callback,
+            classifier=self.classifier,
+        )
+
+        if self._tools:
+            self._retriever: ToolRetriever | None = ToolRetriever(
+                registry=self._tools,
+                config=self.config.tool_retrieval,
+                cache_dir=self.workspace.global_path("vectors"),
+            )
+        else:
+            self._retriever = None
+
         self.history: list[dict] = []
         self._delegation_mask = get_delegation_mask(self.config.specialists)
+        self._graph = self._build_graph()
 
     # ------------------------------------------------------------------
-    # Internal helpers
+    # Specialist & Model Resolution
     # ------------------------------------------------------------------
 
     def _get_api_key(self, specialist_name: str) -> str | None:
-        """Get API key from environment variable for a specialist."""
         import os
 
         spec = self._get_specialist(specialist_name)
@@ -104,57 +151,39 @@ class Conductor:
             return os.environ.get(spec.api_key_env)
         return None
 
+    def _get_effective_config(self, spec: SpecialistConfig) -> SpecialistConfig:
+        prefix_parts: list[str] = []
+        if self.workspace:
+            inst = self.workspace.instructions()
+            if inst:
+                prefix_parts.append(f"### Instructions\n{inst}")
+            ctx = self.workspace.context()
+            if ctx:
+                prefix_parts.append(f"### Context\n{ctx}")
+        if prefix_parts:
+            merged_prefix = "\n\n".join(prefix_parts)
+            effective_prompt = f"{merged_prefix}\n\n{spec.system_prompt}"
+            return replace(spec, system_prompt=effective_prompt)
+        return spec
+
     def _get_specialist(self, name: str) -> SpecialistConfig | None:
-        """Resolve a role name to its SpecialistConfig."""
+        spec: SpecialistConfig | None = None
         if name == "generalist" or name == self.config.generalist.name:
-            return self.config.generalist
-        return self.config.specialists.get(name)
+            spec = self.config.generalist
+        else:
+            spec = self.config.specialists.get(name)
+        if spec is None:
+            return None
+        return self._get_effective_config(spec)
 
-    def _format_history(self) -> list[dict]:
-        """Project internal history onto the roles a chat API actually accepts.
-
-        Internally each turn is tagged with its *speaker* ("generalist", "math",
-        ...), which is what the routing state machine needs. Chat APIs accept
-        only system/user/assistant/tool, so every model turn maps to a system
-        annotation (speaker identity) followed by a clean assistant message.
-        This avoids models echoing back ``[role]:`` prefixes they see in context.
-
-        The ``route`` key is metadata and is never sent.
-        """
-        messages: list[dict] = []
-        for msg in self.history:
-            role, content = msg["role"], msg["content"]
-            if role in ("user", "system"):
-                messages.append({"role": role, "content": content})
-            elif role == "tool":
-                tool_msg = {"role": "tool", "content": content}
-                if "tool_call_id" in msg:
-                    tool_msg["tool_call_id"] = msg["tool_call_id"]
-                messages.append(tool_msg)
-            elif role == "assistant" and "tool_calls" in msg:
-                messages.append(
-                    {
-                        "role": "assistant",
-                        "content": content,
-                        "tool_calls": msg["tool_calls"],
-                    }
-                )
-            else:
-                # Separate speaker identity from content so models don't echo
-                # the "[role]:" prefix back in their own responses.
-                messages.append(
-                    {"role": "system", "content": f"(Response from {role} specialist:)"}
-                )
-                messages.append({"role": "assistant", "content": content})
-        return messages
-
-    # Matches an echoed "[rolename]: " prefix that models sometimes parrot back
-    # when they see it in their context. Strip exactly one occurrence from the
-    # start of the content so the history stays clean.
-    _ROLE_ECHO_RE = re.compile(r"^\[[\w]+\]:\s*")
+    def _get_chat_model(self, name: str, **kwargs: Any) -> Any:
+        spec = self._get_specialist(name)
+        if not spec:
+            raise ValueError(f"Specialist '{name}' not found")
+        api_key = self._get_api_key(name)
+        return create_chat_model(spec, api_key=api_key, **kwargs)
 
     def _strip_role_echo(self, content: str) -> str:
-        """Remove any echoed [role]: prefix from model output."""
         return self._ROLE_ECHO_RE.sub("", content, count=1)
 
     def _final_answer_prompt(self) -> str:
@@ -163,333 +192,512 @@ class Conductor:
             "everything discussed so far. End your reply with [ROUTE: return].]"
         )
 
-    def _forced_final(self, error_prefix: str) -> tuple[str, str | None]:
-        """Make one last generalist call that is instructed to answer, not route.
-
-        Returns (content, error). Used when the hop cap is hit -- a degraded but
-        real answer is better for the user than an exception or a silent hang.
-        """
-        self.history.append(
-            {"role": "system", "content": self._final_answer_prompt(), "route": None}
-        )
-        try:
-            response = call_llm(
-                self._format_history(),
-                self.config.generalist,
-                api_key=self._get_api_key("generalist"),
-            )
-        except Exception as exc:
-            return "", f"{error_prefix}: {exc}"
-
-        raw = getattr(response, "content", response) or ""
-        content, _ = parse_route_tag(raw)
-        self.history.append({"role": "generalist", "content": content, "route": "return"})
-        return content, None
-
     # ------------------------------------------------------------------
-    # Tool-calling support
+    # Message Conversion
     # ------------------------------------------------------------------
 
-    def _call_with_tools(
-        self,
-        messages: list[dict],
-        config: SpecialistConfig,
-        api_key: str | None,
-        on_event: Callable[[dict], None] | None = None,
-    ) -> tuple[str, list[dict]]:
-        """Call LLM with tools, looping until a text response arrives.
+    def _format_messages_for_langchain(self, messages_dict: list[dict]) -> list[BaseMessage]:
+        """Convert internal dict-based message history to LangChain BaseMessage objects."""
+        lc_messages: list[BaseMessage] = []
+        for msg in messages_dict:
+            role = msg.get("role")
+            content = msg.get("content") or ""
 
-        Executes each tool call the model returns, appends the results as
-        ``tool`` role messages, then re-calls the model with the augmented
-        context.  Loops up to 5 rounds to prevent infinite tool-call cycles.
-
-        Returns (final_text, extra_history) where extra_history contains only
-        the assistant tool-call messages and tool results appended during this
-        call. The caller records the final text as the current specialist's
-        normal model turn after routing tags are stripped.
-
-        Args:
-            on_event: Optional callback for tool_call / tool_result events so
-                the caller (e.g. the CLI) can surface them to the user in real
-                time without buffering.
-        """
-        openai_tools = self._tools.to_openai_format() if self._tools else []
-        max_rounds = 5
-        extra: list[dict] = []
-
-        for _ in range(max_rounds):
-            completion = call_llm(
-                messages + extra, config, api_key=api_key, tools=openai_tools or None
-            )
-
-            raw_content = getattr(completion, "content", None) or ""
-            tool_calls: list = getattr(completion, "tool_calls", None) or []
-
-            if not tool_calls:
-                return raw_content, extra
-
-            # Record the assistant's tool-call message
-            extra.append({
-                "role": "assistant",
-                "content": None,
-                "tool_calls": [
-                    {
-                        "id": getattr(tc, "id", ""),
-                        "type": "function",
-                        "function": {
-                            "name": getattr(getattr(tc, "function", None) or {}, "name", ""),
-                            "arguments": getattr(getattr(tc, "function", None) or {}, "arguments", "{}"),
-                        },
-                    }
-                    for tc in tool_calls
-                ],
-            })
-
-            # Execute each tool and record the result
-            for tc in tool_calls:
-                func = getattr(tc, "function", None) or {}
-                name = getattr(func, "name", "")
-                raw_args = getattr(func, "arguments", "{}")
-                if on_event:
-                    on_event({"type": "tool_call", "name": name, "arguments": raw_args})
-                result = (
-                    self._tools.execute({"name": name, "arguments": raw_args})
-                    if self._tools else {"error": "No tool registry"}
-                )
-                if on_event:
-                    on_event({"type": "tool_result", "name": name, "result": result})
-                extra.append({
-                    "role": "tool",
-                    "tool_call_id": getattr(tc, "id", ""),
-                    "content": json.dumps(result),
-                })
-
-        # Loop limit: one final call with a nudge
-        nudge = {
-            "role": "system",
-            "content": (
-                "Too many tool-call rounds. Summarise the results above and give "
-                "the user a direct answer."
-            ),
-        }
-        final_completion = call_llm(messages + extra + [nudge], config, api_key=api_key)
-        final_text = getattr(final_completion, "content", None) or ""
-        return final_text, extra
-
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
-    def chat(self, message: str) -> Generator[dict, None, str]:
-        """Send a user message and run the delegation loop.
-
-        This is a **generator** that yields intermediate events and
-        returns the final response string.
-
-        **Yielded events (dict):**
-
-        ============== =================================================
-        ``type``        Description
-        ============== =================================================
-        ``"route"``     A routing/delegation decision (keys:
-                        ``from_role``, ``to_role``).
-        ``"intermediate"``  Intermediate response from a model (keys:
-                            ``role``, ``content``).
-        ``"final"``     The final response returned to the user (key:
-                        ``content``).
-        ``"error"``     An error occurred (key: ``content``).
-        ============== =================================================
-
-        Args:
-            message: The user's input message.
-
-        Yields:
-            Event dicts as described above.
-
-        Returns:
-            The final response string.
-        """
-        self.history.append({"role": "user", "content": message, "route": None})
-
-        current_role = "generalist"
-        hops = 0
-        visited_specialists: set[str] = set()
-
-        while True:
-            if hops >= self.config.max_hops:
-                yield {
-                    "type": "error",
-                    "content": (
-                        f"Hop limit of {self.config.max_hops} reached; forcing a "
-                        "final answer from the generalist."
-                    ),
-                }
-                content, error = self._forced_final("Error calling generalist")
-                if error:
-                    yield {"type": "error", "content": error}
-                    return error
-                yield {"type": "final", "content": content, "role": "generalist"}
-                return content
-
-            specialist_config = self._get_specialist(current_role)
-            if specialist_config is None:
-                error_msg = f"Unknown role '{current_role}' — no config found."
-                yield {"type": "error", "content": error_msg}
-                return error_msg
-
-            # Build conversation history for this turn
-            messages = self._format_history()
-
-            # Call the LLM (with tool support when a registry is present)
-            try:
-                api_key = self._get_api_key(current_role)
-                extra: list[dict] = []
-                if self._tools:
-                    tool_events: list[dict] = []
-                    response, extra = self._call_with_tools(
-                        messages, specialist_config, api_key,
-                        on_event=tool_events.append,
+            if role == "user":
+                lc_messages.append(HumanMessage(content=content))
+            elif role == "system":
+                lc_messages.append(SystemMessage(content=content))
+            elif role == "tool":
+                lc_messages.append(
+                    ToolMessage(
+                        content=content,
+                        tool_call_id=msg.get("tool_call_id", ""),
+                        name=msg.get("name", ""),
                     )
-                    yield from tool_events
-                    for m in extra:
-                        self.history.append({**m, "route": None})
-                else:
-                    response = call_llm(messages, specialist_config, api_key=api_key)
+                )
+            elif role == "assistant" and "tool_calls" in msg:
+                lc_messages.append(
+                    AIMessage(
+                        content=content,
+                        tool_calls=[
+                            {
+                                "id": tc.get("id", ""),
+                                "name": tc.get("function", {}).get("name", tc.get("name", "")),
+                                "args": (
+                                    json.loads(tc["function"]["arguments"])
+                                    if isinstance(tc.get("function", {}).get("arguments"), str)
+                                    else tc.get("function", {}).get("arguments", tc.get("args", {}))
+                                ),
+                            }
+                            for tc in msg["tool_calls"]
+                        ],
+                    )
+                )
+            else:
+                lc_messages.append(SystemMessage(content=f"(Response from {role} specialist:)"))
+                lc_messages.append(AIMessage(content=content))
+        return lc_messages
+
+    # ------------------------------------------------------------------
+    # LangGraph Node Factories
+    # ------------------------------------------------------------------
+
+    def _make_agent_node(self, role_name: str) -> Any:
+        """Factory creating a LangGraph node function for a specific agent role."""
+
+        def agent_node(state: ConductorState) -> dict[str, Any]:
+            spec = self._get_specialist(role_name)
+            if not spec:
+                return {
+                    **state,
+                    "error": f"Unknown role '{role_name}' — no config found.",
+                    "target_role": "end",
+                }
+
+            events: list[dict] = []
+            previous_role = state.get("previous_role")
+            if previous_role and previous_role != role_name:
+                events.append({"type": "route", "from_role": previous_role, "to_role": role_name})
+
+            messages_history = list(state.get("messages", []))
+            lc_messages = self._format_messages_for_langchain(messages_history)
+            full_lc_messages: list[BaseMessage] = [SystemMessage(content=spec.system_prompt)] + lc_messages
+
+            # Resolve active tools (applying Two-Phase RAG if enabled)
+            active_tools = self._tools
+            if active_tools and self.config.tool_retrieval.enabled and self._retriever:
+                reasoning_prompt = SystemMessage(
+                    content=(
+                        "Before responding, briefly state your reasoning and whether you need external tools "
+                        "(e.g. calculation, file search/editing, web search, memory). "
+                        "State the required tools and query parameters."
+                    )
+                )
+                try:
+                    base_model = self._get_chat_model(role_name)
+                    reasoning_resp = base_model.invoke(full_lc_messages + [reasoning_prompt])
+                    reasoning_text = _extract_text(reasoning_resp.content)
+                    active_tools = self._retriever.create_retrieved_registry(reasoning_text)
+                except Exception as exc:
+                    logger.warning("RAG tool retrieval failed, using all tools: %s", exc)
+                    active_tools = self._tools
+
+            openai_tools = active_tools.to_openai_format() if active_tools else []
+            model = self._get_chat_model(role_name)
+            if openai_tools:
+                with contextlib.suppress(Exception):
+                    model = model.bind_tools(openai_tools)
+
+            try:
+                response = model.invoke(full_lc_messages)
             except Exception as exc:
-                error_msg = f"Error calling {current_role}: {exc}"
-                yield {"type": "error", "content": error_msg}
-                return error_msg
-            hops += 1
+                err = f"Error calling {role_name}: {exc}"
+                events.append({"type": "error", "content": err})
+                return {
+                    **state,
+                    "error": err,
+                    "events": events,
+                    "target_role": "end",
+                }
 
-            # Parse the routing tag from the response
-            is_generalist = current_role == "generalist"
-            cleaned_content, route_target = parse_route_tag(response)
+            # Check for tool calls
+            tool_calls: list[dict] = []
+            if hasattr(response, "tool_calls") and response.tool_calls:
+                tool_calls = response.tool_calls
+            elif hasattr(response, "additional_kwargs") and "tool_calls" in response.additional_kwargs:
+                tool_calls = response.additional_kwargs["tool_calls"]
+
+            raw_content = _extract_text(response.content)
+
+            if tool_calls:
+                standardized_tool_calls = []
+                for tc in tool_calls:
+                    tc_id = tc.get("id", "")
+                    tc_name = tc.get("name") or tc.get("function", {}).get("name", "")
+                    tc_args = tc.get("args") or tc.get("function", {}).get("arguments", {})
+                    args_str = json.dumps(tc_args) if isinstance(tc_args, dict) else str(tc_args)
+                    standardized_tool_calls.append(
+                        {
+                            "id": tc_id,
+                            "type": "function",
+                            "function": {"name": tc_name, "arguments": args_str},
+                        }
+                    )
+
+                assistant_msg = {
+                    "role": "assistant",
+                    "content": raw_content,
+                    "tool_calls": standardized_tool_calls,
+                }
+                messages_history.append(assistant_msg)
+
+                return {
+                    **state,
+                    "messages": messages_history,
+                    "current_role": role_name,
+                    "previous_role": role_name,
+                    "last_tool_calls": standardized_tool_calls,
+                    "target_role": "tool_execution",
+                    "events": events,
+                }
+
+            # No tool calls: parse routing tag
+            cleaned_content, route_target = parse_route_tag(raw_content)
             cleaned_content = self._strip_role_echo(cleaned_content)
+            new_hops = state.get("hops", 0) + 1
 
-            # Append the model's response to conversation history
-            self.history.append(
+            messages_history.append(
                 {
-                    "role": current_role,
+                    "role": role_name,
                     "content": cleaned_content,
                     "route": route_target,
                 }
             )
 
-            # --- Handle "return": generalist return yields final; specialist return goes back to generalist ---
-            if route_target == "return":
-                if is_generalist:
-                    yield {"type": "final", "content": cleaned_content, "role": current_role}
-                    return cleaned_content
+            is_generalist = role_name == "generalist"
+            visited = list(state.get("visited_specialists", []))
+            if not is_generalist and role_name not in visited:
+                visited.append(role_name)
+
+            final_output = ""
+            if is_generalist and route_target == "return":
+                events.append({"type": "final", "content": cleaned_content, "role": role_name})
+                final_output = cleaned_content
+            elif is_generalist and route_target == "generalist":
+                events.append(
+                    {
+                        "type": "error",
+                        "content": "The generalist routed to itself; treating as a final answer.",
+                    }
+                )
+                events.append({"type": "final", "content": cleaned_content, "role": role_name})
+                final_output = cleaned_content
+            else:
+                events.append({"type": "intermediate", "role": role_name, "content": cleaned_content})
+
+            return {
+                **state,
+                "messages": messages_history,
+                "current_role": role_name,
+                "previous_role": role_name,
+                "hops": new_hops,
+                "visited_specialists": visited,
+                "last_response": cleaned_content,
+                "final_output": final_output,
+                "target_role": route_target,
+                "events": events,
+            }
+
+        return agent_node
+
+    def _tool_execution_node(self, state: ConductorState) -> ConductorState:
+        """Execute tool calls with security permissions and return to calling agent."""
+        tool_calls = state.get("last_tool_calls", [])
+        events: list[dict] = []
+        messages_history = list(state.get("messages", []))
+        active_tools = self._tools
+
+        for tc in tool_calls:
+            func = tc.get("function", {})
+            name = func.get("name", "")
+            raw_args = func.get("arguments", "{}")
+            parsed_args: dict[str, Any] = {}
+            if isinstance(raw_args, str):
+                try:
+                    parsed_args = json.loads(raw_args)
+                except Exception:
+                    parsed_args = {}
+            elif isinstance(raw_args, dict):
+                parsed_args = raw_args
+
+            decision = self.permissions.check(name, parsed_args)
+            if decision.action == "deny":
+                result = {"error": f"Permission denied: {decision.reason}"}
+                events.append({"type": "error", "content": f"Security blocked tool '{name}': {decision.reason}"})
+            elif decision.action == "confirm" and self.confirm_callback:
+                approved = self.confirm_callback(name, parsed_args, decision.reason)
+                if approved:
+                    events.append({"type": "tool_call", "name": name, "arguments": raw_args})
+                    result = (
+                        active_tools.execute({"name": name, "arguments": raw_args})
+                        if active_tools else {"error": "No tool registry"}
+                    )
+                    events.append({"type": "tool_result", "name": name, "result": result})
                 else:
-                    visited_specialists.add(current_role)
-                    yield {"type": "route", "from_role": current_role, "to_role": "generalist"}
-                    yield {"type": "intermediate", "role": current_role, "content": cleaned_content}
-                    current_role = "generalist"
-                    continue
+                    result = {"error": "Tool call cancelled by user"}
+                    events.append({"type": "error", "content": f"User denied permission for tool '{name}'"})
+            else:
+                events.append({"type": "tool_call", "name": name, "arguments": raw_args})
+                result = (
+                    active_tools.execute({"name": name, "arguments": raw_args})
+                    if active_tools else {"error": "No tool registry"}
+                )
+                events.append({"type": "tool_result", "name": name, "result": result})
 
-            target_role = route_target
+            messages_history.append(
+                {
+                    "role": "tool",
+                    "name": name,
+                    "tool_call_id": tc.get("id", ""),
+                    "content": json.dumps(result) if not isinstance(result, str) else result,
+                }
+            )
 
-            # --- A generalist routing to itself makes zero progress ---
+        return {
+            **state,
+            "messages": messages_history,
+            "last_tool_calls": [],
+            "target_role": state.get("current_role", "generalist"),
+            "events": events,
+        }
+
+    def _forced_final_node(self, state: ConductorState) -> ConductorState:
+        """Synthesize final response from generalist when hop limit is reached."""
+        events: list[dict] = [
+            {
+                "type": "error",
+                "content": (
+                    f"Hop limit of {self.config.max_hops} reached; forcing a "
+                    "final answer from the generalist."
+                ),
+            }
+        ]
+        messages_history = list(state.get("messages", []))
+        messages_history.append(
+            {"role": "system", "content": self._final_answer_prompt(), "route": None}
+        )
+
+        try:
+            model = self._get_chat_model("generalist")
+            lc_messages = self._format_messages_for_langchain(messages_history)
+            response = model.invoke(lc_messages)
+            raw = _extract_text(response.content)
+            content, _ = parse_route_tag(raw)
+            cleaned_content = self._strip_role_echo(content)
+            messages_history.append({"role": "generalist", "content": cleaned_content, "route": "return"})
+            events.append({"type": "final", "content": cleaned_content, "role": "generalist"})
+            return {
+                **state,
+                "messages": messages_history,
+                "current_role": "generalist",
+                "last_response": cleaned_content,
+                "final_output": cleaned_content,
+                "events": events,
+            }
+        except Exception as exc:
+            err = f"Error calling generalist: {exc}"
+            events.append({"type": "error", "content": err})
+            return {
+                **state,
+                "error": err,
+                "events": events,
+            }
+
+    def _invalid_target_node(self, state: ConductorState) -> ConductorState:
+        """Handle attempt to route to an undeclared specialist."""
+        prev_role = state.get("previous_role")
+        prev = prev_role if prev_role is not None else "specialist"
+        target_role = state.get("target_role")
+        target = target_role if target_role is not None else "unknown"
+        events: list[dict[str, Any]] = [
+            {"type": "error", "content": f"Cannot route to '{target}': unknown specialist."},
+            {"type": "route", "from_role": prev, "to_role": "generalist"},
+        ]
+        messages_history = list(state.get("messages", []))
+        messages_history.append(
+            {
+                "role": "system",
+                "content": f"[The {prev} tried to route to '{target}' which does not exist. You are the generalist — handle this.]",
+                "route": None,
+            }
+        )
+        return {
+            **state,
+            "messages": messages_history,
+            "current_role": "generalist",
+            "previous_role": "generalist",
+            "events": events,
+        }
+
+    def _forbidden_delegation_node(self, state: ConductorState) -> ConductorState:
+        """Handle delegation violation."""
+        prev_role = state.get("previous_role")
+        prev = prev_role if prev_role is not None else "specialist"
+        target_role = state.get("target_role")
+        target = target_role if target_role is not None else "unknown"
+        allowed = self._delegation_mask.get(prev, [])
+        events: list[dict[str, Any]] = [
+            {"type": "error", "content": f"'{prev}' cannot delegate to '{target}'. Allowed targets: {allowed}"},
+            {"type": "route", "from_role": prev, "to_role": "generalist"},
+        ]
+        messages_history = list(state.get("messages", []))
+        messages_history.append(
+            {
+                "role": "system",
+                "content": f"[The {prev} specialist attempted to delegate to {target}, which is not permitted. You are the generalist — handle this.]",
+                "route": None,
+            }
+        )
+        return {
+            **state,
+            "messages": messages_history,
+            "current_role": "generalist",
+            "previous_role": "generalist",
+            "events": events,
+        }
+
+    def _loop_detected_node(self, state: ConductorState) -> ConductorState:
+        """Prevent infinite routing loops back to already visited specialists."""
+        target = state.get("target_role", "specialist")
+        messages_history = list(state.get("messages", []))
+        messages_history.append(
+            {
+                "role": "system",
+                "content": (
+                    f"[You already received an answer from the '{target}' specialist for this question. "
+                    "Do NOT route again. Synthesize a final response using everything discussed "
+                    "so far and end with [ROUTE: return].]"
+                ),
+                "route": None,
+            }
+        )
+        return {
+            **state,
+            "messages": messages_history,
+            "current_role": "generalist",
+        }
+
+    # ------------------------------------------------------------------
+    # Graph Construction & Conditional Routing
+    # ------------------------------------------------------------------
+
+    def _make_route_edge(self, role_name: str) -> Callable[[ConductorState], str]:
+        """Create conditional routing edge logic for a specific agent role."""
+
+        def route_edge(state: ConductorState) -> str:
+            if state.get("error"):
+                return "end"
+
+            target_role = state.get("target_role")
+            if target_role == "tool_execution":
+                return "tool_execution"
+
+            is_generalist = role_name == "generalist"
+
+            if state.get("hops", 0) >= self.config.max_hops:
+                return "end" if is_generalist else "forced_final"
+
+            if target_role == "return":
+                return "end" if is_generalist else "generalist"
+
             if is_generalist and target_role == "generalist":
-                error_msg = "The generalist routed to itself; treating as a final answer."
-                yield {"type": "error", "content": error_msg}
-                yield {"type": "final", "content": cleaned_content, "role": current_role}
-                return cleaned_content
+                return "end"
 
-            # --- Validate that the target specialist exists ---
             if target_role not in self.config.specialists and target_role != "generalist":
-                error_msg = f"Cannot route to '{target_role}': unknown specialist."
-                yield {"type": "error", "content": error_msg}
+                return "invalid_target"
 
-                # Inject a system message so the generalist knows what happened
-                self.history.append(
-                    {
-                        "role": "system",
-                        "content": (
-                            f"[The {current_role} tried to route to '{target_role}' "
-                            "which does not exist. You are the generalist — handle this.]"
-                        ),
-                        "route": None,
-                    }
-                )
-                previous_role = current_role
-                current_role = "generalist"
-                yield {"type": "route", "from_role": previous_role, "to_role": "generalist"}
-                continue
-
-            # --- Enforce delegation mask (specialist → specialist only) ---
             if not is_generalist:
-                allowed = self._delegation_mask.get(current_role, [])
+                allowed = self._delegation_mask.get(role_name, [])
                 if target_role not in allowed:
-                    error_msg = (
-                        f"'{current_role}' cannot delegate to '{target_role}'. "
-                        f"Allowed targets: {allowed}"
-                    )
-                    yield {"type": "error", "content": error_msg}
+                    return "forbidden_delegation"
 
-                    self.history.append(
-                        {
-                            "role": "system",
-                            "content": (
-                                f"[The {current_role} specialist attempted to "
-                                f"delegate to {target_role}, which is not permitted. "
-                                "You are the generalist — handle this.]"
-                            ),
-                            "route": None,
-                        }
-                    )
-                    previous_role = current_role
-                    current_role = "generalist"
-                    yield {"type": "route", "from_role": previous_role, "to_role": "generalist"}
+            if target_role in state.get("visited_specialists", []):
+                return "loop_detected"
+
+            return target_role
+
+        return route_edge
+
+    def _build_graph(self) -> Any:
+        """Construct the compiled LangGraph StateGraph connecting all agents and tools."""
+        builder = StateGraph(ConductorState)
+
+        all_roles = ["generalist"] + list(self.config.specialists.keys())
+
+        # Add agent nodes
+        for role in all_roles:
+            builder.add_node(role, self._make_agent_node(role))
+
+        # Add tool and recovery nodes
+        builder.add_node("tool_execution", self._tool_execution_node)
+        builder.add_node("forced_final", self._forced_final_node)
+        builder.add_node("invalid_target", self._invalid_target_node)
+        builder.add_node("forbidden_delegation", self._forbidden_delegation_node)
+        builder.add_node("loop_detected", self._loop_detected_node)
+
+        # Set entry point
+        builder.set_entry_point("generalist")
+
+        # Routing edges mapping
+        destination_map: dict[Any, str] = {r: r for r in all_roles}
+        destination_map.update(
+            {
+                "tool_execution": "tool_execution",
+                "forced_final": "forced_final",
+                "invalid_target": "invalid_target",
+                "forbidden_delegation": "forbidden_delegation",
+                "loop_detected": "loop_detected",
+                "end": END,
+            }
+        )
+
+        for role in all_roles:
+            builder.add_conditional_edges(role, self._make_route_edge(role), destination_map)
+
+        # Return from tool execution back to active calling role
+        builder.add_conditional_edges(
+            "tool_execution",
+            lambda state: state.get("current_role", "generalist"),
+            {r: r for r in all_roles},
+        )
+
+        # Recovery nodes return to generalist
+        builder.add_edge("invalid_target", "generalist")
+        builder.add_edge("forbidden_delegation", "generalist")
+        builder.add_edge("loop_detected", "generalist")
+        builder.add_edge("forced_final", END)
+
+        return builder.compile()
+
+    # ------------------------------------------------------------------
+    # Public Execution APIs
+    # ------------------------------------------------------------------
+
+    def chat(self, message: str) -> Generator[dict, None, str]:
+        """Send a user message and run the multi-agent routing loop via LangGraph."""
+        self.history.append({"role": "user", "content": message, "route": None})
+
+        initial_state: ConductorState = {
+            "messages": list(self.history),
+            "current_role": "generalist",
+            "previous_role": None,
+            "target_role": None,
+            "hops": 0,
+            "visited_specialists": [],
+            "last_response": "",
+            "last_tool_calls": [],
+            "final_output": "",
+            "error": None,
+            "events": [],
+        }
+
+        current_state = dict(initial_state)
+
+        for output in self._graph.stream(initial_state, stream_mode="updates"):
+            for _, node_update in output.items():
+                if not isinstance(node_update, dict):
                     continue
+                current_state.update(node_update)
+                yield from node_update.get("events", [])
 
-            # --- Block re-routing to a specialist that already answered ---
-            if target_role in visited_specialists:
-                self.history.append(
-                    {
-                        "role": "system",
-                        "content": (
-                            f"[You already received an answer from the '{target_role}' "
-                            "specialist for this question. Do NOT route again. "
-                            "Synthesize a final response using everything discussed "
-                            "so far and end with [ROUTE: return].]"
-                        ),
-                        "route": None,
-                    }
-                )
-                current_role = "generalist"
-                continue
-
-            # --- Route to the target ---
-            yield {"type": "route", "from_role": current_role, "to_role": target_role}
-            yield {"type": "intermediate", "role": current_role, "content": cleaned_content}
-            current_role = target_role
+        msgs = current_state.get("messages", self.history)
+        if isinstance(msgs, list):
+            self.history = msgs
+        final_output_val = current_state.get("final_output") or current_state.get("last_response", "")
+        return str(final_output_val)
 
     def chat_stream(self, message: str) -> Iterator[str]:
-        """Run the routing loop, streaming generalist turns as they are produced.
-
-        Design note: the routing protocol puts the tag at the END of a response,
-        so a turn's role (routing vs. final) is not knowable until it is over.
-        Two designs are possible, and this picks the cheaper one:
-
-        - Buffer every generalist turn, then re-issue the final one with
-          ``stream: true``. True token streaming, but it calls the generalist
-          twice for every message -- real money, and the second call can
-          disagree with the first.
-        - Stream each generalist turn once, live. A turn that turns out to be a
-          routing hop has its narration ("Let me check with the math
-          specialist") shown to the user, which :meth:`chat` already surfaces as
-          an ``intermediate`` event anyway.
-
-        Specialist turns are never streamed -- their output is internal.
-        The routing tag itself is always suppressed.
-
-        Args:
-            message: The user's input message.
-
-        Yields:
-            Content deltas of the generalist's output.
-        """
+        """Stream generalist output tokens as they are produced."""
         self.history.append({"role": "user", "content": message, "route": None})
 
         current_role = "generalist"
@@ -498,8 +706,16 @@ class Conductor:
 
         while True:
             if hops >= self.config.max_hops:
-                content, error = self._forced_final("Error calling generalist")
-                yield error if error else content
+                # Forced final answer from generalist
+                messages = list(self.history)
+                messages.append({"role": "system", "content": self._final_answer_prompt(), "route": None})
+                model = self._get_chat_model("generalist")
+                lc_messages = self._format_messages_for_langchain(messages)
+                res = model.invoke(lc_messages)
+                content = _extract_text(res.content)
+                cleaned, _ = parse_route_tag(content)
+                self.history.append({"role": "generalist", "content": cleaned, "route": "return"})
+                yield cleaned
                 return
 
             specialist_config = self._get_specialist(current_role)
@@ -508,37 +724,52 @@ class Conductor:
                 return
 
             is_generalist = current_role == "generalist"
-            messages = self._format_history()
-            api_key = self._get_api_key(current_role)
+            state: ConductorState = {
+                "messages": list(self.history),
+                "current_role": current_role,
+                "hops": hops,
+                "visited_specialists": list(visited_specialists),
+            }
 
-            try:
-                if self._tools:
-                    extra: list[dict]
-                    response, extra = self._call_with_tools(
-                        messages, specialist_config, api_key
-                    )
-                    for m in extra:
-                        self.history.append({**m, "route": None})
-                    if is_generalist:
-                        cleaned_preview, _ = parse_route_tag(response)
-                        if cleaned_preview:
-                            yield cleaned_preview
-                elif is_generalist:
-                    chunks: list[str] = []
-                    for delta, emit in _stream_without_tag(
-                        call_llm_stream(messages, specialist_config, api_key=api_key)
-                    ):
+            if self._tools:
+                agent_node_fn = self._make_agent_node(current_role)
+                while True:
+                    update_dict = agent_node_fn(state)
+                    state.update(update_dict)
+                    if state.get("target_role") == "tool_execution":
+                        update_dict = self._tool_execution_node(state)
+                        state.update(update_dict)
+                    else:
+                        break
+                response = state.get("last_response", "")
+                if is_generalist and response:
+                    yield response
+            elif is_generalist:
+                chunks: list[str] = []
+                model = self._get_chat_model(current_role)
+                lc_messages = [SystemMessage(content=specialist_config.system_prompt)] + self._format_messages_for_langchain(self.history)
+                try:
+                    for chunk in model.stream(lc_messages):
+                        delta = _extract_text(chunk.content)
                         chunks.append(delta)
+                    for _, emit in _stream_without_tag(iter(chunks)):
                         if emit:
                             yield emit
                     response = "".join(chunks)
-                else:
-                    response = call_llm(messages, specialist_config, api_key=api_key)
-            except Exception as exc:
-                yield f"[error] Error calling {current_role}: {exc}"
-                return
-            hops += 1
+                except Exception as exc:
+                    yield f"[error] Error calling {current_role}: {exc}"
+                    return
+            else:
+                model = self._get_chat_model(current_role)
+                lc_messages = [SystemMessage(content=specialist_config.system_prompt)] + self._format_messages_for_langchain(self.history)
+                try:
+                    res = model.invoke(lc_messages)
+                    response = _extract_text(res.content)
+                except Exception as exc:
+                    yield f"[error] Error calling {current_role}: {exc}"
+                    return
 
+            hops += 1
             cleaned_content, route_target = parse_route_tag(response)
             cleaned_content = self._strip_role_echo(cleaned_content)
             self.history.append(
@@ -553,16 +784,13 @@ class Conductor:
                 continue
 
             if is_generalist and route_target == "generalist":
-                return  # self-route makes no progress; the text is already streamed
+                return
 
             if route_target not in self.config.specialists:
                 self.history.append(
                     {
                         "role": "system",
-                        "content": (
-                            f"[The {current_role} tried to route to '{route_target}' "
-                            "which does not exist. You are the generalist — handle this.]"
-                        ),
+                        "content": f"[The {current_role} tried to route to '{route_target}' which does not exist. You are the generalist — handle this.]",
                         "route": None,
                     }
                 )
@@ -573,28 +801,18 @@ class Conductor:
                 self.history.append(
                     {
                         "role": "system",
-                        "content": (
-                            f"[The {current_role} specialist attempted to delegate to "
-                            f"{route_target}, which is not permitted. You are the "
-                            "generalist — handle this.]"
-                        ),
+                        "content": f"[The {current_role} specialist attempted to delegate to {route_target}, which is not permitted. You are the generalist — handle this.]",
                         "route": None,
                     }
                 )
                 current_role = "generalist"
                 continue
 
-            # Block re-routing to a specialist that already answered
             if route_target in visited_specialists:
                 self.history.append(
                     {
                         "role": "system",
-                        "content": (
-                            f"[You already received an answer from the '{route_target}' "
-                            "specialist for this question. Do NOT route again. "
-                            "Synthesize a final response using everything discussed "
-                            "so far and end with [ROUTE: return].]"
-                        ),
+                        "content": f"[You already received an answer from the '{route_target}' specialist for this question. Do NOT route again. Synthesize a final response using everything discussed so far and end with [ROUTE: return].]",
                         "route": None,
                     }
                 )
@@ -604,17 +822,7 @@ class Conductor:
             current_role = route_target
 
     def save_history(self, path: str) -> None:
-        """Save conversation history to a JSON file.
-
-        Args:
-            path: Filesystem path for the JSON output.
-        """
         Path(path).write_text(json.dumps(self.history, indent=2))
 
     def load_history(self, path: str) -> None:
-        """Load conversation history from a JSON file.
-
-        Args:
-            path: Filesystem path to read.
-        """
         self.history = json.loads(Path(path).read_text())

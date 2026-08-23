@@ -12,15 +12,19 @@ from rich.markdown import Markdown
 
 from openjarvis.conductor import Conductor
 
-_COMMANDS = ["/exit", "/quit", "/clear", "/help"]
-_HISTORY_PATH = Path.home() / ".config" / "openjarvis" / "history.txt"
+_COMMANDS = ["/exit", "/quit", "/clear", "/help", "/update-tools"]
+_HISTORY_PATH = Path.home() / ".openjarvis" / "history.txt"
+_LEGACY_HISTORY_PATH = Path.home() / ".config" / "openjarvis" / "history.txt"
 
 
 def create_session() -> PromptSession:
     """Create a prompt_toolkit session with history and command completion."""
-    _HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    history_path = _HISTORY_PATH
+    if not history_path.exists() and _LEGACY_HISTORY_PATH.exists():
+        history_path = _LEGACY_HISTORY_PATH
+    history_path.parent.mkdir(parents=True, exist_ok=True)
     return PromptSession(
-        history=FileHistory(str(_HISTORY_PATH)),
+        history=FileHistory(str(history_path)),
         completer=WordCompleter(_COMMANDS, sentence=True),
         enable_history_search=True,
     )
@@ -84,14 +88,24 @@ def run_repl(conductor: Conductor, console: Console) -> None:
             console.clear()
             continue
 
+        if user_input == "/update-tools":
+            if conductor._retriever:
+                console.print("  [cyan]Updating tool embedding vectors...[/cyan]")
+                conductor._retriever.build_index()
+                console.print("  [green]✓[/green] Tool vectors updated successfully.\n")
+            else:
+                console.print("  [yellow]Tool retriever is not active.[/yellow]\n")
+            continue
+
         if user_input == "/help":
             console.print(
                 "  [bold]Commands:[/bold]\n"
-                "  [cyan]/exit[/cyan], [cyan]/quit[/cyan]  — exit OpenJarvis\n"
-                "  [cyan]/clear[/cyan]           — clear the screen\n"
-                "  [cyan]/help[/cyan]            — show this message\n"
-                "  [dim]Up/Down[/dim]            — browse input history\n"
-                "  [dim]Ctrl-R[/dim]             — reverse history search\n"
+                "  [cyan]/exit[/cyan], [cyan]/quit[/cyan]      — exit OpenJarvis\n"
+                "  [cyan]/clear[/cyan]               — clear the screen\n"
+                "  [cyan]/update-tools[/cyan]        — re-index and update tool embeddings\n"
+                "  [cyan]/help[/cyan]                — show this message\n"
+                "  [dim]Up/Down[/dim]                — browse input history\n"
+                "  [dim]Ctrl-R[/dim]                 — reverse history search\n"
             )
             continue
 

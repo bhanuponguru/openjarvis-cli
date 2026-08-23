@@ -1,6 +1,7 @@
 import os
 import py_compile
 import subprocess
+import sys
 import tempfile
 
 from openjarvis.tools import tool
@@ -19,7 +20,7 @@ def run_python(code: str, timeout: int = 10) -> str:
     """
     try:
         result = subprocess.run(
-            ["python", "-c", code],
+            [sys.executable, "-c", code],
             capture_output=True,
             text=True,
             timeout=timeout,

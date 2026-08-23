@@ -121,37 +121,34 @@ Calculate the number of days between two dates.
 
 ## Usage Examples
 
-### Current Time
+### Current Time in Timezone
 
-```
-> What time is it in Sydney right now?
+```text
+oj> What time is it in Sydney right now?
 
-  ↳ routing: generalist → tool_use
-  ⚙ tool: get_current_datetime
+  ↳ routing: generalist → knowledge
+  ⚙ tool: get_current_datetime {"timezone": "Australia/Sydney"}
     → 2026-08-16T06:45:12 Sunday
-  ↳ routing: tool_use → generalist
 
-It's currently 6:45 AM on Sunday, August 16 in Sydney, Australia.
+It is currently **6:45 AM on Sunday, August 16** in Sydney, Australia.
 ```
 
-### Deadline Calculation
+### Deadline & Days Between
 
-```
-> My project deadline is 2026-09-30. How many days do I have left?
+```text
+oj> My project deadline is 2026-09-30. How many days from 2026-08-15 is that?
 
-  ↳ routing: generalist → tool_use
-  ⚙ tool: get_current_datetime
-    → 2026-08-15T...
-  ⚙ tool: days_between
+  ↳ routing: generalist → math
+  ⚙ tool: days_between {"date_a": "2026-08-15", "date_b": "2026-09-30"}
     → 46
-  ↳ routing: tool_use → generalist
 
-You have 46 days until your September 30 deadline.
+There are **46 days** remaining until September 30.
 ```
 
 ---
 
 ## See Also
 
-- [Tools Overview](overview.md) — All 29 tools
-- [Math Tools](math.md) — Calculations and conversions
+- [Tools Overview](overview.md) — All 29 built-in tools
+- [Math Tools](math.md) — Arithmetic and calculations
+- [Data Processing](data.md) — JSON and text manipulations

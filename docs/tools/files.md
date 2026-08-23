@@ -143,53 +143,45 @@ Delete a file. Cannot delete directories.
 
 ## Usage Examples
 
-### Reading a Config
+### Reading a Configuration File
 
+```text
+oj> Read my specialists.yaml and explain what it does
+
+  ↳ routing: generalist → code
+  ⚙ tool: read_file {"path": "specialists.yaml"}
+    → "max_hops: 10\ngeneralist:\n..."
+
+Your `specialists.yaml` defines a generalist router and domain specialists for math and coding...
 ```
-> Read my specialists.yaml and explain what it does
 
-  ↳ routing: generalist → knowledge → tool_use
-  ⚙ tool: read_file
-    → generalist:\n  system_prompt: "..."\n  base_url: ...
-  ↳ routing: tool_use → knowledge → generalist
+### Writing a Project Summary
 
-Your specialists.yaml defines a generalist using gpt-4o-mini and three specialists...
-```
+```text
+oj> List the files here and write a quick summary to summary.md
 
-### Writing a Summary
+  ↳ routing: generalist → code
+  ⚙ tool: list_directory {"path": "."}
+    → ["src", "tests", "README.md", "pyproject.toml"]
+  ⚙ tool: write_file {"path": "summary.md", "content": "# Project Summary\n..."}
+    → "Successfully wrote to summary.md"
 
-```
-> Summarize this project and save it to summary.md
-
-  ↳ routing: generalist → knowledge → tool_use
-  ⚙ tool: list_directory
-    → [src/, tests/, README.md, ...]
-  ⚙ tool: read_file
-    → ...
-  ⚙ tool: write_file
-    → File written successfully
-  ↳ routing: tool_use → knowledge → generalist
-
-I've read the project files and saved a summary to summary.md.
+I have inspected the project directory and generated `summary.md`.
 ```
 
 ---
 
 ## Security Considerations
 
-File tools can read and write anywhere your user account has access, including sensitive system files.
-
-**Best practices:**
-
-- Run OpenJarvis from a project directory to limit scope
-- Review file paths before allowing writes, especially for paths outside your working directory
-- `delete_file` is irreversible — use with care
-- `write_file` overwrites silently — always ask to append if preserving data matters
+File tools operate with the permissions of the active user:
+- **`read_file`**: Safely read code and configuration files.
+- **`write_file`**: Writes or appends text to local files.
+- **`delete_file`**: Deletion is permanent. Use with care.
 
 ---
 
 ## See Also
 
-- [Tools Overview](overview.md) — All 29 tools
-- [Code Execution](code.md) — Run scripts to process files
-- [Troubleshooting](../troubleshooting.md) — Common file tool issues
+- [Tools Overview](overview.md) — All 29 built-in tools
+- [Code Execution](code.md) — Subprocess execution
+- [Data Processing](data.md) — Parsing CSV, JSON, and regex searches

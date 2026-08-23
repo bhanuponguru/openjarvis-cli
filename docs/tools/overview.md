@@ -1,236 +1,59 @@
 # Built-In Tools Overview
 
-OpenJarvis includes 29 production-ready tools that specialists can invoke automatically.
+OpenJarvis includes **29 production-ready tools** organized into 7 functional modules. Models automatically invoke these tools using standard function calling.
 
 ---
 
 ## Tool Categories
 
-| Category | Count | Tools |
-|----------|-------|-------|
-| **[Web](web.md)** | 4 | Search, fetch, HTTP GET/POST |
-| **[Math](math.md)** | 3 | Calculate, solve equations, convert units |
-| **[Files](files.md)** | 5 | Read, write, list, check existence, file info |
-| **[Code Execution](code.md)** | 2 | Run Python, run shell commands |
-| **[Date & Time](datetime.md)** | 5 | Current time/date, date calculations, formatting |
-| **[Text Processing](text.md)** | 5 | Word count, JSON parsing, text manipulation |
-| **[System](system.md)** | 2 | Environment variables, system information |
-| **[Memory](memory.md)** | 3 | Save, retrieve, list notes |
-| **Crypto** | 1 | Hash text (SHA-256) |
+| Module | Count | Available Tools |
+| :--- | :--- | :--- |
+| **[Date & Time](datetime.md)** | 4 | `get_current_datetime`, `date_arithmetic`, `format_datetime`, `days_between` |
+| **[Math](math.md)** | 4 | `evaluate_expression`, `convert_units`, `solve_equation`, `prime_factorize` |
+| **[File I/O](files.md)** | 6 | `read_file`, `write_file`, `list_directory`, `search_in_files`, `file_info`, `delete_file` |
+| **[Web](web.md)** | 3 | `fetch_url`, `search_web`, `fetch_wikipedia` |
+| **[Code Execution](code.md)** | 3 | `run_python`, `run_shell`, `lint_python` |
+| **[Data Processing](data.md)** | 5 | `parse_json`, `jq_query`, `parse_csv`, `regex_search`, `regex_replace` |
+| **[Session Memory](memory.md)** | 4 | `store_note`, `recall_note`, `list_notes`, `delete_note` |
 
-**Total:** 29 tools
+**Total: 29 Built-in Tools**
 
 ---
 
-## How Tools Work
+## How Tool Calling Works
 
-### Automatic Invocation
+1. **Automatic Detection**: When a user's request requires calculations, web lookups, or file inspection, the active model outputs a structured tool call.
+2. **Execution & Feedback**: OpenJarvis runs the tool locally (sandboxed subprocess for code, safe AST evaluator for math) and returns the result to the model.
+3. **Synthesis**: The model uses the tool output to complete its answer and returns it to you.
 
-Specialists invoke tools automatically — you don't need to explicitly request them.
+```text
+oj> What's the square root of 1764 plus 58?
 
-**Example:**
-```
-> What's 15% of 200?
+  ↳ routing: generalist → math
+  ⚙ tool: evaluate_expression {"expression": "1764**0.5 + 58"}
+    → 100.0
 
-  routing: generalist → math → tool_use
-  routing: tool_use → math → generalist
-
-15% of 200 is 30.
-```
-
-The math specialist automatically delegated to tool_use, which invoked the `calculate` tool.
-
-### Tool Delegation
-
-Specialists can only use tools if they're configured to delegate to `tool_use`:
-
-```yaml
-math:
-  delegates_to: ["tool_use"]  # Can use tools
-
-creative:
-  delegates_to: []  # Cannot use tools
-```
-
-### Tool Results
-
-Tool results are returned to the calling specialist, which interprets them and returns a natural language response.
-
----
-
-## Quick Reference
-
-### Web Tools
-
-```
-> Search for the latest news about AI
-> Fetch the content from https://example.com
-> Make a GET request to https://api.example.com/data
-> POST this data to https://api.example.com/endpoint
-```
-
-### Math Tools
-
-```
-> Calculate 15.5 * 234 + 67
-> Solve for x: 2x + 5 = 15
-> Convert 50 miles to kilometers
-```
-
-### File Tools
-
-```
-> Read the file config.yaml
-> Write "Hello World" to output.txt
-> List all files in the current directory
-> Does the file data.json exist?
-> Get information about the file large-file.bin
-```
-
-### Code Execution
-
-```
-> Run this Python code: print([x**2 for x in range(10)])
-> Execute this shell command: ls -la
-```
-
-⚠️ **Security:** Code execution runs on your machine. Only execute trusted code.
-
-### Date & Time Tools
-
-```
-> What's the current time?
-> What's today's date?
-> How many days between 2024-01-01 and 2024-12-31?
-> Add 30 days to today's date
-> Format 2024-08-15 as "August 15, 2024"
-```
-
-### Text Processing Tools
-
-```
-> Count the words in this text: [paste text]
-> Extract JSON from this string: [paste string]
-> Format this JSON nicely: {"a":1,"b":2}
-> Truncate this text to 100 characters
-> Replace all spaces with underscores in this text
-```
-
-### System Tools
-
-```
-> What's the value of the HOME environment variable?
-> What's my system information?
-```
-
-### Memory Tools
-
-```
-> Save a note called "reminder": Call John at 3 PM
-> Get the note "reminder"
-> List all my saved notes
-```
-
-### Crypto Tools
-
-```
-> Hash this text using SHA-256: "Hello World"
+The square root of 1764 (42) plus 58 is **100**.
 ```
 
 ---
 
-## Tool Availability
+## Tool Safety & Guardrails
 
-All 29 tools are always available. Specialists automatically use tools when needed based on their task.
-
----
-
-## Detailed Documentation
-
-Click through to see detailed documentation for each category:
-
-- **[Web Tools →](web.md)** — Search, fetch, HTTP requests
-- **[Math Tools →](math.md)** — Calculations, equations, conversions
-- **[File Tools →](files.md)** — File system operations
-- **[Code Execution →](code.md)** — Run Python and shell commands
-- **[Date & Time Tools →](datetime.md)** — Time and date operations
-- **[Text Processing →](text.md)** — Text manipulation and JSON parsing
-- **[System Tools →](system.md)** — Environment and system info
-- **[Memory Tools →](memory.md)** — Persistent note storage
+- **Math Evaluation (`evaluate_expression`)**: Evaluates math expressions safely using AST parsing (no `eval()` or code execution).
+- **Code Execution (`run_python`, `run_shell`)**: Runs in isolated subprocesses with strict timeouts (10-15 seconds) and a 4KB output truncation buffer.
+- **Web Fetching (`fetch_url`)**: Strips scripts and style tags, truncating text to 8KB.
+- **File System (`file_tools`)**: Safe file reading/writing scoped to your workspace.
 
 ---
 
-## Security Considerations
+## Explore Detailed Tool Manuals
 
-### Code Execution Tools
+- **[Web Tools →](web.md)** — Searching DuckDuckGo, reading URLs, Wikipedia summaries
+- **[Math Tools →](math.md)** — Arithmetic, unit conversion, symbolic algebra
+- **[File Tools →](files.md)** — Reading, writing, searching, and inspecting files
+- **[Code Tools →](code.md)** — Running Python and shell commands safely
+- **[Date & Time Tools →](datetime.md)** — Timestamps, date arithmetic, formatting
+- **[Data Tools →](data.md)** — JSON parsing, jq queries, CSV formatting, regex
+- **[Memory Tools →](memory.md)** — Storing and recalling session notes
 
-The `run_python` and `run_shell` tools execute arbitrary code on your machine. 
-
-**Risks:**
-- File system access
-- Network access
-- Process execution
-- Data destruction
-
-**Best Practices:**
-- Only use with trusted inputs
-- Review generated code before execution
-- Run in isolated environments for untrusted code
-- Consider disabling these tools in production
-
-**Disabling code execution:** This feature is not yet implemented, but will be added in a future release.
-
-### File System Tools
-
-File tools can read and write anywhere your user has permissions.
-
-**Best Practices:**
-- Be careful with `write_file` — it can overwrite existing files
-- Review file paths before allowing writes
-- Consider running OpenJarvis with restricted permissions
-
-### Web Tools
-
-Web tools make outbound HTTP requests.
-
-**Best Practices:**
-- Be aware of rate limits on search APIs
-- Don't send sensitive data to external APIs
-- Review URLs before allowing requests
-
----
-
-## Tool Error Handling
-
-When a tool fails, specialists receive an error message and can retry or take alternative approaches.
-
-**Example:**
-```
-> Read the file doesnt-exist.txt
-
-  routing: generalist → knowledge → tool_use
-  routing: tool_use → knowledge → generalist
-
-I cannot read that file because it doesn't exist. Please verify the filename.
-```
-
----
-
-## Future Tools
-
-Planned additions:
-
-- Database tools (SQL queries)
-- Email tools (send/receive)
-- Calendar tools (schedule management)
-- Image generation tools
-- Audio/video processing tools
-- Custom tool plugins
-
----
-
-## See Also
-
-- [Configuration](../configuration/overview.md) — Configure specialist tool access
-- [Routing Protocol](../usage/routing.md) — How specialists invoke tools
-- [Troubleshooting](../troubleshooting.md) — Common tool issues

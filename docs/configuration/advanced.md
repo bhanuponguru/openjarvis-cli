@@ -1,67 +1,57 @@
 # Advanced Configuration
 
-This page covers power-user configuration options for OpenJarvis.
+This page covers power-user configuration techniques, environment management, and specialized setups for OpenJarvis.
 
 ---
 
-## Configuration File Locations
+## Managing Multiple Configurations
 
-OpenJarvis searches for configuration in this order (first match wins):
+You can maintain different specialist configurations for different tasks (e.g. coding, research, writing):
 
-1. `--config` flag: `openjarvis --config /path/to/config.yaml`
-2. `OJ_CONFIG` environment variable
-3. `specialists.yaml` in the current working directory
-4. `~/.config/openjarvis/specialists.yaml`
-
-### Per-Project Configs
-
-Keep a `specialists.yaml` in each project directory and run OpenJarvis from there:
-
-```
-my-project/
-├── specialists.yaml    ← OpenJarvis uses this when run from here
-├── src/
-└── ...
+```text
+~/.config/openjarvis/
+├── specialists.yaml  # Default setup
+├── coding.yaml       # Code-focused specialists (low temp, local code models)
+└── research.yaml     # Research setup (high-capacity models, web search)
 ```
 
-### Global Config
-
-For a config that works everywhere:
+To run OpenJarvis with a specific configuration:
 
 ```bash
-mkdir -p ~/.config/openjarvis
-cp specialists.yaml ~/.config/openjarvis/specialists.yaml
-```
-
-### Switching Configs
-
-```bash
-# Use a specific config
-openjarvis --config ~/configs/coding.yaml
-
-# Use an environment variable
-export OJ_CONFIG=~/configs/research.yaml
-openjarvis
+OJ_CONFIG=~/.config/openjarvis/coding.yaml openjarvis
 ```
 
 ---
 
-## Environment Variable Substitution
+## Per-Project Configuration
 
-API keys are loaded from environment variables named in `api_key_env`. You can use any variable name:
+You can place a `specialists.yaml` file in the root of any project directory. When you run `openjarvis` inside that directory, it automatically loads `./specialists.yaml` before falling back to your user config.
+
+```text
+my-web-app/
+├── specialists.yaml  # Custom specialists for this codebase
+├── package.json
+└── src/
+```
+
+---
+
+## Environment Variable Management
+
+All API credentials are read from environment variables defined by `api_key_env` in your configuration:
 
 ```yaml
 generalist:
-  api_key_env: "MY_CUSTOM_KEY_VAR"
+  api_key_env: "OPENAI_API_KEY"
+
+specialists:
+  knowledge:
+    api_key_env: "GROQ_API_KEY"
 ```
 
-```bash
-export MY_CUSTOM_KEY_VAR="sk-..."
-```
+### Setting Credentials
 
-### Persisting API Keys
-
-Add to your shell profile so they're available in every session:
+Export variables in your active shell or shell profile:
 
 ```bash
 # ~/.bashrc or ~/.zshrc
@@ -70,201 +60,67 @@ export GROQ_API_KEY="gsk_..."
 export OPENROUTER_API_KEY="sk-or-..."
 ```
 
-On Windows (PowerShell):
-```powershell
-[System.Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "sk-...", "User")
-```
-
----
-
-## Custom Specialists
-
-You can define any specialist with any name. The generalist routes to them by name.
-
-### Example: Legal Specialist
-
-```yaml
-generalist:
-  system_prompt: |
-    You are OpenJarvis.
-    Route using: [ROUTE: return], [ROUTE: legal], [ROUTE: code]
-  base_url: "https://api.openai.com/v1"
-  model: "gpt-4o-mini"
-  api_key_env: "OPENAI_API_KEY"
-
-specialists:
-  legal:
-    system_prompt: |
-      You are a legal research specialist.
-      Provide general legal information (not legal advice).
-      End with [RETURN].
-    base_url: "https://api.openai.com/v1"
-    model: "gpt-4o"
-    api_key_env: "OPENAI_API_KEY"
-    temperature: 0.3
-
-  code:
-    system_prompt: |
-      You are a code specialist.
-      Generate clean, correct code.
-      End with [RETURN].
-    base_url: "http://localhost:11434/v1"
-    model: "codellama"
-    temperature: 0.2
-```
-
-### Example: Language Specialist
-
-```yaml
-specialists:
-  translator:
-    system_prompt: |
-      You are a translation specialist.
-      Translate text accurately, preserving tone and meaning.
-      End with [RETURN].
-    base_url: "https://api.groq.com/openai/v1"
-    model: "llama-3.1-70b-versatile"
-    api_key_env: "GROQ_API_KEY"
-    temperature: 0.3
-```
-
----
-
-## Controlling Temperature Per Task
-
-Use low temperature for deterministic tasks and higher for creative ones:
-
-```yaml
-specialists:
-  math:
-    temperature: 0.1    # Very deterministic — math needs exact answers
-
-  code:
-    temperature: 0.2    # Low — consistent code style
-
-  knowledge:
-    temperature: 0.5    # Balanced — factual but natural language
-
-  creative:
-    temperature: 0.9    # High — varied, creative output
-```
-
----
-
-## Large Context Models
-
-For tasks requiring large context (long documents, big codebases), use models with larger context windows:
-
-```yaml
-specialists:
-  document_analyst:
-    system_prompt: |
-      You are a document analysis specialist.
-      Read and analyze long documents carefully.
-      End with [RETURN].
-    base_url: "https://api.openai.com/v1"
-    model: "gpt-4o"           # 128K context window
-    api_key_env: "OPENAI_API_KEY"
-    temperature: 0.3
-```
-
 ---
 
 ## Offline / Air-Gapped Setup
 
-For fully offline use with Ollama:
+For completely offline, air-gapped environments, configure OpenJarvis with Ollama:
 
 ```yaml
+max_hops: 8
+
 generalist:
   system_prompt: |
-    You are OpenJarvis. Answer helpfully.
-    Route: [ROUTE: return], [ROUTE: math], [ROUTE: code]
+    You are OpenJarvis.
+    Route requests using:
+    [ROUTE: math] - Math problems
+    [ROUTE: code] - Programming tasks
+    [ROUTE: return] - Final answer
   base_url: "http://localhost:11434/v1"
   model: "llama3"
-  api_key_env: ""
+  temperature: 0.0
 
 specialists:
   math:
-    system_prompt: "Math specialist. End with [RETURN]."
+    system_prompt: "You are the math specialist. Solve step-by-step. End with [RETURN]."
     base_url: "http://localhost:11434/v1"
     model: "llama3"
-    temperature: 0.2
-    delegates_to: ["tool_use"]
+    temperature: 0.0
+    delegates_to: []
 
   code:
-    system_prompt: "Code specialist. End with [RETURN]."
+    system_prompt: "You are the code specialist. End with [RETURN]."
     base_url: "http://localhost:11434/v1"
     model: "codellama"
-    temperature: 0.2
-    delegates_to: ["tool_use"]
-
-  tool_use:
-    system_prompt: "Tool specialist. End with [RETURN]."
-    base_url: "http://localhost:11434/v1"
-    model: "llama3"
-    temperature: 0.3
+    temperature: 0.0
+    delegates_to: []
 ```
 
-Note: Web search and URL fetching tools will fail without internet. Math, file, date, memory, and code execution tools work fully offline.
+> **Offline Tool Behavior**: When offline, local tools (math evaluation, file operations, date/time calculations, data parsing, and code execution) work fully. Web search (`search_web`) and URL fetching (`fetch_url`) require an active internet connection.
 
 ---
 
-## Multiple Configs for Different Contexts
+## Fine-Tuning Performance & Timeouts
 
-Create separate configs for different use cases:
+### Temperature per Domain
+- **Deterministic Tasks (`0.0` - `0.1`)**: Math calculations, symbolic algebra, code generation, JSON transformation.
+- **Balanced Reasoning (`0.2` - `0.4`)**: Generalist orchestration, factual summaries, planning.
+- **Creative Generation (`0.7` - `0.9`)**: Ideation, storytelling, brainstorming.
 
-```bash
-~/.config/openjarvis/
-├── coding.yaml      # Code-focused setup with codellama
-├── research.yaml    # Research setup with web search emphasis
-├── writing.yaml     # Creative writing with high temperature
-└── default.yaml     # General-purpose fallback
+### Request Timeouts
+The default per-request timeout is `60.0` seconds. For slower local models or deep reasoning queries, increase the timeout:
+
+```yaml
+specialists:
+  math:
+    timeout: 120.0 # 2 minutes
 ```
-
-Switch between them:
-```bash
-export OJ_CONFIG=~/.config/openjarvis/coding.yaml
-openjarvis
-
-# or per-session:
-openjarvis --config ~/.config/openjarvis/research.yaml
-```
-
----
-
-## Debugging Configuration
-
-### Check Which Config Is Loaded
-
-The startup message shows configuration errors. If no error appears, config loaded successfully.
-
-### Test a Specific Provider
-
-Run OpenJarvis and type a simple question. If the response comes back, the provider is working. If you see a connection error, check:
-
-1. Is the `base_url` correct?
-2. Is the API key set? (`echo $OPENAI_API_KEY`)
-3. Is the model name correct for the provider?
-4. For Ollama: is it running? (`ollama list`)
-
-### Verbose Routing
-
-Watch the routing indicators in the terminal output to see which specialists are being used:
-
-```
-  ↳ routing: generalist → math
-  ↳ routing: math → tool_use
-  ↳ routing: tool_use → math
-  ↳ routing: math → generalist
-```
-
-If routing isn't happening as expected, review the generalist's system prompt routing instructions.
 
 ---
 
 ## See Also
 
 - [Configuration Overview](overview.md) — All configuration fields
-- [Specialists](specialists.md) — Specialist prompt engineering
-- [Providers](providers.md) — Provider-specific setup
-- [Troubleshooting](../troubleshooting.md) — Common issues
+- [Specialists Guide](specialists.md) — Specialist prompt engineering
+- [Providers Guide](providers.md) — Provider-specific setup
+- [Troubleshooting](../troubleshooting.md) — Common issues and fixes

@@ -9,16 +9,29 @@ from prompt_toolkit import prompt
 from prompt_toolkit.validation import ValidationError, Validator
 from rich.console import Console
 
-_USER_CONFIG = Path.home() / ".config" / "openjarvis" / "specialists.yaml"
+from openjarvis.workspace import discover_workspace
+
+_USER_CONFIG = Path.home() / ".openjarvis" / "config" / "specialists.yaml"
 
 _PROVIDER_PRESETS: dict[str, dict[str, str]] = {
     "ollama": {
-        "base_url": "http://localhost:11434/v1",
+        "base_url": "http://localhost:11434",
         "model": "llama3",
     },
     "openai": {
         "base_url": "https://api.openai.com/v1",
         "model": "gpt-4o",
+        "api_key_env": "OPENAI_API_KEY",
+    },
+    "anthropic": {
+        "base_url": "https://api.anthropic.com",
+        "model": "claude-3-5-sonnet-20241022",
+        "api_key_env": "ANTHROPIC_API_KEY",
+    },
+    "google": {
+        "base_url": "https://generativelanguage.googleapis.com",
+        "model": "gemini-1.5-pro",
+        "api_key_env": "GOOGLE_API_KEY",
     },
     "custom": {
         "base_url": "http://localhost:8000/v1",
@@ -92,21 +105,28 @@ def run_wizard() -> Path:
 
     # --- Provider ---
     console.print("[bold]Step 1/3 — Choose your LLM provider[/bold]")
-    console.print("  [cyan]ollama[/cyan]  — Local models via Ollama (free, private)")
-    console.print("  [cyan]openai[/cyan]  — OpenAI API (requires API key)")
-    console.print("  [cyan]custom[/cyan]  — Any OpenAI-compatible endpoint\n")
+    console.print("  [cyan]ollama[/cyan]     — Local models via Ollama (free, private)")
+    console.print("  [cyan]openai[/cyan]     — OpenAI API (GPT-4o, etc.)")
+    console.print("  [cyan]anthropic[/cyan]  — Anthropic API (Claude 3.5 Sonnet, etc.)")
+    console.print("  [cyan]google[/cyan]     — Google Gemini API (Gemini 1.5 Pro, etc.)")
+    console.print("  [cyan]custom[/cyan]     — Any OpenAI-compatible endpoint\n")
 
-    provider = _choose("Provider", ["ollama", "openai", "custom"], default="ollama")
+    provider = _choose(
+        "Provider",
+        ["ollama", "openai", "anthropic", "google", "custom"],
+        default="ollama",
+    )
     preset = _PROVIDER_PRESETS[provider]
 
     console.print()
     console.print("[bold]Step 2/3 — Configure endpoint and model[/bold]")
-    base_url = _ask("API base URL", default=preset["base_url"])
-    model = _ask("Model name", default=preset["model"])
+    base_url = _ask("API base URL", default=preset.get("base_url", ""))
+    model = _ask("Model name", default=preset.get("model", ""))
 
+    default_env = preset.get("api_key_env", "")
     api_key_env: str | None = None
-    if provider in ("openai", "custom"):
-        raw = _ask("Environment variable holding API key (leave blank to skip)", default="")
+    if provider in ("openai", "anthropic", "google", "custom"):
+        raw = _ask("Environment variable holding API key (leave blank to skip)", default=default_env)
         api_key_env = raw if raw else None
 
     console.print()
@@ -118,6 +138,7 @@ def run_wizard() -> Path:
     # --- Generate config ---
     generalist: dict = {
         "system_prompt": _GENERALIST_PROMPT,
+        "provider": provider,
         "base_url": base_url,
         "model": model,
         "delegates_to": list(_SPECIALISTS.keys()),
@@ -129,6 +150,7 @@ def run_wizard() -> Path:
     for name, system_prompt in _SPECIALISTS.items():
         entry: dict[str, object] = {
             "system_prompt": system_prompt,
+            "provider": provider,
             "base_url": base_url,
             "model": model,
         }
@@ -141,6 +163,7 @@ def run_wizard() -> Path:
         "specialists": specialists,
     }
 
+    discover_workspace().ensure_dirs()
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(yaml.dump(config_data, default_flow_style=False, sort_keys=False))
 

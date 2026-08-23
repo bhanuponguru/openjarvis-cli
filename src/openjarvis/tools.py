@@ -193,6 +193,10 @@ class ToolRegistry:
         """Return the tool with the given name, or ``None`` if not found."""
         return self._tools.get(name)
 
+    def get_tools(self) -> dict[str, Tool]:
+        """Return a copy of all registered tools mapping name -> Tool."""
+        return dict(self._tools)
+
     def execute(self, tool_call: dict) -> Any:
         """Execute a single tool call and return its result.
 

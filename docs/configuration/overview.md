@@ -1,372 +1,175 @@
 # Configuration Overview
 
-OpenJarvis uses a YAML configuration file to define specialists and their behavior.
+OpenJarvis uses a simple YAML configuration file (typically `specialists.yaml`) to define the orchestrator and domain specialists.
 
 ---
 
-## Configuration File Location
+## Configuration File Discovery Order
 
-OpenJarvis looks for configuration in this order:
+When you run `openjarvis`, the CLI automatically locates your configuration using this search order:
 
-1. File specified with `--config` flag: `openjarvis --config my-config.yaml`
-2. `OJ_CONFIG` environment variable: `export OJ_CONFIG=/path/to/config.yaml`
-3. `specialists.yaml` in current directory
-4. `~/.config/openjarvis/specialists.yaml`
+1. **`OJ_CONFIG` environment variable** (highest priority):
+   ```bash
+   export OJ_CONFIG=/path/to/my-config.yaml
+   openjarvis
+   ```
+2. **Current working directory**: `./specialists.yaml`
+3. **User configuration directory**: `~/.config/openjarvis/specialists.yaml`
+4. **System-wide configuration**: `/etc/openjarvis/specialists.yaml` (Linux / macOS)
+
+If no configuration file is found in any location, OpenJarvis launches the **interactive setup wizard** to create one for you.
 
 ---
 
-## Basic Structure
+## Configuration Structure
+
+A complete configuration defines the global hop cap, the required `generalist` orchestrator, and optional domain `specialists`:
 
 ```yaml
+max_hops: 10 # Maximum specialist transitions per query
+
 generalist:
-  system_prompt: "..."
-  base_url: "https://api.openai.com/v1"
-  model: "gpt-4o-mini"
-  api_key_env: "OPENAI_API_KEY"
-  temperature: 0.7
-
-specialists:
-  math:
-    system_prompt: "..."
-    base_url: "http://localhost:11434/v1"
-    model: "llama3"
-    temperature: 0.3
-    delegates_to: ["tool_use"]
-  
-  code:
-    system_prompt: "..."
-    base_url: "http://localhost:11434/v1"
-    model: "codellama"
-    temperature: 0.2
-    delegates_to: ["math", "tool_use"]
-```
-
----
-
-## Configuration Sections
-
-### Generalist (Required)
-
-The conductor that routes requests and synthesizes final answers.
-
-```yaml
-generalist:
+  name: "generalist"
   system_prompt: |
-    You are OpenJarvis. Route requests using:
-    [ROUTE: return] - Final answer
-    [ROUTE: math] - Math tasks
-    [ROUTE: code] - Code tasks
+    You are the ROUTER of OpenJarvis. Your job is to choose the best specialist
+    and emit a single routing tag at the end of your response:
+    [ROUTE: math] - Mathematics, statistics, equations
+    [ROUTE: code] - Programming, debugging, architecture
+    [ROUTE: knowledge] - Factual questions and research
+    [ROUTE: return] - Direct answer or tool response
+  provider: "openai"
   base_url: "https://api.openai.com/v1"
   model: "gpt-4o-mini"
   api_key_env: "OPENAI_API_KEY"
-  temperature: 0.7
-```
+  temperature: 0.0
+  timeout: 60.0
 
-### Specialists (Optional)
-
-Domain-specific models for specialized tasks.
-
-```yaml
 specialists:
   math:
-    system_prompt: "..."
-    base_url: "..."
-    model: "..."
-    temperature: 0.3
-    delegates_to: ["tool_use"]
+    name: "math"
+    system_prompt: |
+      You are the MATH specialist. Solve mathematics and quantitative problems.
+      End your response with [RETURN].
+    provider: "openai"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4o-mini"
+    api_key_env: "OPENAI_API_KEY"
+    temperature: 0.0
+    delegates_to: []
+
+  code:
+    name: "code"
+    system_prompt: |
+      You are the CODE specialist. Write and debug software.
+      End with [RETURN] or [DELEGATE: math].
+    provider: "openai"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4o-mini"
+    api_key_env: "OPENAI_API_KEY"
+    temperature: 0.0
+    delegates_to: ["math"]
+
+  knowledge:
+    name: "knowledge"
+    system_prompt: |
+      You are the KNOWLEDGE specialist. Answer factual questions and explain concepts.
+      End with [RETURN].
+    provider: "openai"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4o-mini"
+    api_key_env: "OPENAI_API_KEY"
+    temperature: 0.2
+    delegates_to: []
 ```
 
 ---
 
 ## Field Reference
 
-### system_prompt (required)
+### Global Settings
 
-Instructions for the model. For the generalist, must include routing tags. For specialists, must include `[RETURN]` instruction.
+| Field | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `max_hops` | Integer | `10` | Maximum number of model hops allowed for a single prompt to prevent infinite delegation loops. |
 
-**Example:**
-```yaml
-system_prompt: |
-  You are a math specialist.
-  Solve problems step-by-step.
-  End with [RETURN] to send back to generalist.
-```
+### Specialist Settings (`generalist` and each `specialists` entry)
 
-### base_url (required)
-
-API endpoint URL. Common values:
-
-- OpenAI: `https://api.openai.com/v1`
-- Ollama: `http://localhost:11434/v1`
-- Groq: `https://api.groq.com/v1`
-- Claude (via OpenRouter): `https://openrouter.ai/api/v1`
-
-### model (required)
-
-Model identifier. Depends on your provider:
-
-**OpenAI:**
-- `gpt-4o`
-- `gpt-4o-mini`
-- `gpt-4-turbo`
-
-**Ollama:**
-- `llama3`
-- `llama3:70b`
-- `codellama`
-- `mistral`
-
-**Groq:**
-- `llama-3.1-70b-versatile`
-- `llama-3.1-8b-instant`
-- `mixtral-8x7b-32768`
-
-### api_key_env (optional)
-
-Name of environment variable containing the API key.
-
-**Example:**
-```yaml
-api_key_env: "OPENAI_API_KEY"
-```
-
-Set the environment variable:
-```bash
-export OPENAI_API_KEY="sk-..."
-```
-
-Leave empty for providers that don't need authentication (Ollama):
-```yaml
-api_key_env: ""
-```
-
-### temperature (optional, default: 0.7)
-
-Controls randomness in model output:
-
-- **0.0-0.3:** Deterministic, focused (good for math, code)
-- **0.4-0.7:** Balanced (good for general use)
-- **0.8-1.0:** Creative, diverse (good for writing)
-
-**Example:**
-```yaml
-math:
-  temperature: 0.2  # Precise calculations
-
-creative:
-  temperature: 0.9  # Diverse creative output
-```
-
-### delegates_to (optional)
-
-List of specialists this specialist can delegate to.
-
-**Example:**
-```yaml
-code:
-  delegates_to: ["math", "tool_use"]
-```
-
-This allows the code specialist to:
-- Delegate math problems to the math specialist
-- Delegate tool execution to the tool_use specialist
+| Field | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `system_prompt` | String | **Required** | Instructions defining the role, capabilities, and routing tags for this model. |
+| `name` | String | Section key | Identifier for this role (e.g. `generalist`, `math`, `code`). |
+| `provider` | String | `"openai"` | Provider protocol (all OpenAI-compatible endpoints use `"openai"`). |
+| `base_url` | String | `"http://localhost:11434/v1"` | The HTTP base URL of the API endpoint. |
+| `model` | String | `"llama3"` | Model name requested from the provider. |
+| `api_key_env` | String | `null` | Name of the environment variable holding the API key (e.g. `"OPENAI_API_KEY"`). |
+| `temperature` | Float | `0.7` | Sampling temperature (0.0 for deterministic, 1.0 for creative). |
+| `max_tokens` | Integer | `null` | Optional max tokens to generate. If omitted, no limit is sent. |
+| `stop` | List[String] | `[]` | Optional list of stop sequences. |
+| `timeout` | Float | `60.0` | HTTP request timeout in seconds. |
+| `delegates_to` | List[String] | `[]` | List of specialist names this specialist is permitted to delegate to. |
 
 ---
 
-## Example Configurations
+## Configuration Recipes
 
-### Fully Local (Ollama)
-
+### 1. Completely Local & Free with Ollama
 ```yaml
 generalist:
-  system_prompt: |
-    You are OpenJarvis. Route using:
-    [ROUTE: return], [ROUTE: math], [ROUTE: code], [ROUTE: knowledge]
+  system_prompt: "You are OpenJarvis. Route using [ROUTE: math], [ROUTE: code], or [ROUTE: return]."
   base_url: "http://localhost:11434/v1"
   model: "llama3"
-  api_key_env: ""
-  temperature: 0.7
+  temperature: 0.0
 
 specialists:
   math:
-    system_prompt: "Math specialist. End with [RETURN]."
+    system_prompt: "You are the math specialist. End with [RETURN]."
     base_url: "http://localhost:11434/v1"
     model: "llama3"
-    temperature: 0.3
-    delegates_to: ["tool_use"]
+    temperature: 0.0
 
   code:
-    system_prompt: "Code specialist. End with [RETURN]."
+    system_prompt: "You are the code specialist. End with [RETURN]."
     base_url: "http://localhost:11434/v1"
     model: "codellama"
-    temperature: 0.2
-    delegates_to: ["math", "tool_use"]
-
-  tool_use:
-    system_prompt: "Tool specialist. End with [RETURN]."
-    base_url: "http://localhost:11434/v1"
-    model: "llama3"
-    temperature: 0.3
+    temperature: 0.0
 ```
 
-### Cloud Only (OpenAI)
-
-```yaml
-generalist:
-  system_prompt: |
-    You are OpenJarvis. Route using routing tags.
-  base_url: "https://api.openai.com/v1"
-  model: "gpt-4o-mini"
-  api_key_env: "OPENAI_API_KEY"
-  temperature: 0.7
-
-specialists:
-  math:
-    system_prompt: "Math specialist. End with [RETURN]."
-    base_url: "https://api.openai.com/v1"
-    model: "gpt-4o-mini"
-    api_key_env: "OPENAI_API_KEY"
-    temperature: 0.3
-    delegates_to: ["tool_use"]
-
-  code:
-    system_prompt: "Code specialist. End with [RETURN]."
-    base_url: "https://api.openai.com/v1"
-    model: "gpt-4o-mini"
-    api_key_env: "OPENAI_API_KEY"
-    temperature: 0.2
-    delegates_to: ["math", "tool_use"]
-
-  tool_use:
-    system_prompt: "Tool specialist. End with [RETURN]."
-    base_url: "https://api.openai.com/v1"
-    model: "gpt-4o-mini"
-    api_key_env: "OPENAI_API_KEY"
-    temperature: 0.3
-```
-
-### Hybrid (Best Model for Each Task)
-
+### 2. High-Speed Hybrid Setup
 ```yaml
 generalist:
   base_url: "https://api.openai.com/v1"
   model: "gpt-4o-mini"
   api_key_env: "OPENAI_API_KEY"
-  temperature: 0.7
+  temperature: 0.0
 
 specialists:
-  math:
-    base_url: "http://localhost:11434/v1"
-    model: "llama3"  # Local for privacy
-    temperature: 0.3
-    delegates_to: ["tool_use"]
-
-  code:
-    base_url: "https://api.groq.com/v1"
-    model: "llama-3.1-70b-versatile"  # Groq for speed
+  knowledge:
+    base_url: "https://api.groq.com/openai/v1"
+    model: "llama-3.1-70b-versatile"
     api_key_env: "GROQ_API_KEY"
     temperature: 0.2
-    delegates_to: ["math", "tool_use"]
 
-  knowledge:
-    base_url: "https://api.openai.com/v1"
-    model: "gpt-4o"  # OpenAI for accuracy
-    api_key_env: "OPENAI_API_KEY"
-    temperature: 0.5
-    delegates_to: ["tool_use"]
-
-  tool_use:
+  math:
     base_url: "http://localhost:11434/v1"
     model: "llama3"
-    temperature: 0.3
+    temperature: 0.0
 ```
 
 ---
 
-## Environment Variables
+## Validation & Startup Checks
 
-### API Keys
-
-Set API keys as environment variables:
-
-```bash
-# OpenAI
-export OPENAI_API_KEY="sk-..."
-
-# Groq
-export GROQ_API_KEY="gsk_..."
-
-# Anthropic (via OpenRouter)
-export OPENROUTER_API_KEY="sk-or-..."
-```
-
-Add to your shell profile for persistence:
-
-```bash
-# ~/.bashrc or ~/.zshrc
-export OPENAI_API_KEY="sk-..."
-```
-
-### Config Path
-
-Override default config location:
-
-```bash
-export OJ_CONFIG="/path/to/my-config.yaml"
-```
-
----
-
-## Validation
-
-OpenJarvis validates your configuration on startup. Common errors:
-
-### Missing Required Field
-
-```
-Error: Missing required field 'base_url' for specialist 'math'
-```
-
-**Fix:** Add the missing field to your config.
-
-### Invalid URL
-
-```
-Error: Invalid base_url 'not-a-url' for generalist
-```
-
-**Fix:** Use a proper URL (must start with `http://` or `https://`).
-
-### Missing API Key
-
-```
-Error: Environment variable 'OPENAI_API_KEY' not set
-```
-
-**Fix:** Set the API key:
-```bash
-export OPENAI_API_KEY="sk-..."
-```
-
-### Invalid Delegation
-
-```
-Error: Specialist 'code' delegates to unknown specialist 'unknown'
-```
-
-**Fix:** Only delegate to specialists that exist in your config.
+OpenJarvis validates your configuration when starting:
+- **Unknown Keys**: Reports the exact line/section and lists allowed keys if a typo occurs.
+- **Missing Prompts**: Flags missing required `system_prompt` entries immediately.
+- **Invalid Delegation**: Ensures all `delegates_to` names exist in the `specialists` map.
+- **Missing API Keys**: Alerts you with the environment variable name if an API key is missing.
 
 ---
 
 ## Next Steps
 
-- **[Specialists Configuration →](specialists.md)** — Detailed specialist setup
-- **[Providers Configuration →](providers.md)** — Provider-specific guides
-- **[Advanced Configuration →](advanced.md)** — Power user features
+- **[Specialists Guide →](specialists.md)** — Designing specialist prompts and delegation
+- **[Providers Guide →](providers.md)** — Setting up Ollama, OpenAI, Groq, and OpenRouter
+- **[Advanced Options →](advanced.md)** — Fine-tuning timeouts, temperatures, and hop limits
 
----
-
-## See Also
-
-- [Quick Start](../getting-started/quick-start.md) — Example configurations
-- [Troubleshooting](../troubleshooting.md) — Common config issues

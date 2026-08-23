@@ -72,61 +72,34 @@ Fetch a summary of a Wikipedia article on any topic.
 
 ---
 
-## How Tools Are Invoked
+## How Web Tools Are Invoked
 
-You don't call tools directly — specialists invoke them automatically. Just ask naturally:
+You don't need to call tools manually — models invoke them automatically when answering prompts that require real-time knowledge or web content:
 
-```
-> What's the current price of Bitcoin?
+```text
+oj> What's the latest price of Bitcoin?
 
-  ↳ routing: generalist → knowledge → tool_use
-  ⚙ tool: search_web
+  ↳ routing: generalist → knowledge
+  ⚙ tool: search_web {"query": "Bitcoin price current USD"}
     → [{"title": "Bitcoin Price...", "url": "...", "snippet": "..."}]
-  ↳ routing: tool_use → knowledge → generalist
 
 The current price of Bitcoin is approximately $65,000 USD...
 ```
 
 ---
 
-## Tool Access Requirements
+## Rate Limits & Privacy
 
-Web tools require a specialist to have `tool_use` in its `delegates_to`:
+- **DuckDuckGo Search (`search_web`)**: Queries DuckDuckGo without personal tracking or API keys.
+- **Web Fetching (`fetch_url`)**: Requests the target URL directly, strips HTML scripts/styles, and truncates content to ~8KB.
+- **Wikipedia (`fetch_wikipedia`)**: Fetches summary extracts for quick reference.
 
-```yaml
-specialists:
-  knowledge:
-    system_prompt: "Knowledge specialist. End with [RETURN]."
-    base_url: "..."
-    model: "..."
-    delegates_to: ["tool_use"]   # Required for web tool access
-
-  tool_use:
-    system_prompt: "Tool specialist. End with [RETURN]."
-    base_url: "..."
-    model: "..."
-```
-
----
-
-## Rate Limits
-
-`search_web` uses DuckDuckGo's search API, which has informal rate limits. If you make many searches in rapid succession, you may see empty results or errors. This resolves automatically after a short pause.
-
----
-
-## Privacy
-
-- `search_web` sends queries to DuckDuckGo (privacy-focused, no personal tracking)
-- `fetch_url` sends requests directly to the target website
-- No search data is stored by OpenJarvis
-
-For fully private operation, use Ollama with offline tools only and avoid web tools.
+For air-gapped or 100% offline environments, avoid prompts that require live web access.
 
 ---
 
 ## See Also
 
-- [Tools Overview](overview.md) — All 29 tools
-- [Configuration](../configuration/overview.md) — Set up tool access
-- [Troubleshooting](../troubleshooting.md) — Web tool issues
+- [Tools Overview](overview.md) — All 29 built-in tools
+- [Configuration Guide](../configuration/overview.md) — Configuring specialists
+- [Troubleshooting](../troubleshooting.md) — Common connection issues

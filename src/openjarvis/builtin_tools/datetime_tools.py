@@ -4,13 +4,6 @@ import pytz
 
 from openjarvis.tools import tool
 
-_registry: dict[str, object] = {}
-
-def get_registry():
-    from openjarvis.tools import ToolRegistry
-    if not _registry:
-        _registry['registry'] = ToolRegistry()
-    return _registry['registry']
 
 @tool()
 def get_current_datetime(timezone: str = "UTC") -> str:

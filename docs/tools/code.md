@@ -72,78 +72,45 @@ Check Python code for syntax errors without executing it.
 
 ## Usage Examples
 
-### Running a Calculation
+### Running Python Subprocesses
 
-```
-> Calculate the sum of squares from 1 to 100 using Python
+```text
+oj> Calculate the sum of squares from 1 to 100 using Python
 
-  ↳ routing: generalist → code → tool_use
-  ⚙ tool: run_python
+  ↳ routing: generalist → code
+  ⚙ tool: run_python {"code": "print(sum(i**2 for i in range(1, 101)))"}
     → 338350
-  ↳ routing: tool_use → code → generalist
 
-The sum of squares from 1 to 100 is 338,350.
-(Calculated with: sum(i**2 for i in range(1, 101)))
+The sum of squares from 1 to 100 is **338,350**.
 ```
 
-### Checking Generated Code
+### Checking Generated Python Code
 
-```
-> Write and test a Python function to check if a number is prime
+```text
+oj> Check if this Python function has any syntax issues: def foo(x): return x + 1
 
-  ↳ routing: generalist → code → tool_use
-  ⚙ tool: lint_python
-    → Syntax OK
-  ⚙ tool: run_python
-    → True
-    → False
-    → True
-  ↳ routing: tool_use → code → generalist
+  ↳ routing: generalist → code
+  ⚙ tool: lint_python {"code": "def foo(x):\n    return x + 1"}
+    → "Syntax OK"
 
-Here's a prime-checking function: [code shown]
+The snippet contains valid Python syntax without errors.
 ```
 
 ---
 
-## Security Warning
+## Security & Timeout Guardrails
 
-Code execution tools run directly on your machine with your user's permissions. This means:
+Code execution tools run directly in isolated subprocesses using the active user's permissions:
 
-- Python code can read/write any file you have access to
-- Shell commands can do anything your user can do
-- Network access is available
-- System resources can be consumed or exhausted
-- **There is no sandbox**
-
-**Only use with trusted inputs.** If you're asking OpenJarvis to execute code from untrusted sources (web pages, user input, etc.), review the code before it runs.
-
-### Timeout Protection
-
-Both tools enforce timeouts (10s for Python, 15s for shell) to prevent runaway processes. Output is capped at 4KB to prevent memory issues.
-
----
-
-## Tool Access Requirements
-
-Code tools require the `tool_use` specialist, which in turn requires `delegates_to` to be set:
-
-```yaml
-specialists:
-  code:
-    delegates_to: ["tool_use"]   # Required
-
-  tool_use:
-    system_prompt: |
-      You are a tool specialist. Execute tools carefully.
-      End with [RETURN].
-    base_url: "..."
-    model: "..."
-```
+- **Subprocess Isolation**: Subprocesses are spawned per-execution without shell string injection.
+- **Strict Timeouts**: 10 seconds for `run_python`, 15 seconds for `run_shell`.
+- **Buffer Cap**: Standard output and error streams are truncated to 4KB.
+- **Static Linting (`lint_python`)**: Uses Python's internal AST parser to validate syntax safely without executing code.
 
 ---
 
 ## See Also
 
-- [Tools Overview](overview.md) — All 29 tools
-- [File Tools](files.md) — Read and write files
-- [Troubleshooting](../troubleshooting.md) — Code execution issues
+- [Tools Overview](overview.md) — All 29 built-in tools
+- [File Tools](files.md) — Reading, writing, and searching files
+- [Data Processing](data.md) — JSON, CSV, and regex operations

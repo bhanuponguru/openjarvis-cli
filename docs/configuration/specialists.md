@@ -1,222 +1,131 @@
 # Specialists Configuration
 
-Specialists are the domain-specific models that OpenJarvis routes requests to. The generalist acts as conductor, deciding which specialist handles each part of a query.
+Specialists are domain-specific language model roles configured to handle distinct types of tasks (such as writing code, solving mathematics, answering factual questions, or decomposing complex plans).
+
+The **generalist** coordinates the team, while **specialists** execute tasks, call built-in tools as needed, and either return answers or delegate to peer specialists.
 
 ---
 
-## The Generalist
+## The Generalist (Router & Conductor)
 
-The generalist is required and acts as the conductor for every conversation. It receives all user input, decides whether to answer directly or route to a specialist, and synthesizes the final response.
+The `generalist` role is required for all configurations. It receives user prompts, decides whether to answer directly or route to a domain specialist, and synthesizes the final answer.
 
 ```yaml
 generalist:
+  name: "generalist"
   system_prompt: |
-    You are OpenJarvis, an intelligent AI assistant.
-    
-    For each user request, decide how to respond:
-    - Answer directly for simple questions
-    - Route to specialists for complex or domain-specific tasks
-    
-    Routing tags (use on their own line):
-    [ROUTE: return]     — Send this response directly to the user
-    [ROUTE: math]       — Route to math specialist
-    [ROUTE: code]       — Route to code specialist
-    [ROUTE: knowledge]  — Route to knowledge specialist
-    [ROUTE: tool_use]   — Route to tool specialist
+    You are the ROUTER of OpenJarvis. Choose the best specialist for each query:
+    [ROUTE: math]       - Calculations, proofs, algebra, numerical problems
+    [ROUTE: code]       - Software development, debugging, scripting
+    [ROUTE: knowledge]  - Factual questions, concepts, general research
+    [ROUTE: return]     - Answer directly or deliver tool result
+  provider: "openai"
   base_url: "https://api.openai.com/v1"
   model: "gpt-4o-mini"
   api_key_env: "OPENAI_API_KEY"
-  temperature: 0.7
+  temperature: 0.0
 ```
 
-### Generalist System Prompt Rules
+### Generalist Prompt Guidelines
 
-The generalist's system prompt must include:
-
-1. **Its role** — What it is and what it does
-2. **Routing instructions** — Which tags to use and when
-3. **All available specialists** — Listed so it knows what to route to
-
-The routing tag format is `[ROUTE: specialist_name]` where `specialist_name` matches a key under `specialists:` in your config, or `return` to send the response directly to the user.
+1. **Explicit Routing Tags**: List each specialist tag (`[ROUTE: <specialist>]`) clearly on its own line.
+2. **Direct Answer Tag**: Specify `[ROUTE: return]` when the query does not need specialist delegation.
+3. **Low Temperature**: Set `temperature: 0.0` or `0.1` so the router makes reliable, deterministic decisions.
 
 ---
 
-## Specialists
+## Defining Specialists
 
-Specialists handle specific domains. Each specialist must:
-
-1. Know its domain (from `system_prompt`)
-2. Know how to return results (`[RETURN]` tag)
-3. Optionally know how to delegate further (`[DELEGATE: name]`)
-
-### Minimal Specialist
+Under the `specialists:` section, define custom specialist roles. Each specialist is configured with its own system prompt, model endpoint, temperature, and optional delegation targets:
 
 ```yaml
 specialists:
   math:
+    name: "math"
     system_prompt: |
-      You are a mathematics specialist.
-      Solve problems step-by-step, showing your work.
-      When done, end your response with [RETURN] on its own line.
-    base_url: "http://localhost:11434/v1"
-    model: "llama3"
-    temperature: 0.3
-```
+      You are the MATH specialist.
+      Solve calculations, algebra, and quantitative problems step-by-step.
+      You have access to calculation and equation-solving tools via function calling.
+      End your final answer with [RETURN].
+    provider: "openai"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4o-mini"
+    api_key_env: "OPENAI_API_KEY"
+    temperature: 0.0
+    delegates_to: []
 
-### Specialist with Tool Access
-
-```yaml
-specialists:
-  math:
-    system_prompt: |
-      You are a mathematics specialist.
-      You can use the calculate tool for arithmetic.
-      Show your work, then end with [RETURN].
-    base_url: "http://localhost:11434/v1"
-    model: "llama3"
-    temperature: 0.3
-    delegates_to: ["tool_use"]
-```
-
-### Specialist with Peer Delegation
-
-```yaml
-specialists:
   code:
+    name: "code"
     system_prompt: |
-      You are a code specialist.
-      For math problems within code, delegate to math: [DELEGATE: math]
-      For tool use, delegate to tool_use: [DELEGATE: tool_use]
-      When done, end with [RETURN].
-    base_url: "http://localhost:11434/v1"
-    model: "codellama"
+      You are the CODE specialist.
+      Write, analyze, and debug software.
+      You have access to file and code execution tools via function calling.
+      If you require deep mathematical derivations, emit [DELEGATE: math].
+      Otherwise, end your response with [RETURN].
+    provider: "openai"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4o-mini"
+    api_key_env: "OPENAI_API_KEY"
+    temperature: 0.0
+    delegates_to: ["math"]
+
+  planning:
+    name: "planning"
+    system_prompt: |
+      You are the PLANNING specialist.
+      Decompose complex, multi-step tasks into clear, ordered action items.
+      If you need factual checks, emit [DELEGATE: knowledge].
+      If you need quantitative estimations, emit [DELEGATE: math].
+      Otherwise, end your completed plan with [RETURN].
+    provider: "openai"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4o-mini"
+    api_key_env: "OPENAI_API_KEY"
     temperature: 0.2
-    delegates_to: ["math", "tool_use"]
+    delegates_to: ["knowledge", "math"]
 ```
 
 ---
 
-## Built-in Specialist Roles
+## Tool Access for Specialists
 
-These are the commonly used specialist names. You can use any names you want, but these are well-understood conventions:
+All 29 built-in tools (web search, math solving, file I/O, code execution, datetime, data parsing, session memory) are provided directly to models via standard OpenAI function calling.
 
-| Name | Purpose | Recommended Model |
-|------|---------|-------------------|
-| `math` | Calculations, proofs, equations | Any capable model, low temperature |
-| `code` | Code generation, debugging, review | Code-specific model (codellama, deepseek-coder) |
-| `knowledge` | Facts, research, explanations | General capable model |
-| `creative` | Writing, brainstorming, storytelling | Higher temperature model |
-| `planning` | Task decomposition, step-by-step plans | General capable model |
-| `tool_use` | Executes tools (web search, calculations, etc.) | Any model with good instruction following |
-
-The `tool_use` specialist is special — it's the gateway to OpenJarvis's 29 built-in tools. Specialists that need tools must `delegates_to: ["tool_use"]`.
+Models call tools automatically whenever their prompt requires it. Results are executed by OpenJarvis and fed back into the model conversation before the specialist emits `[RETURN]`.
 
 ---
 
-## System Prompt Engineering
+## Peer Delegation Rules (`delegates_to`)
 
-### Generalist Routing Prompts
-
-The generalist's routing instructions determine how intelligently it delegates. A good routing prompt:
-
-```yaml
-system_prompt: |
-  You are OpenJarvis, an intelligent AI assistant.
-  
-  Think carefully before routing. For each request:
-  - Simple questions or explanations → answer directly with [ROUTE: return]
-  - Math, equations, calculations → [ROUTE: math]
-  - Code, programming, debugging → [ROUTE: code]
-  - Facts, research, current events → [ROUTE: knowledge]
-  - Creative writing, stories, poetry → [ROUTE: creative]
-  - Multi-step planning → [ROUTE: planning]
-  
-  You can route to multiple specialists sequentially by routing, 
-  receiving the result, then routing again.
-  
-  Always synthesize a final answer with [ROUTE: return] when done.
-```
-
-### Specialist Return Prompts
-
-Specialists must know to return. A good specialist system prompt:
-
-```yaml
-system_prompt: |
-  You are a mathematics specialist. Your job is to solve math problems accurately.
-  
-  - Show your work step by step
-  - Use exact values when possible (fractions, not decimals)
-  - If a calculation is needed, use the calculate tool
-  - If the problem requires knowledge (like GDP of a country), return to generalist
-  
-  Always end your response with [RETURN] on its own line.
-```
-
-### Common Mistakes
-
-**Missing `[RETURN]` in specialist prompt:**
-The specialist will keep responding without returning to the generalist. Always include `[RETURN]` instructions.
-
-**Too many routing options:**
-The generalist gets confused if given 10+ specialists. Start with 3-4 and add more as needed.
-
-**No routing tags in generalist:**
-If the generalist's system prompt doesn't mention routing tags, it won't use them and will answer everything directly.
-
----
-
-## Delegation Graph
-
-Delegation defines which specialists can talk to each other. Only the paths you define are allowed:
+The `delegates_to` field defines which other specialists a specialist is allowed to call:
 
 ```yaml
 specialists:
-  math:
-    delegates_to: ["tool_use"]           # math → tool_use
-
   code:
-    delegates_to: ["math", "tool_use"]   # code → math, code → tool_use
-
-  knowledge:
-    delegates_to: ["tool_use"]           # knowledge → tool_use
-
-  tool_use:
-    delegates_to: []                     # tool_use returns to whoever called it
+    delegates_to: ["math"] # code can delegate to math
+  planning:
+    delegates_to: ["knowledge", "math"] # planning can delegate to knowledge or math
 ```
 
-This creates:
-```
-generalist → math → tool_use
-generalist → code → math → tool_use
-generalist → code → tool_use
-generalist → knowledge → tool_use
-```
-
-If a specialist tries to delegate to a name not in its `delegates_to` list, the delegation is ignored.
+- **Allowed Target**: If a specialist emits `[DELEGATE: math]` and `"math"` is in its `delegates_to` list, OpenJarvis transitions execution to the `math` specialist.
+- **Unapproved Target**: If a specialist attempts to delegate to an unlisted specialist, OpenJarvis safely intercepts the request and routes back to the generalist to recover.
 
 ---
 
-## Minimal Configuration
+## Common Specialist Roles
 
-The absolute minimum configuration — just the generalist:
-
-```yaml
-generalist:
-  system_prompt: |
-    You are OpenJarvis. Answer questions helpfully.
-    End responses with [ROUTE: return].
-  base_url: "http://localhost:11434/v1"
-  model: "llama3"
-  temperature: 0.7
-```
-
-With no specialists defined, the generalist handles everything directly.
+| Role | Domain Focus | Recommended Settings |
+| :--- | :--- | :--- |
+| **`math`** | Arithmetic, algebra, statistics, equations | Temperature `0.0`, high precision |
+| **`code`** | Software architecture, algorithms, bug fixes | Temperature `0.0`, code-tuned models (e.g. `codellama`, `gpt-4o`) |
+| **`knowledge`** | Research, explanations, current facts | Temperature `0.2` - `0.4`, web tools enabled |
+| **`creative`** | Brainstorming, copywriting, fiction | Temperature `0.7` - `0.9` |
+| **`planning`** | Project roadmap, step-by-step decomposition | Temperature `0.2`, delegates to `knowledge` & `math` |
 
 ---
 
-## See Also
+## Next Steps
 
-- [Configuration Overview](overview.md) — All configuration fields explained
-- [Providers](providers.md) — Provider-specific setup
-- [Routing Protocol](../usage/routing.md) — How routing tags work
+- **[Providers Guide →](providers.md)** — Connect Ollama, OpenAI, Groq, or OpenRouter
+- **[Built-in Tools Reference →](../tools/overview.md)** — List of all 29 tools available to specialists
+- **[Routing Protocol →](../usage/routing.md)** — Detailed mechanics of routing tags and return tokens

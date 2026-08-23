@@ -1,131 +1,72 @@
-# Installation
+# Installation Guide
 
-OpenJarvis is distributed as a pre-built binary for your platform — no Python installation or build tools required.
+OpenJarvis can be installed via pre-built standalone binaries or via Python's `uv` workspace package manager.
+
+---
+
+## Option 1: Standalone Binary (Recommended)
+
+Pre-built binaries include all dependencies and the embedded user documentation. No Python runtime or build tools are required.
 
 ### Download
 
-Download the latest version for your platform from [bhanuponguru.tech/openjarvis/release](https://bhanuponguru.tech/openjarvis/release):
+Download the release archive for your operating system and architecture from GitHub Releases:
+- **Linux (x86_64, aarch64)**: `openjarvis-<version>-linux-x86_64.tar.gz`
+- **macOS (Apple Silicon arm64, Intel x86_64)**: `openjarvis-<version>-macos-arm64.tar.gz`
+- **Windows (x86_64)**: `openjarvis-<version>-windows-x86_64.zip`
 
-- **Linux:** `openjarvis-linux-x86_64.tar.gz`
-- **macOS:** `openjarvis-macos-x86_64.tar.gz`
-- **Windows:** `openjarvis-windows-x86_64.zip`
-
-### Linux / macOS
+### Linux & macOS
 
 ```bash
-# Extract the archive
+# 1. Extract the release tarball
 tar xzf openjarvis-*.tar.gz
-
-# Enter the directory
 cd openjarvis-*
 
-# Run OpenJarvis
+# 2. Make executable if needed
+chmod +x openjarvis
+
+# 3. Launch OpenJarvis
 ./openjarvis
-```
 
-**Optional:** Add to PATH for system-wide access:
-
-```bash
-# Move to a directory in your PATH
+# (Optional) Install system-wide
 sudo mv openjarvis /usr/local/bin/
-
-# Now run from anywhere
-openjarvis
 ```
 
 ### Windows
 
-1. Extract the ZIP file
-2. Double-click `openjarvis.exe` to run
-3. Or run from Command Prompt/PowerShell:
-
-```powershell
-.\openjarvis.exe
-```
-
-**Optional:** Add to PATH:
-1. Right-click "This PC" → Properties → Advanced system settings
-2. Click "Environment Variables"
-3. Edit "Path" and add the directory containing `openjarvis.exe`
+1. Extract the ZIP archive.
+2. Open PowerShell or Command Prompt in the extracted directory.
+3. Run `.\openjarvis.exe`.
 
 ---
 
-## Verify Installation
+## Option 2: Running from Source with `uv`
 
-After installation, verify OpenJarvis is working:
+If you are developing or prefer running from source:
 
 ```bash
-openjarvis --version
-```
+# Clone the repository
+git clone https://github.com/bhanuponguru/OpenJarvis.git
+cd OpenJarvis
 
-You should see output like:
-
-```
-OpenJarvis version 0.1.0
+# Install dependencies and launch
+uv sync --all-packages
+uv run openjarvis
 ```
 
 ---
 
-## What's Included
+## What Is Included in Release Packages
 
-Binary distributions include:
-
-- **openjarvis** — The main executable
-- **specialists.example.yaml** — Sample configuration file
-- **README.md** — Quick reference
-- **docs/** — Full HTML documentation (this site)
-- **LICENSE** — License information
+- **`openjarvis`**: Self-contained executable CLI binary.
+- **`specialists.example.yaml`**: Pre-configured example configuration file.
+- **`README.md`**: Quick reference manual.
+- **`docs/`**: Complete offline HTML user documentation site.
 
 ---
 
 ## Next Steps
 
-- **[Quick Start →](quick-start.md)** — Get OpenJarvis running in 5 minutes
-- **[Configuration →](../configuration/overview.md)** — Set up your AI providers
-- **[Built-in Tools →](../tools/overview.md)** — See what OpenJarvis can do
-
----
-
-## Troubleshooting
-
-### Binary won't run on Linux
-
-**Error:** `Permission denied`
-
-**Solution:** Make the binary executable:
-
-```bash
-chmod +x openjarvis
-```
-
-### Binary won't run on macOS
-
-**Error:** "openjarvis" cannot be opened because the developer cannot be verified
-
-**Solution:** Allow the app in Security & Privacy:
-
-```bash
-# Remove quarantine attribute
-xattr -d com.apple.quarantine openjarvis
-
-# Or use System Preferences → Security & Privacy → Allow
-```
-
-### Binary won't run on Windows
-
-**Error:** Windows Defender blocks the executable
-
-**Solution:** Click "More info" → "Run anyway" in the SmartScreen prompt, or add an exception in Windows Security.
-
-### Source installation fails
-
-**Error:** `uv: command not found`
-
-**Solution:** Install uv first (see prerequisites above), or use pip:
-
-```bash
-cd packages/openjarvis
-pip install .
-```
-
-For more help, see the [Troubleshooting guide](../troubleshooting.md).
+- **[Quick Start Guide →](quick-start.md)** — Run the setup wizard and start chatting
+- **[Configuration Overview →](../configuration/overview.md)** — Configure AI providers
+- **[Built-in Tools →](../tools/overview.md)** — Explore all 29 built-in tools

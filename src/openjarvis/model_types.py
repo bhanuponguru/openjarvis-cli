@@ -17,6 +17,23 @@ class SpecialistConfig:
 
 
 @dataclass
+class ToolRetrievalConfig:
+    enabled: bool = False
+    top_k: int = 5
+    similarity_threshold: float = 0.35
+    always_on_tools: list[str] = field(default_factory=list)
+
+
+@dataclass
+class ToolPermissionConfig:
+    mode: str = "interactive"  # interactive | allowlist | autonomous
+    allowed_tools: list[str] = field(default_factory=list)
+    blocked_tools: list[str] = field(default_factory=list)
+    rules: dict[str, dict] = field(default_factory=dict)
+    remembered_decisions: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
 class ConductorConfig:
     generalist: SpecialistConfig
     specialists: dict[str, SpecialistConfig] = field(default_factory=dict)
@@ -25,3 +42,6 @@ class ConductorConfig:
     # On reaching the cap the conductor forces a final generalist answer rather
     # than raising -- a degraded answer beats an exception.
     max_hops: int = 10
+    tool_retrieval: ToolRetrievalConfig = field(default_factory=ToolRetrievalConfig)
+    tool_permissions: ToolPermissionConfig = field(default_factory=ToolPermissionConfig)
+

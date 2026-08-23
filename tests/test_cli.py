@@ -15,8 +15,8 @@ def test_run_cli_missing_config_launches_wizard(monkeypatch, tmp_path):
 
     monkeypatch.setenv("OJ_CONFIG", "this-file-does-not-exist.yaml")
     monkeypatch.setattr(cli, "run_wizard", lambda: config_file)
-    monkeypatch.setattr(cli, "load_config", lambda path=None: dummy_config)
-    monkeypatch.setattr(cli, "Conductor", lambda config=None, tools=None: None)
+    monkeypatch.setattr(cli, "load_config", lambda *args, **kwargs: dummy_config)
+    monkeypatch.setattr(cli, "Conductor", lambda *args, **kwargs: None)
     monkeypatch.setattr(cli, "create_builtin_registry", lambda: ToolRegistry())
     monkeypatch.setattr(cli, "run_repl", lambda conductor, console: None)
 
@@ -46,14 +46,14 @@ def test_run_cli_with_existing_config_and_exit(monkeypatch, capsys):
     )
 
     class DummyConductor:
-        def __init__(self, config=None, tools=None):
-            self.config = config
-            self.tools = tools
+        def __init__(self, *args, **kwargs):
+            self.config = kwargs.get("config")
+            self.tools = kwargs.get("tools")
 
         def chat(self, user_input):
             yield {"type": "final", "content": "noop", "role": "generalist"}
 
-    monkeypatch.setattr(cli, "load_config", lambda path=None: dummy_config)
+    monkeypatch.setattr(cli, "load_config", lambda *args, **kwargs: dummy_config)
     monkeypatch.setattr(cli, "Conductor", DummyConductor)
     monkeypatch.setattr(cli, "create_builtin_registry", lambda: ToolRegistry())
     monkeypatch.setattr(cli, "run_repl", lambda conductor, console: None)
@@ -75,13 +75,13 @@ def test_run_cli_passes_tools_to_conductor(monkeypatch):
     captured = {}
 
     class CapturingConductor:
-        def __init__(self, config=None, tools=None):
-            captured["tools"] = tools
+        def __init__(self, *args, **kwargs):
+            captured["tools"] = kwargs.get("tools")
 
         def chat(self, user_input):
             yield {"type": "final", "content": "ok", "role": "generalist"}
 
-    monkeypatch.setattr(cli, "load_config", lambda path=None: dummy_config)
+    monkeypatch.setattr(cli, "load_config", lambda *args, **kwargs: dummy_config)
     monkeypatch.setattr(cli, "Conductor", CapturingConductor)
     monkeypatch.setattr(cli, "create_builtin_registry", lambda: dummy_registry)
     monkeypatch.setattr(cli, "run_repl", lambda conductor, console: None)
