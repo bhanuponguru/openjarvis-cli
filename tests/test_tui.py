@@ -29,6 +29,24 @@ def test_render_event_route(capsys):
     assert "math" in output
 
 
+def test_render_event_delegation(capsys):
+    console = Console(file=StringIO(), highlight=False)
+    tui.render_event(console, {"type": "route", "from_role": "code", "to_role": "math"})
+    output = console.file.getvalue()
+    assert "delegating" in output
+    assert "code" in output
+    assert "math" in output
+
+
+def test_render_event_returning(capsys):
+    console = Console(file=StringIO(), highlight=False)
+    tui.render_event(console, {"type": "route", "from_role": "math", "to_role": "generalist"})
+    output = console.file.getvalue()
+    assert "returning" in output
+    assert "math" in output
+    assert "generalist" in output
+
+
 def test_render_event_intermediate_with_content(capsys):
     console = Console(file=StringIO(), highlight=False)
     tui.render_event(console, {"type": "intermediate", "content": "thinking...", "role": "math"})

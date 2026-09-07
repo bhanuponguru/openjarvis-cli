@@ -87,15 +87,15 @@ def locate_config() -> Path:
     if local_config.exists():
         return local_config
 
-    # 3. Global user config (~/.openjarvis/config/specialists.yaml)
-    global_config = Path.home() / ".openjarvis" / "config" / "specialists.yaml"
-    if global_config.exists():
-        return global_config
-
-    # 4. Current directory fallback (./specialists.yaml)
+    # 3. Current directory config (./specialists.yaml)
     cwd_config = Path.cwd() / "specialists.yaml"
     if cwd_config.exists():
         return cwd_config
+
+    # 4. Global user config (~/.openjarvis/config/specialists.yaml)
+    global_config = Path.home() / ".openjarvis" / "config" / "specialists.yaml"
+    if global_config.exists():
+        return global_config
 
     # 5. Legacy user config directory (~/.config/openjarvis/specialists.yaml)
     legacy_user_config = Path.home() / ".config" / "openjarvis" / "specialists.yaml"
@@ -224,6 +224,12 @@ def load_config(
     if path is not None:
         return _load_single_config(Path(path))
 
+    if env_config := os.getenv("OJ_CONFIG"):
+        config_path = Path(env_config)
+        if not config_path.exists():
+            raise FileNotFoundError(f"OJ_CONFIG points to non-existent file: {env_config}")
+        return _load_single_config(config_path)
+
     ws = workspace or discover_workspace()
     global_file = ws.global_root / "config" / "specialists.yaml"
     local_file = ws.local_root / "config" / "specialists.yaml" if ws.local_root else None
@@ -232,6 +238,13 @@ def load_config(
         global_cfg = _load_single_config(global_file)
         local_cfg = _load_single_config(local_file)
         return merge_configs(global_cfg, local_cfg)
+
+    if local_file and local_file.exists():
+        return _load_single_config(local_file)
+
+    cwd_file = Path.cwd() / "specialists.yaml"
+    if cwd_file.exists():
+        return _load_single_config(cwd_file)
 
     # Fall back to standard locate_config()
     p = locate_config()

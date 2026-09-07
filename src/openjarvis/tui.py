@@ -35,9 +35,20 @@ def render_event(console: Console, event: dict) -> None:
     etype = event.get("type")
 
     if etype == "route":
-        console.print(
-            f"  [dim]↳ routing: {event['from_role']} → {event['to_role']}[/dim]"
-        )
+        from_role = event.get("from_role")
+        to_role = event.get("to_role")
+        if from_role != "generalist" and to_role != "generalist":
+            console.print(
+                f"  [cyan]↳ delegating: {from_role} → {to_role}[/cyan]"
+            )
+        elif to_role == "generalist":
+            console.print(
+                f"  [dim]↳ returning: {from_role} → {to_role}[/dim]"
+            )
+        else:
+            console.print(
+                f"  [dim]↳ routing: {from_role} → {to_role}[/dim]"
+            )
 
     elif etype == "intermediate":
         content = (event.get("content") or "").strip()
