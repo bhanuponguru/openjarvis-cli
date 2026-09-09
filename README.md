@@ -93,9 +93,8 @@ To exit the interactive session, type `exit`, `quit`, or press `Ctrl+C` / `Ctrl+
 
 OpenJarvis searches for its configuration in the following priority order:
 1. `OJ_CONFIG` environment variable (`export OJ_CONFIG=/path/to/specialists.yaml`)
-2. `./specialists.yaml` in the current working directory
-3. `~/.config/openjarvis/specialists.yaml`
-4. `/etc/openjarvis/specialists.yaml` (Linux / macOS)
+2. `./.openjarvis/config/specialists.yaml` (project-specific workspace)
+3. `~/.openjarvis/config/specialists.yaml` (global user workspace)
 
 ### Configuration Format (`specialists.yaml`)
 
