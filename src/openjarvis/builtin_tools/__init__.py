@@ -46,6 +46,7 @@ def create_builtin_registry(
         "code_tools",
         "data_tools",
         "memory_tools",
+        "editor_tools",
     }
 
     modules_to_load = include & all_modules if include is not None else all_modules
@@ -61,6 +62,7 @@ def create_builtin_registry(
         "code_tools": _load_code_tools,
         "data_tools": _load_data_tools,
         "memory_tools": _load_memory_tools,
+        "editor_tools": _load_editor_tools,
     }
 
     for module_name in modules_to_load:
@@ -110,6 +112,12 @@ def _load_memory_tools(registry: ToolRegistry):
     from . import memory_tools
     for name, tool_obj in DEFAULT_REGISTRY._tools.items():
         if tool_obj.func.__module__ == memory_tools.__name__:
+            registry._tools[name] = tool_obj
+
+def _load_editor_tools(registry: ToolRegistry):
+    from . import editor_tools
+    for name, tool_obj in DEFAULT_REGISTRY._tools.items():
+        if tool_obj.func.__module__ == editor_tools.__name__:
             registry._tools[name] = tool_obj
 
 

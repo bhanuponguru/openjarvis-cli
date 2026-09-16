@@ -8,7 +8,7 @@ OpenJarvis is an intelligent AI orchestrator and interactive terminal assistant.
 
 - 🎯 **Intelligent Multi-Model Routing**: Routes user requests to domain specialists and synthesizes clear, unified answers.
 - 🔌 **Provider Agnostic**: Connects to Ollama (local and private), OpenAI, Groq, OpenRouter, Claude, or any OpenAI-compatible API.
-- 🛠️ **29 Production-Ready Built-In Tools**: Automated function-calling tools for web search, math calculations, code execution, file I/O, datetime operations, data parsing, and session notes.
+- 🛠️ **31 Production-Ready Built-In Tools**: Automated function-calling tools for web search, math calculations, code execution, file I/O, datetime operations, data parsing, session notes, and native SWE tools (`str_replace_editor`, `execute_bash`).
 - 🪄 **Interactive Setup Wizard**: Automatically configures your model providers on first run if no configuration file exists.
 - 💻 **Modern Terminal Interface**: Interactive REPL with syntax-highlighted Markdown rendering, multiline input, command history, and real-time routing status.
 - 🚀 **Standalone Executables**: Zero Python runtime required when using pre-built binary releases.
@@ -158,6 +158,7 @@ OpenJarvis provides 29 built-in tools across 7 functional domains that models au
 | **Code Execution** | `run_python`, `run_shell`, `lint_python` | Subprocess Python execution, shell commands, syntax linting |
 | **Data Processing** | `parse_json`, `jq_query`, `parse_csv`, `regex_search`, `regex_replace` | JSON parsing, dot-notation extraction, CSV tables, regex |
 | **Session Memory** | `store_note`, `recall_note`, `list_notes`, `delete_note` | Storing and retrieving context notes during a session |
+| **Editor & SWE Execution** | `str_replace_editor`, `execute_bash` | Benchmark-standard string replacement and safe bash command execution |
 
 ---
 
