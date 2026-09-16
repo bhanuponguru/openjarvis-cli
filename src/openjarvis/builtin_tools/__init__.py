@@ -6,8 +6,10 @@ This module provides a pre-configured registry of tools that agents can use:
 - file_tools: File I/O and directory operations
 - web_tools: URL fetching, web search, Wikipedia lookups
 - code_tools: Python execution, shell commands, linting
-- data_tools: JSON/CSV parsing, regex operations
+- data_tools: JSON/CSV parsing, regex operations, SQLite queries
 - memory_tools: Session-scoped note storage
+- editor_tools: Standard text editor and bash execution
+- git_tools: Version control, diffs, logs, and patch management
 """
 
 from openjarvis.tools import DEFAULT_REGISTRY, ToolRegistry
@@ -47,6 +49,7 @@ def create_builtin_registry(
         "data_tools",
         "memory_tools",
         "editor_tools",
+        "git_tools",
     }
 
     modules_to_load = include & all_modules if include is not None else all_modules
@@ -63,6 +66,7 @@ def create_builtin_registry(
         "data_tools": _load_data_tools,
         "memory_tools": _load_memory_tools,
         "editor_tools": _load_editor_tools,
+        "git_tools": _load_git_tools,
     }
 
     for module_name in modules_to_load:
@@ -116,9 +120,15 @@ def _load_memory_tools(registry: ToolRegistry):
 
 def _load_editor_tools(registry: ToolRegistry):
     from . import editor_tools
-    for name, tool_obj in DEFAULT_REGISTRY._tools.items():
+    for tool_obj in DEFAULT_REGISTRY._tools.values():
         if tool_obj.func.__module__ == editor_tools.__name__:
-            registry._tools[name] = tool_obj
+            registry.register(tool_obj)
+
+def _load_git_tools(registry: ToolRegistry):
+    from . import git_tools
+    for tool_obj in DEFAULT_REGISTRY._tools.values():
+        if tool_obj.func.__module__ == git_tools.__name__:
+            registry.register(tool_obj)
 
 
 __all__ = ["create_builtin_registry"]

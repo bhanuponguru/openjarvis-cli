@@ -1,6 +1,6 @@
 # Code Execution Tools
 
-OpenJarvis includes 3 code tools for running Python, executing shell commands, and checking Python syntax.
+OpenJarvis includes 4 code tools for running Python, executing shell commands, checking Python syntax, and running pytest test suites.
 
 ---
 
@@ -67,6 +67,21 @@ Check Python code for syntax errors without executing it.
 > Check if this Python code has any syntax errors: [paste code]
 > Validate this Python snippet before running it
 ```
+
+---
+
+### `run_pytest`
+
+Run pytest on a test suite or specific test file and return execution output with pass/fail counts.
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `test_path` | string | `""` | Optional path to specific test file or directory |
+| `args` | string | `""` | Optional additional pytest arguments (e.g. `"-k test_editor -v"`) |
+
+**Returns:** Output string including exit code, test pass/fail counts, and failure tracebacks.
 
 ---
 

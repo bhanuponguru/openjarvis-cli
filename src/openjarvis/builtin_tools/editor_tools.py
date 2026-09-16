@@ -82,8 +82,9 @@ def str_replace_editor(
     elif command == "str_replace":
         if not file_path.exists():
             return f"Error: File '{path}' does not exist."
-        if old_str is None or new_str is None:
-            return "Error: Both 'old_str' and 'new_str' must be provided for 'str_replace'."
+        if old_str is None:
+            return "Error: 'old_str' must be provided for 'str_replace'."
+        replacement = new_str if new_str is not None else ""
         try:
             content = file_path.read_text(encoding="utf-8", errors="replace")
             count = content.count(old_str)
@@ -97,7 +98,7 @@ def str_replace_editor(
 
             # Save undo state
             _get_history(path).append(content)
-            new_content = content.replace(old_str, new_str, 1)
+            new_content = content.replace(old_str, replacement, 1)
             file_path.write_text(new_content, encoding="utf-8")
             return f"Successfully replaced text in '{path}'."
         except Exception as e:
@@ -172,4 +173,23 @@ def execute_bash(
         return f"Error: Command timed out after {timeout_seconds} seconds"
     except Exception as e:
         return f"Error executing bash command: {e}"
+
+
+@tool()
+def bash(
+    command: str,
+    timeout_seconds: int = 30,
+    cwd: str | None = None,
+) -> str:
+    """Standard SWE benchmark bash execution interface.
+
+    Args:
+        command: Bash command line string to execute.
+        timeout_seconds: Execution timeout in seconds (default 30).
+        cwd: Working directory for execution (defaults to current working directory).
+
+    Returns:
+        Formatted execution result containing exit code, stdout, and stderr.
+    """
+    return execute_bash(command=command, timeout_seconds=timeout_seconds, cwd=cwd)
 

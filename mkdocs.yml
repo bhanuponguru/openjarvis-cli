@@ -72,6 +72,8 @@ nav:
       - Advanced: configuration/advanced.md
   - Built-in Tools:
       - Overview: tools/overview.md
+      - Code Editor: tools/editor.md
+      - Git Tools: tools/git.md
       - Web Tools: tools/web.md
       - Math Tools: tools/math.md
       - File Tools: tools/files.md

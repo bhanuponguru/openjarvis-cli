@@ -1,6 +1,6 @@
 # Data Processing Tools
 
-OpenJarvis includes 5 data processing tools for parsing JSON, querying structured payloads, formatting CSV tables, and executing regex matches.
+OpenJarvis includes 6 data processing tools for parsing JSON, querying structured payloads, formatting CSV tables, executing regex matches, and querying SQLite databases.
 
 ---
 
@@ -118,6 +118,27 @@ Replace all occurrences matching a regex pattern in text.
 ```text
 > Replace all whitespace with underscores in: "Hello World Example"
 > Redact all email addresses in this document (replace with [EMAIL])
+```
+
+---
+
+### `sql_query`
+
+Execute SQL statements against a SQLite database file or in-memory database.
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `query` | string | required | SQL query or multi-statement script to execute |
+| `db_path` | string | `":memory:"` | Path to SQLite database file, or `":memory:"` for transient DB |
+
+**Returns:** Formatted Markdown table preview of rows returned, or confirmation of rows affected.
+
+**Example prompts:**
+```text
+> Query the database at app.db: SELECT * FROM users LIMIT 10;
+> Create a table and insert test data in :memory:
 ```
 
 ---

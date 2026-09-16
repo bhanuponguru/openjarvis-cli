@@ -63,7 +63,7 @@ class SafetyClassifier:
 
         # 1. High-priority heuristic guardrails for known dangerous payloads
         lower_args = args_str.lower()
-        if tool_name == "run_shell":
+        if tool_name in ("run_shell", "execute_bash", "bash"):
             for p in _DANGEROUS_SHELL_PATTERNS:
                 if p in lower_args:
                     return PermissionDecision(
@@ -79,8 +79,8 @@ class SafetyClassifier:
                         f"Autonomous safety classifier flagged sensitive Python construct: '{p}'",
                         "classifier",
                     )
-        elif tool_name in ("read_file", "write_file", "delete_file"):
-            path_val = str(arguments.get("path", ""))
+        elif tool_name in ("read_file", "write_file", "delete_file", "str_replace_editor", "file_info", "search_file"):
+            path_val = str(arguments.get("path", "") or arguments.get("file_path", ""))
             for p in _DANGEROUS_FILE_PATTERNS:
                 if p in path_val:
                     return PermissionDecision(

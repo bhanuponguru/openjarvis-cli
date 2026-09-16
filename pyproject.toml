@@ -3,6 +3,10 @@ name = "openjarvis-cli"
 version = "0.2.0"
 description = "OpenJarvis CLI — Autonomous agentic orchestration client and terminal interface routing tasks across LLMs"
 readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    { name = "Bhanu Ponguru", email = "bhanuponguru@gmail.com" },
+]
 requires-python = ">=3.13"
 dependencies = [
     "pyyaml>=6.0",

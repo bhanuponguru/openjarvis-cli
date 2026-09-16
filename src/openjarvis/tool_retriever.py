@@ -139,6 +139,7 @@ class ToolRetriever:
                 data = {
                     "tools": self._tool_names,
                     "vectors": self._tool_vectors,
+                    "vocab": self._fallback_embedder.vocab if self._fallback_embedder else None,
                 }
                 cache_file.write_text(json.dumps(data), encoding="utf-8")
             except OSError as exc:
@@ -160,6 +161,16 @@ class ToolRetriever:
             if sorted(cached_tools) == sorted(current_tools):
                 self._tool_names = cached_tools
                 self._tool_vectors = data.get("vectors", [])
+                cached_vocab = data.get("vocab")
+                if self._fallback_embedder is not None:
+                    if cached_vocab and isinstance(cached_vocab, dict):
+                        self._fallback_embedder.vocab = cached_vocab
+                    else:
+                        descriptions = [
+                            _format_tool_for_embedding(self.registry.get_tools()[name])
+                            for name in self._tool_names
+                        ]
+                        self._fallback_embedder.fit_transform(descriptions)
                 return True
         except Exception:
             pass

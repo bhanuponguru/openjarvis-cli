@@ -15,12 +15,13 @@ def _find_last_match(response: str) -> tuple[re.Match | None, str | None]:
     Returns:
         (match, match_type) where match_type is "route", "return", or "delegate"
     """
+    normalized = response.replace("\r\n", "\n")
     candidates: list[tuple[re.Match, str]] = []
-    for m in _ROUTE_PATTERN.finditer(response):
+    for m in _ROUTE_PATTERN.finditer(normalized):
         candidates.append((m, "route"))
-    for m in _RETURN_PATTERN.finditer(response):
+    for m in _RETURN_PATTERN.finditer(normalized):
         candidates.append((m, "return"))
-    for m in _DELEGATE_PATTERN.finditer(response):
+    for m in _DELEGATE_PATTERN.finditer(normalized):
         candidates.append((m, "delegate"))
 
     if not candidates:
@@ -60,12 +61,13 @@ def parse_route_tag(response: str) -> tuple[str, str | None]:
         (cleaned_content, route_target). ``route_target`` is "return" when no
         tag is present, so a model that forgets the protocol still terminates.
     """
-    match, match_type = _find_last_match(response)
+    normalized = response.replace("\r\n", "\n")
+    match, match_type = _find_last_match(normalized)
 
     if match is None:
-        return response.strip(), "return"
+        return normalized.strip(), "return"
 
     route = "return" if match_type == "return" else match.group(1).strip().lower()
 
-    cleaned = response[:match.start()] + response[match.end():]
+    cleaned = normalized[:match.start()] + normalized[match.end():]
     return cleaned.strip(), route

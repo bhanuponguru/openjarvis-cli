@@ -6,6 +6,8 @@ import tempfile
 from pathlib import Path
 
 import pytest
+import respx
+from httpx import Response
 
 from openjarvis.builtin_tools import create_builtin_registry
 
@@ -154,6 +156,39 @@ class TestFileTools:
             assert len(result) > 0
             assert result[0]["match"] == "hello"
 
+    def test_search_dir_and_file(self, registry):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sub = Path(tmpdir) / "pkg"
+            sub.mkdir()
+            (sub / "mod_a.py").write_text("def target_function():\n    return 42\n")
+            (sub / "mod_b.py").write_text("# No target here\n")
+
+            matches = registry.execute({
+                "name": "search_dir",
+                "arguments": {"search_term": "target_function", "dir_path": tmpdir}
+            })
+            assert len(matches) == 1
+            assert "mod_a.py" in matches[0]["file"]
+
+            file_matches = registry.execute({
+                "name": "search_file",
+                "arguments": {"search_term": "target_function", "file_path": str(sub / "mod_a.py")}
+            })
+            assert len(file_matches) == 1
+            assert file_matches[0]["line"] == 1
+
+    def test_find_file(self, registry):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            (Path(tmpdir) / "apple.py").write_text("")
+            (Path(tmpdir) / "banana.py").write_text("")
+
+            results = registry.execute({
+                "name": "find_file",
+                "arguments": {"file_name": "apple*.py", "dir_path": tmpdir}
+            })
+            assert len(results) == 1
+            assert "apple.py" in results[0]
+
 
 class TestDataTools:
     def test_parse_json(self, registry):
@@ -202,6 +237,30 @@ class TestDataTools:
             }
         })
         assert result == "abcXdefX"
+
+    def test_sql_query(self, registry):
+        setup = """
+        CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER);
+        INSERT INTO users (name, age) VALUES ('Alice', 30), ('Bob', 25);
+        """
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as db_file:
+            db_path = db_file.name
+
+        try:
+            registry.execute({
+                "name": "sql_query",
+                "arguments": {"query": setup, "db_path": db_path}
+            })
+            res = registry.execute({
+                "name": "sql_query",
+                "arguments": {"query": "SELECT name, age FROM users ORDER BY age DESC;", "db_path": db_path}
+            })
+            assert "Alice" in res
+            assert "30" in res
+            assert "Bob" in res
+        finally:
+            if os.path.exists(db_path):
+                os.remove(db_path)
 
 
 class TestMemoryTools:
@@ -281,6 +340,17 @@ class TestCodeTools:
         })
         assert "Error" in result or "Syntax" in result
 
+    def test_run_pytest(self, registry):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            test_file = Path(tmpdir) / "test_sample.py"
+            test_file.write_text("def test_ok():\n    assert 1 + 1 == 2\n")
+            res = registry.execute({
+                "name": "run_pytest",
+                "arguments": {"test_path": str(test_file)}
+            })
+            assert "Exit code: 0" in res
+            assert "1 passed" in res
+
 
 class TestWebTools:
     def test_fetch_url_invalid(self, registry):
@@ -298,6 +368,36 @@ class TestWebTools:
         assert isinstance(result, list)
         if result and "error" not in result[0]:
             assert "title" in result[0] or "url" in result[0]
+
+    @respx.mock
+    def test_http_request(self, registry):
+        respx.get("https://api.example.com/data").mock(
+            return_value=Response(200, json={"status": "ok"})
+        )
+        res = registry.execute({
+            "name": "http_request",
+            "arguments": {"url": "https://api.example.com/data"}
+        })
+        assert res.get("status_code") == 200
+        assert res.get("body") == {"status": "ok"}
+
+    def test_parse_openapi_spec(self, registry):
+        spec = """
+        openapi: 3.0.0
+        info:
+          title: Sample API
+          version: 1.0.0
+        paths:
+          /status:
+            get:
+              summary: Check status
+        """
+        res = registry.execute({
+            "name": "parse_openapi_spec",
+            "arguments": {"spec_text": spec}
+        })
+        assert res.get("title") == "Sample API"
+        assert res.get("total_endpoints") == 1
 
 
 class TestRegistryOptions:

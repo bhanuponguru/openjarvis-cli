@@ -85,3 +85,14 @@ def test_is_route_tag_distinguishes_tag_from_absence():
     assert not is_route_tag("[note] a bracketed aside")
     # A tag with prose attached is not a bare tag, so it must stay visible.
     assert not is_route_tag("Sure thing [ROUTE: math]")
+
+
+def test_tag_with_crlf_line_endings():
+    """Windows-style CRLF from LLM endpoints should parse correctly."""
+    content, route = parse_route_tag("Hello world\r\n[ROUTE: math]\r\n")
+    assert content.strip() == "Hello world"
+    assert route == "math"
+
+    content_ret, route_ret = parse_route_tag("Done\r\n[RETURN]\r\n")
+    assert content_ret.strip() == "Done"
+    assert route_ret == "return"

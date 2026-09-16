@@ -1,6 +1,6 @@
 # Web Tools
 
-OpenJarvis includes 3 web tools for searching the internet and fetching content.
+OpenJarvis includes 5 web tools for searching the internet, fetching content, executing HTTP REST requests, and inspecting OpenAPI specifications.
 
 ---
 
@@ -69,6 +69,41 @@ Fetch a summary of a Wikipedia article on any topic.
 > What is quantum entanglement?
 > Explain the Roman Empire
 ```
+
+---
+
+### `http_request`
+
+Execute an HTTP/REST API request with configurable methods, headers, query parameters, and JSON payloads.
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `url` | string | required | Full destination URL (http/https) |
+| `method` | string | `"GET"` | HTTP method (GET, POST, PUT, DELETE, PATCH, HEAD) |
+| `headers` | object | `{}` | Optional request headers dict |
+| `params` | object | `{}` | Optional query string parameters |
+| `data` | string | `null` | Optional raw body string |
+| `json_data` | object | `null` | Optional JSON body payload |
+| `timeout` | integer | 15 | Timeout in seconds |
+
+**Returns:** Dict with `status_code`, `headers`, and parsed `body` (JSON or truncated text).
+
+---
+
+### `parse_openapi_spec`
+
+Parse and inspect an OpenAPI or Swagger 2.0/3.0 specification from raw text or local file.
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `spec_text` | string | `null` | Raw JSON/YAML specification text |
+| `spec_path` | string | `null` | File path to OpenAPI JSON/YAML file |
+
+**Returns:** Dict with API title, version, endpoint count, and list of endpoints with methods, operations, and parameters.
 
 ---
 

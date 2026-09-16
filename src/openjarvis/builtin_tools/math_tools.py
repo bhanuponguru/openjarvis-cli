@@ -1,4 +1,5 @@
 import ast
+import math
 from collections.abc import Callable
 
 from openjarvis.tools import tool
@@ -63,12 +64,11 @@ def evaluate_expression(expression: str) -> str:
         Numeric result as a string.
     """
     try:
-        expr = expression.replace("pi", str(3.141592653589793)).replace("e", str(2.718281828459045))
-
-        tree = ast.parse(expr, mode="eval")
+        tree = ast.parse(expression, mode="eval")
         SafeEvaluator().visit(tree)
 
-        result = eval(compile(tree, "<string>", "eval"))
+        env = {"pi": math.pi, "e": math.e}
+        result = eval(compile(tree, "<string>", "eval"), {"__builtins__": {}}, env)
         return str(result)
     except ValueError as e:
         return f"Error: {e}"

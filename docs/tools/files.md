@@ -1,6 +1,6 @@
 # File Tools
 
-OpenJarvis includes 6 file system tools for reading, writing, and managing files.
+OpenJarvis includes 9 file system tools for reading, writing, searching, and managing files and directory trees.
 
 ---
 
@@ -138,6 +138,51 @@ Delete a file. Cannot delete directories.
 ```
 
 ⚠️ **Warning:** Deletion is permanent. There is no undo.
+
+---
+
+### `search_dir`
+
+Recursively search for a string or regex pattern across files in a directory tree.
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `search_term` | string | required | Literal string or regex pattern to match |
+| `dir_path` | string | `"."` | Root directory to search within |
+
+**Returns:** List of matching dicts with `file`, `line`, and `content` (up to 100 matches).
+
+---
+
+### `search_file`
+
+Search for a string or regex pattern in a specific file.
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `search_term` | string | required | Literal string or regex pattern to match |
+| `file_path` | string | required | Path to the target file |
+
+**Returns:** List of matching dicts with `line` and `content`.
+
+---
+
+### `find_file`
+
+Find files matching a filename or glob pattern in a directory tree.
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `file_name` | string | required | Filename or glob pattern (e.g. `"*.py"`) |
+| `dir_path` | string | `"."` | Root directory to search within |
+
+**Returns:** Sorted list of relative file paths matching the pattern.
 
 ---
 

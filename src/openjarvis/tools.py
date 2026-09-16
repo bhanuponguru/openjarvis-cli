@@ -193,6 +193,22 @@ class ToolRegistry:
         """Return the tool with the given name, or ``None`` if not found."""
         return self._tools.get(name)
 
+    def register(self, tool_obj: Tool) -> None:
+        """Register an existing Tool object directly."""
+        self._tools[tool_obj.name] = tool_obj
+
+    def add_tool(
+        self,
+        func: Callable[..., Any],
+        name: str | None = None,
+        description: str | None = None,
+    ) -> Tool:
+        """Register a callable directly as a tool and return the created Tool object."""
+        decorator = self.tool(name=name, description=description)
+        decorator(func)
+        registered_name = name or func.__name__
+        return self._tools[registered_name]
+
     def get_tools(self) -> dict[str, Tool]:
         """Return a copy of all registered tools mapping name -> Tool."""
         return dict(self._tools)
@@ -334,10 +350,11 @@ def _python_type_to_json(annotation: Any) -> str:
         return "null"
     if origin is not None:
         args = getattr(annotation, "__args__", ())
-        if type(None) in args:
-            non_null = [a for a in args if a is not type(None)]
-            if len(non_null) == 1:
-                return _python_type_to_json(non_null[0])
+        non_null = [a for a in args if a is not type(None)]
+        if len(non_null) == 1:
+            return _python_type_to_json(non_null[0])
+        if set(non_null) == {int, float}:
+            return "number"
 
     # Try direct lookup
     for py_type, json_type in _PYTHON_TYPE_TO_JSON.items():

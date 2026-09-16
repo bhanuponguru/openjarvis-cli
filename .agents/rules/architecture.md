@@ -8,12 +8,15 @@
   - `engine.py`: Graph state machine driving execution steps.
 
 ## 2. Built-in Tools Framework (`openjarvis.builtin_tools`)
-OpenJarvis CLI ships with 29 native tools:
-- **Terminal Execution**: `execute_bash` with timeout enforcement, sandboxed execution, and structured stdout/stderr capturing.
-- **File System & Code Editing**: `str_replace_editor` (view, create, str_replace, insert, undo_edit) matching SWE-bench specifications.
-- **Persistent Memory**: `store_memory`, `retrieve_memory`, `delete_memory` with local JSON and global session scoping.
-- **Information Retrieval**: `web_search`, `fetch_web_page`, `extract_text`.
-- **System Utilities**: date/time, JSON validators, calculation utilities.
+OpenJarvis CLI ships with 49 native tools organized into 9 modules:
+- **Editor & Terminal (`editor_tools`)**: `execute_bash`, `bash`, and `str_replace_editor` (view, create, str_replace, insert, undo_edit).
+- **Git & Version Control (`git_tools`)**: `git_diff`, `git_status`, `git_log`, `apply_patch`.
+- **File System (`file_tools`)**: `read_file`, `write_file`, `list_directory`, `search_in_files`, `search_dir`, `search_file`, `find_file`, `file_info`, `delete_file`.
+- **Web & API (`web_tools`)**: `web_search`, `fetch_url`, `fetch_wikipedia`, `http_request`, `parse_openapi_spec`.
+- **Code Execution (`code_tools`)**: `run_python`, `run_shell`, `lint_python`, `run_pytest`.
+- **Data Processing (`data_tools`)**: `parse_json`, `jq_query`, `parse_csv`, `regex_search`, `regex_replace`, `sql_query`.
+- **Persistent Memory (`memory_tools`)**: `save_memory`, `read_memory`, `update_memory`, `delete_memory`, `list_memories`, `search_memories`, and backward-compatible note aliases.
+- **Date, Time & Math (`datetime_tools`, `math_tools`)**: date/time manipulation and formatting, AST-safe math calculators, unit converters, equation solvers, statistics.
 
 ## 3. Tool Permissions & Security Sandbox (`openjarvis.permissions`)
 - `PermissionManager`: Intercepts every tool call before execution.

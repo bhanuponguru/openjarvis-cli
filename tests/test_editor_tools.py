@@ -75,11 +75,45 @@ def test_editor_insert(tmp_path: Path):
     lines = test_file.read_text(encoding="utf-8").splitlines()
     assert lines == ["line 1", "inserted line", "line 2"]
 
+    # Insert at beginning of file (insert_line=0)
+    ins_zero = str_replace_editor(
+        command="insert",
+        path=str(test_file),
+        insert_line=0,
+        new_str="header line",
+    )
+    assert "Successfully inserted" in ins_zero
+    assert test_file.read_text(encoding="utf-8").splitlines()[0] == "header line"
+
+
+def test_editor_str_replace_deletion(tmp_path: Path):
+    test_file = tmp_path / "del_test.txt"
+    str_replace_editor(
+        command="create",
+        path=str(test_file),
+        file_text="hello remove_me world",
+    )
+    # new_str is None or empty string -> deletes old_str
+    res = str_replace_editor(
+        command="str_replace",
+        path=str(test_file),
+        old_str="remove_me ",
+    )
+    assert "Successfully replaced" in res
+    assert test_file.read_text(encoding="utf-8") == "hello world"
+
 
 def test_execute_bash_basic():
     res = execute_bash("echo 'hello openjarvis'")
     assert "Exit code: 0" in res
     assert "hello openjarvis" in res
+
+
+def test_bash_alias_matches_execute_bash():
+    from openjarvis.builtin_tools.editor_tools import bash
+    res = bash("echo 'benchmark bash test'")
+    assert "Exit code: 0" in res
+    assert "benchmark bash test" in res
 
 
 def test_execute_bash_nonzero_exit():

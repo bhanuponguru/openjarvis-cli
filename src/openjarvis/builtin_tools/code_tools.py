@@ -93,3 +93,33 @@ def lint_python(code: str) -> str:
         return f"Syntax Error: {e}"
     except Exception as e:
         return f"Error: {e}"
+
+
+@tool()
+def run_pytest(test_path: str = "", args: str = "") -> str:
+    """Run pytest on the test suite and return structured test counts and failures.
+
+    Args:
+        test_path: Optional path to specific test file or directory.
+        args: Optional additional pytest arguments (e.g. "-k test_editor -v").
+
+    Returns:
+        Execution summary with pass/fail counts and error tracebacks.
+    """
+    cmd = ["pytest", "-q"]
+    if test_path:
+        cmd.append(test_path)
+    if args:
+        cmd.extend(args.split())
+
+    try:
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        output = res.stdout + res.stderr
+        if len(output) > 5000:
+            output = output[:5000] + "\n... [output truncated at 5000 chars]"
+        return f"Exit code: {res.returncode}\n{output.strip()}"
+    except subprocess.TimeoutExpired:
+        return "Error: pytest execution timed out after 60 seconds."
+    except Exception as exc:
+        return f"Error running pytest: {exc}"
+

@@ -39,3 +39,9 @@ def test_tool_retriever_load_cache(tmp_path: Path):
     loaded = retriever2.load_cache()
     assert loaded is True
     assert len(retriever2._tool_vectors) == len(retriever1._tool_vectors)
+
+    # Retrieval after loading from cache must succeed with non-zero vector match
+    retrieved = retriever2.retrieve("Calculate mathematical formula and arithmetic expression")
+    assert len(retrieved) > 0
+    retrieved_names = {t.name for t in retrieved}
+    assert "evaluate_expression" in retrieved_names or "solve_equation" in retrieved_names

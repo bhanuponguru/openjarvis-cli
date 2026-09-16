@@ -2,6 +2,7 @@ import csv
 import io
 import json
 import re
+import sqlite3
 
 from openjarvis.tools import tool
 
@@ -132,3 +133,61 @@ def regex_replace(pattern: str, replacement: str, text: str) -> str:
         return f"Regex Error: {e}"
     except Exception as e:
         return f"Error: {e}"
+
+
+@tool()
+def sql_query(query: str, db_path: str = ":memory:") -> str:
+    """Execute a SQL query against a SQLite database.
+
+    Args:
+        query: SQL statement to execute.
+        db_path: Path to SQLite database file, or ':memory:' for transient database.
+
+    Returns:
+        Rendered markdown table of query results, or execution status string.
+    """
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        statements = [s.strip() for s in query.strip().split(";") if s.strip()]
+        if not statements:
+            conn.close()
+            return "Empty query."
+
+        if len(statements) > 1:
+            for s in statements[:-1]:
+                cursor.execute(s)
+            cursor.execute(statements[-1])
+        else:
+            cursor.execute(statements[0])
+
+        if cursor.description is None:
+            # Non-SELECT statement (e.g., INSERT, UPDATE, CREATE TABLE)
+            conn.commit()
+            rows_affected = cursor.rowcount
+            conn.close()
+            return f"Query executed successfully. Rows affected: {rows_affected}"
+
+        columns = [col[0] for col in cursor.description]
+        rows = cursor.fetchmany(100)
+        conn.close()
+
+        if not rows:
+            return "Query returned 0 rows."
+
+        # Format as Markdown table
+        header = "| " + " | ".join(columns) + " |"
+        separator = "| " + " | ".join(["---"] * len(columns)) + " |"
+        data_rows = []
+        for r in rows:
+            data_rows.append("| " + " | ".join(str(v) if v is not None else "NULL" for v in r) + " |")
+
+        table = "\n".join([header, separator] + data_rows)
+        if len(rows) == 100:
+            table += "\n... [truncated at 100 rows]"
+        return table
+    except sqlite3.Error as exc:
+        return f"SQL Error: {exc}"
+    except Exception as exc:
+        return f"Database error: {exc}"
