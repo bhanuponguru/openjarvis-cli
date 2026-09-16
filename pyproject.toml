@@ -74,6 +74,7 @@ ignore = [
 "tests/*" = ["SLF001"]
 
 [tool.mypy]
+files = ["src"]
 python_version = "3.13"
 check_untyped_defs = true
 warn_unused_ignores = true
