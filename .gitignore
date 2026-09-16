@@ -1,0 +1,38 @@
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.installed.cfg
+*.egg
+dist/
+build/cython_out/
+build/_cython_build/
+build/_cython_temp/
+build/_pyinstaller_work/
+wheels/
+*.so
+*.pyd
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Testing & linting caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local configs & keys
+.env
+.openjarvis/
+my-config.yaml
+
+# Documentation site output
+site/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store

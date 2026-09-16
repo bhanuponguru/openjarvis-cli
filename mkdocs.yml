@@ -1,8 +1,8 @@
-site_name: OpenJarvis
-site_description: Intelligent AI orchestrator with multi-model routing
-site_url: https://bhanuponguru.tech/openjarvis
-repo_url: https://github.com/bhanuponguru/OpenJarvis
-repo_name: OpenJarvis
+site_name: OpenJarvis CLI
+site_description: Autonomous multi-model agentic CLI & orchestrator
+site_url: https://bhanuponguru.tech/openjarvis-cli
+repo_url: https://github.com/bhanuponguru/openjarvis-cli
+repo_name: openjarvis-cli
 
 docs_dir: docs
 site_dir: site
@@ -81,7 +81,8 @@ nav:
       - Session Memory: tools/memory.md
   - Usage:
       - Command Line: usage/cli.md
-      # - Python API: usage/python-api.md
       - Routing Protocol: usage/routing.md
+  - Security & Permissions: security.md
+  - Developer Guide: developer-guide.md
   - Troubleshooting: troubleshooting.md
   - FAQ: faq.md

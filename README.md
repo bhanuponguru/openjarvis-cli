@@ -1,17 +1,23 @@
-# OpenJarvis — Multi-Model AI Orchestrator
+# OpenJarvis CLI (`openjarvis-cli`)
 
-OpenJarvis is an intelligent AI orchestrator and interactive terminal assistant. Instead of relying on a single model for all tasks, OpenJarvis coordinates a team of specialist AI models (for coding, mathematics, factual knowledge, and planning) and 29 built-in tools over any OpenAI-compatible API.
+> **Autonomous multi-model agentic CLI & orchestrator routing tasks across specialized LLMs**
+
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PyPI version](https://badge.fury.io/py/openjarvis-cli.svg)](https://pypi.org/project/openjarvis-cli/)
+
+OpenJarvis CLI is an intelligent terminal client that coordinates a team of specialized language models across any model provider. Instead of forcing one model to do everything, OpenJarvis dynamically routes tasks to specialized agents (coding, mathematics, factual knowledge, and planning) and executes built-in tools when needed.
 
 ---
 
-## Features
+## Key Features
 
-- 🎯 **Intelligent Multi-Model Routing**: Routes user requests to domain specialists and synthesizes clear, unified answers.
-- 🔌 **Provider Agnostic**: Connects to Ollama (local and private), OpenAI, Groq, OpenRouter, Claude, or any OpenAI-compatible API.
-- 🛠️ **31 Production-Ready Built-In Tools**: Automated function-calling tools for web search, math calculations, code execution, file I/O, datetime operations, data parsing, session notes, and native SWE tools (`str_replace_editor`, `execute_bash`).
-- 🪄 **Interactive Setup Wizard**: Automatically configures your model providers on first run if no configuration file exists.
-- 💻 **Modern Terminal Interface**: Interactive REPL with syntax-highlighted Markdown rendering, multiline input, command history, and real-time routing status.
-- 🚀 **Standalone Executables**: Zero Python runtime required when using pre-built binary releases.
+- 🎯 **Multi-Model Orchestration**: Dynamic LangGraph state machine routing requests across specialized agents.
+- 🔌 **Provider Agnostic**: Mix and match Ollama (free local models), OpenAI, Groq, Anthropic, Gemini, or any OpenAI-compatible API in one session.
+- 🛠️ **29 Production-Ready Built-In Tools**: Terminal execution (`execute_bash`), file editing (`str_replace_editor`), web search, math solvers, datetime utilities, and session memory.
+- 🛡️ **Interactive Security Sandbox**: Granular permission manager intercepting tool calls with interactive user approvals and path constraints.
+- 💻 **Modern Terminal Interface**: Interactive REPL with syntax-highlighted Markdown rendering, multiline input, and live routing events.
+- 🚀 **Zero-Dependency Standalone Binaries**: Precompiled executables available for Linux, macOS, and Windows.
 
 ---
 
@@ -19,173 +25,96 @@ OpenJarvis is an intelligent AI orchestrator and interactive terminal assistant.
 
 ### 1. Installation
 
-#### Standalone Binary (Recommended)
-Download the binary for your platform from [Releases](https://github.com/bhanuponguru/OpenJarvis/releases):
-
+#### Via `uv` (Recommended)
 ```bash
-# Linux / macOS
-tar xzf openjarvis-*.tar.gz
-cd openjarvis-*
-./openjarvis
-
-# Windows
-# Extract the ZIP archive and run openjarvis.exe
+uv tool install openjarvis-cli
 ```
 
-#### From Source (Python 3.13+)
+#### Via `pip`
 ```bash
-git clone https://github.com/bhanuponguru/OpenJarvis.git
-cd OpenJarvis
-uv sync --all-packages
-uv run openjarvis
+pip install openjarvis-cli
 ```
 
-### 2. First Run & Setup Wizard
+#### Standalone Binary (Zero Python Required)
+Download the latest executable for your platform from [GitHub Releases](https://github.com/bhanuponguru/openjarvis-cli/releases).
 
-When you launch `openjarvis` without an existing configuration, an interactive wizard prompts you to set up your preferred provider:
-
-```text
-════════ OpenJarvis Setup ════════
-
-Welcome! No specialists.yaml config was found.
-Let's create one so you can start using OpenJarvis.
-
-Step 1/3 — Choose your LLM provider
-  ollama     — Local models via Ollama (free, private)
-  openai     — OpenAI API (GPT-4o, etc.)
-  anthropic  — Anthropic API (Claude 3.5 Sonnet, etc.)
-Model name [llama3]: 
-
-Step 2/3 — Where to save the config
-✓ Config written to ~/.config/openjarvis/specialists.yaml
-
-oj> 
+#### From Source
+```bash
+git clone https://github.com/bhanuponguru/openjarvis-cli.git
+cd openjarvis-cli
+uv sync
 ```
-
-### 3. Interactive Usage
-
-Type prompts naturally into the OpenJarvis prompt:
-
-```text
-oj> What's 15% of 80, and write a Python helper function for it?
-
-  ↳ routing: generalist → math
-  ⚙ tool: evaluate_expression {"expression": "0.15 * 80"}
-    → 12.0
-  ↳ routing: math → code
-
-15% of 80 is **12.0**.
-
-Here is a Python function to calculate percentage values:
-
-```python
-def calculate_percentage(part_percent: float, total: float) -> float:
-    """Calculate the given percentage of a total value."""
-    return (part_percent / 100.0) * total
-```
-```
-
-To exit the interactive session, type `exit`, `quit`, or press `Ctrl+C` / `Ctrl+D`.
 
 ---
 
-## Configuration Guide
+### 2. Launching OpenJarvis
 
-OpenJarvis searches for its configuration in the following priority order:
-1. `OJ_CONFIG` environment variable (`export OJ_CONFIG=/path/to/specialists.yaml`)
-2. `./.openjarvis/config/specialists.yaml` (project-specific workspace)
-3. `~/.openjarvis/config/specialists.yaml` (global user workspace)
+Launch the terminal client:
+```bash
+openjarvis
+# or use the short alias:
+oj
+```
 
-### Configuration Format (`specialists.yaml`)
+On first launch, if no configuration is found, an interactive setup wizard will guide you to configure your preferred provider (Ollama, OpenAI, Anthropic, etc.).
+
+---
+
+### 3. Command-Line Options
+
+```text
+Usage: openjarvis [OPTIONS] [QUERY]
+
+Options:
+  -c, --config PATH     Path to specialists.yaml configuration file
+  --model TEXT          Override generalist model name
+  --provider TEXT       Override default provider (e.g. ollama, openai, anthropic)
+  --version             Show version and exit
+  --help                Show this message and exit
+```
+
+To run non-interactively with a single prompt:
+```bash
+oj "Calculate 15% of 850 and write a python script to verify"
+```
+
+---
+
+## Configuration (`specialists.yaml`)
+
+OpenJarvis uses a simple YAML file defining your team of specialists:
 
 ```yaml
-max_hops: 10 # Maximum specialist transitions per query
-
 generalist:
-  name: "generalist"
-  system_prompt: |
-    You are the ROUTER of OpenJarvis. Choose the best specialist:
-    [ROUTE: math] - Calculations, statistics, proofs
-    [ROUTE: code] - Programming, debugging, architecture
-    [ROUTE: knowledge] - Factual questions and research
-    [ROUTE: return] - Direct answer or tool result
-  provider: "openai"
-  base_url: "https://api.openai.com/v1"
-  model: "gpt-4o-mini"
-  api_key_env: "OPENAI_API_KEY"
+  provider: "ollama"
+  model: "llama3.2"
   temperature: 0.0
 
 specialists:
-  math:
-    name: "math"
-    system_prompt: "You are the MATH specialist. End replies with [RETURN]."
-    base_url: "http://localhost:11434/v1" # Local Ollama
-    model: "llama3"
-    temperature: 0.0
-    delegates_to: []
-
   code:
-    name: "code"
-    system_prompt: "You are the CODE specialist. End replies with [RETURN] or [DELEGATE: math]."
-    base_url: "https://api.openai.com/v1"
-    model: "gpt-4o-mini"
-    api_key_env: "OPENAI_API_KEY"
+    provider: "ollama"
+    model: "qwen2.5-coder:7b"
     temperature: 0.0
-    delegates_to: ["math"]
 
-  knowledge:
-    name: "knowledge"
-    system_prompt: "You are the KNOWLEDGE specialist. End replies with [RETURN]."
-    base_url: "https://api.groq.com/openai/v1"
-    model: "llama-3.1-70b-versatile"
-    api_key_env: "GROQ_API_KEY"
-    temperature: 0.2
-    delegates_to: []
+  math:
+    provider: "openai"
+    model: "gpt-4o-mini"
+    temperature: 0.0
 ```
-
----
-
-## Built-In Tools Reference
-
-OpenJarvis provides 29 built-in tools across 7 functional domains that models automatically invoke via standard function calling:
-
-| Category | Tools | Descriptions |
-| :--- | :--- | :--- |
-| **Date & Time** | `get_current_datetime`, `date_arithmetic`, `format_datetime`, `days_between` | Timestamps, timezone queries, date deltas, formatting |
-| **Math** | `evaluate_expression`, `convert_units`, `solve_equation`, `prime_factorize` | Safe arithmetic evaluation, unit conversion, algebra, factorization |
-| **File I/O** | `read_file`, `write_file`, `list_directory`, `search_in_files`, `file_info`, `delete_file` | File inspection, pattern search, metadata, and updates |
-| **Web** | `fetch_url`, `search_web`, `fetch_wikipedia` | DuckDuckGo search, URL content extraction, Wikipedia lookups |
-| **Code Execution** | `run_python`, `run_shell`, `lint_python` | Subprocess Python execution, shell commands, syntax linting |
-| **Data Processing** | `parse_json`, `jq_query`, `parse_csv`, `regex_search`, `regex_replace` | JSON parsing, dot-notation extraction, CSV tables, regex |
-| **Session Memory** | `store_note`, `recall_note`, `list_notes`, `delete_note` | Storing and retrieving context notes during a session |
-| **Editor & SWE Execution** | `str_replace_editor`, `execute_bash` | Benchmark-standard string replacement and safe bash command execution |
-
----
-
-## Keyboard Shortcuts & Commands
-
-| Key / Command | Action |
-| :--- | :--- |
-| `Enter` | Submit current input |
-| `Escape` then `Enter` | Insert a newline for multi-line input |
-| `↑` / `↓` | Cycle through command history |
-| `Ctrl+C` | Cancel current prompt or stop generation |
-| `Ctrl+D` or `exit` | Exit OpenJarvis |
 
 ---
 
 ## Documentation
 
-Full standalone user documentation is included in the [docs/](docs/) directory:
+Full documentation is available at [https://bhanuponguru.tech/openjarvis-cli](https://bhanuponguru.tech/openjarvis-cli):
 - [Installation Guide](docs/getting-started/installation.md)
-- [Configuration Overview](docs/configuration/overview.md)
-- [Provider Recipes](docs/configuration/providers.md)
-- [Built-in Tools Manual](docs/tools/overview.md)
-- [Troubleshooting & FAQ](docs/faq.md)
+- [Configuration Reference](docs/configuration/overview.md)
+- [Built-In Tools Catalog](docs/tools/overview.md)
+- [Security & Sandboxing](docs/security.md)
+- [Developer & Contributing Guide](docs/developer-guide.md)
 
-To view the offline documentation site:
-```bash
-uv sync --group docs
-cd packages/openjarvis
-uv run mkdocs serve
-```
+---
+
+## License
+
+Apache 2.0 License.
