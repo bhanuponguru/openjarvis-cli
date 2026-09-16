@@ -8,88 +8,49 @@ This directory contains the standalone user documentation for the OpenJarvis cli
 
 ```
 docs/
-├── mkdocs.yml                     # MkDocs configuration
-├── index.md                       # Landing page
+├── index.md                       # Landing page & architecture
 ├── getting-started/
-│   ├── installation.md            # Installation guide
-│   ├── quick-start.md             # Quick start guide
-│   └── first-steps.md             # First steps tutorial
+│   ├── installation.md            # Installation & uv setup
+│   ├── quick-start.md             # First CLI conversation
+│   └── first-steps.md             # Key interactive concepts
 ├── configuration/
-│   ├── overview.md                # Configuration overview
-│   ├── specialists.md             # Specialist configuration
-│   ├── providers.md               # Provider-specific guides
-│   └── advanced.md                # Advanced configuration
+│   ├── overview.md                # Specialists YAML configuration
+│   ├── specialists.md             # Specialist roles & delegations
+│   ├── providers.md               # LLM Provider setups (Ollama, OpenAI, Anthropic, etc.)
+│   └── advanced.md                # Multi-specialist routing & air-gapped setup
 ├── tools/
-│   ├── overview.md                # Tools overview
-│   ├── web.md                     # Web tools
-│   ├── math.md                    # Math tools
-│   ├── files.md                   # File tools
-│   ├── code.md                    # Code execution tools
-│   ├── datetime.md                # Date/time tools
-│   ├── text.md                    # Text processing tools
-│   ├── system.md                  # System tools
-│   └── memory.md                  # Memory tools
+│   ├── overview.md                # 29 Built-in tools overview
+│   ├── web.md                     # Web browsing & DDGS search
+│   ├── math.md                    # SymPy, stats, & math solvers
+│   ├── files.md                   # File I/O, inspection, & directory operations
+│   ├── code.md                    # Sandboxed python execution & linting
+│   ├── datetime.md                # Timezone & date arithmetic
+│   ├── data.md                    # JSON/CSV transforms & statistics
+│   └── memory.md                  # Session memory operations
 ├── usage/
-│   ├── cli.md                     # Command-line usage
-│   ├── python-api.md              # Python API
-│   └── routing.md                 # Routing protocol
-├── troubleshooting.md             # Troubleshooting guide
-└── faq.md                         # FAQ
+│   ├── cli.md                     # Command-line options & flags
+│   └── routing.md                 # Specialist routing protocol
+├── security.md                    # Permission levels & sandboxing
+├── developer-guide.md             # Contributing, testing, & binary builds
+├── troubleshooting.md             # Common errors & solutions
+└── faq.md                         # Frequently asked questions
 ```
 
 ---
 
-## Viewing the Documentation
+## Local Documentation Preview
 
-This documentation is pre-built and included in the binary distribution as HTML. Simply open `docs/index.html` in your web browser after extracting the binary package.
+To serve this documentation locally:
 
-For development/editing, see the main repository documentation.
+```bash
+uv run --group docs mkdocs serve
+```
 
----
+To verify documentation builds with strict link checking:
 
-## Documentation vs Main Repo Docs
-
-| This Documentation (`packages/openjarvis/docs/`) | Main Repo Docs (`docs/`) |
-|--------------------------------------------------|--------------------------|
-| **User-facing** — End users of OpenJarvis | **Developer-facing** — Contributors and maintainers |
-| **Distributable** — Shipped with binaries | **Private** — Internal development docs |
-| **Product docs** — OpenJarvis client only | **Technical docs** — Entire project (client + server) |
-| **Standalone** — Complete, self-contained | **Comprehensive** — Architecture, internals, training |
-
----
-
-## Key Principles
-
-### Audience
-
-This documentation is for **end users** who:
-- Want to install and use OpenJarvis
-- Need configuration help
-- Want to understand features and capabilities
-- Need troubleshooting assistance
-
-This documentation is **NOT** for:
-- Developers contributing to OpenJarvis (use main repo docs)
-- jarvis server internals (separate documentation)
-- Training details, architecture internals, or implementation details
-
-### Content Guidelines
-
-- **User-centric:** Focus on what users want to accomplish
-- **Complete:** Self-contained, no dependency on main repo docs
-- **Practical:** Examples, commands, configurations
-- **Accessible:** Clear language, no jargon without explanation
-- **Up-to-date:** Keep in sync with code changes
-
-### No Cross-References
-
-Do not link to:
-- Main repository `docs/` folder
-- Developer guides
-- Architecture documents
-- Training documentation
-
-These docs must stand alone.
+```bash
+uv run --group docs mkdocs build --strict
+```
 
 ---
 

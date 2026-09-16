@@ -301,5 +301,5 @@ for event in conductor.chat("What is the weather in Paris?"):
 All tools have comprehensive test coverage. Run tests:
 
 ```bash
-uv run python -m pytest packages/openjarvis/tests/test_builtin_tools.py -v
+uv run python -m pytest tests/test_builtin_tools.py -v
 ```

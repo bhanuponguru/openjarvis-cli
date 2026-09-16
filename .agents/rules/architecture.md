@@ -23,3 +23,4 @@ OpenJarvis CLI ships with 29 native tools:
 ## 4. Package Boundary Invariants
 - `openjarvis-cli` must NEVER import `torch` or model internals.
 - All model interaction occurs through HTTP or LangChain provider abstractions (`ChatOpenAI`, `ChatOllama`, `ChatAnthropic`).
+

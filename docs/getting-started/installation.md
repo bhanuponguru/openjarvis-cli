@@ -46,11 +46,11 @@ If you are developing or prefer running from source:
 
 ```bash
 # Clone the repository
-git clone https://github.com/bhanuponguru/OpenJarvis.git
-cd OpenJarvis
+git clone https://github.com/bhanuponguru/openjarvis-cli.git
+cd openjarvis-cli
 
 # Install dependencies and launch
-uv sync --all-packages
+uv sync
 uv run openjarvis
 ```
 

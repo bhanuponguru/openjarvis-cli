@@ -12,7 +12,7 @@ VALID_API_ROLES = {"system", "user", "assistant", "tool", "human", "ai"}
 
 def make_config(max_hops: int = 10) -> ConductorConfig:
     return ConductorConfig(
-        generalist=SpecialistConfig(name="generalist", system_prompt="you are jarvis"),
+        generalist=SpecialistConfig(name="generalist", system_prompt="you are openjarvis"),
         specialists={
             "math": SpecialistConfig(
                 name="math", system_prompt="math expert", delegates_to=["tool_use"]

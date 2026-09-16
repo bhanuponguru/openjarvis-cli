@@ -14,3 +14,4 @@ uv run mypy
 uv run pytest -q
 ```
 All checks must pass with zero warnings or errors.
+

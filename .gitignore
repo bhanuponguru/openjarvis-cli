@@ -13,6 +13,7 @@ build/_pyinstaller_work/
 wheels/
 *.so
 *.pyd
+*.spec
 
 # Virtual environments
 .venv/
@@ -36,3 +37,4 @@ site/
 .vscode/
 .idea/
 .DS_Store
+

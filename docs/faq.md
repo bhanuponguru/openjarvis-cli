@@ -65,6 +65,6 @@ Press `Escape` followed by `Enter` (or `Alt+Enter`) to insert a new line without
 
 ## Support & Resources
 
-- **GitHub Repository**: [github.com/bhanuponguru/OpenJarvis](https://github.com/bhanuponguru/OpenJarvis)
-- **Issue Tracker**: [Report issues or request features](https://github.com/bhanuponguru/OpenJarvis/issues)
+- **GitHub Repository**: [github.com/bhanuponguru/openjarvis-cli](https://github.com/bhanuponguru/openjarvis-cli)
+- **Issue Tracker**: [Report issues or request features](https://github.com/bhanuponguru/openjarvis-cli/issues)
 - **Troubleshooting Guide**: [Troubleshooting Guide](troubleshooting.md)

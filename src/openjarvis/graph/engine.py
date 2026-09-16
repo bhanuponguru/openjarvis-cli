@@ -1,7 +1,7 @@
 """Directed Cognitive Graph Execution Engine for OpenJarvis.
 
 Orchestrates execution of the heterogeneous cognitive graph:
-Orchestrator (300M) <-> Coder (1.1B) <-> Act (135M) / Reasoning (1.1B),
+Orchestrator <-> Coder <-> Act / Reasoning specialists,
 coordinating over the State Blackboard and typed message protocol.
 """
 
@@ -34,15 +34,21 @@ class CognitiveGraphEngine:
         invoker: Callable[[str, list[dict[str, str]]], str] | None = None,
         tool_registry: ToolRegistry | None = None,
         max_iterations: int = 25,
+        orchestrator_model: str = "orchestrator",
+        coder_model: str = "coder",
     ):
         """Args:
             invoker: Callable taking (model_name, prompt_messages) and returning model response string.
             tool_registry: Optional ToolRegistry for executing actions and tool commands.
             max_iterations: Maximum cognitive graph cycles before aborting.
+            orchestrator_model: Model name/identifier for the orchestrator role.
+            coder_model: Model name/identifier for the coder specialist role.
         """
         self.invoker = invoker
         self.tool_registry = tool_registry
         self.max_iterations = max_iterations
+        self.orchestrator_model = orchestrator_model
+        self.coder_model = coder_model
 
     def run_tool_command(self, cmd: StrReplaceCommand) -> str:
         """Execute a StrReplaceCommand against the native editor tool."""
@@ -123,14 +129,14 @@ class CognitiveGraphEngine:
             {
                 "role": "system",
                 "content": (
-                    "You are the OpenJarvis Orchestrator (jarvis-orchestrator-mark1-300m). "
+                    "You are the OpenJarvis Orchestrator. "
                     "Analyze state and return JSON with 'action' ('code', 'act', 'complete') and 'payload'."
                 ),
             },
             {"role": "user", "content": json.dumps(orch_view)},
         ]
 
-        response = self.invoker("jarvis-orchestrator-mark1-300m", prompt)
+        response = self.invoker(self.orchestrator_model, prompt)
         try:
             parsed = json.loads(response)
         except Exception:
@@ -155,11 +161,11 @@ class CognitiveGraphEngine:
             coder_prompt = [
                 {
                     "role": "system",
-                    "content": "You are jarvis-coder-mark1-1.1b. Propose code modifications and tool calls.",
+                    "content": "You are the OpenJarvis Coder specialist. Propose code modifications and tool calls.",
                 },
                 {"role": "user", "content": json.dumps(coder_view)},
             ]
-            coder_resp = self.invoker("jarvis-coder-mark1-1.1b", coder_prompt)
+            coder_resp = self.invoker(self.coder_model, coder_prompt)
             try:
                 c_parsed = json.loads(coder_resp)
                 tool_calls = [

@@ -58,3 +58,4 @@ All three must pass cleanly with zero errors.
 - `.agents/rules/architecture.md`: Details on Conductor, LangGraph state engine, Blackboard memory, and the 29 built-in tools.
 - `.agents/rules/coding-style.md`: Code style, typing discipline, and tool design rules.
 - `.agents/rules/testing-and-verification.md`: Testing guidelines, mock boundaries, and pre-commit checks.
+

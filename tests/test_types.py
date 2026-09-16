@@ -23,7 +23,7 @@ def test_specialist_config_defaults():
 
 
 def test_conductor_config():
-    generalist = SpecialistConfig(name="generalist", system_prompt="you are jarvis", base_url="http://localhost:11434/v1")
+    generalist = SpecialistConfig(name="generalist", system_prompt="you are openjarvis", base_url="http://localhost:11434/v1")
     math = SpecialistConfig(name="math", system_prompt="math expert", base_url="http://localhost:11434/v1")
     config = ConductorConfig(generalist=generalist, specialists={"math": math})
     assert config.generalist.name == "generalist"

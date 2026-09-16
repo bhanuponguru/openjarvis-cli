@@ -34,3 +34,4 @@ def test_openjarvis_package_boundary():
             violations.append(f"{py_file.relative_to(repo_root)} imports {leaked}")
 
     assert not violations, f"openjarvis violated package boundary: {violations}"
+

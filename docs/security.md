@@ -38,3 +38,4 @@ permissions:
 ## 3. Subprocess Isolation & Timeouts
 
 Tools that execute shell or subprocess commands (e.g. `execute_bash`, `run_python`) enforce strict timeouts (default: 30 seconds) to prevent infinite loops, hanging commands, or rogue subprocesses.
+

@@ -63,3 +63,4 @@ scripts\build-binary.bat
 ```
 
 The compiled standalone binary will be placed in `dist/openjarvis`.
+

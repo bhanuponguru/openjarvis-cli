@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import build_config as config
 
 PROJECT_ROOT = Path(__file__).parent.parent
-SOURCE_DIR = PROJECT_ROOT / "packages" / "openjarvis" / "src"
+SOURCE_DIR = PROJECT_ROOT / "src"
 PKG_DIR = SOURCE_DIR / "openjarvis"
 ENTRY_POINT = PKG_DIR / "__main__.py"
 CYTHON_OUT_DIR = PROJECT_ROOT / "build" / "cython_out"

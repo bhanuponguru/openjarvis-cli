@@ -1,10 +1,10 @@
 """Heterogeneous Directed Cognitive Graph execution engine for OpenJarvis.
 
-This module orchestrates communication between specialized models:
-- jarvis-orchestrator-mark1-300m
-- jarvis-coder-mark1-1.1b
-- jarvis-reasoning-mark1-1.1b
-- jarvis-act-mark1-135m
+This module orchestrates communication between specialized model roles:
+- Orchestrator (State evaluation and task routing)
+- Coder (Code generation and surgical diff proposals)
+- Reasoning (Mathematical and algorithmic derivation)
+- Act (Tool execution and environment observation)
 
 All state coordination occurs over a typed message protocol and a shared blackboard.
 """

@@ -16,3 +16,4 @@
 - Built-in tools must declare JSON-serializable parameters using standard Python type hints or Pydantic models.
 - All tools must return structured text or dict payloads that format clearly in terminal UI output.
 - Tools must fail gracefully with descriptive error messages rather than unhandled Python tracebacks.
+
