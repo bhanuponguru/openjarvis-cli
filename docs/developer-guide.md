@@ -99,7 +99,7 @@ python scripts/bump-version.py 0.1.0
 uv build
 
 # 2. Push git tag to GitHub
-git push origin v0.1.0
+git push origin v<version>
 
 # 3. Publish to PyPI
 uv publish --token pypi-...

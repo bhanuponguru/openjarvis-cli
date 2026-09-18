@@ -182,7 +182,7 @@ python scripts/bump-version.py minor
 python scripts/bump-version.py major
 
 # Or create an annotated tag manually:
-git tag -a v0.1.0 -m "Release v0.1.0"
+git tag -a v<version> -m "Release v<version>"
 ```
 
 To build and publish:

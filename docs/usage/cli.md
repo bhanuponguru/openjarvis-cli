@@ -62,7 +62,7 @@ oj --provider openai --model gpt-4o
 On launch without arguments, OpenJarvis discovers your configuration and opens the interactive prompt:
 
 ```text
-OpenJarvis v0.1.0 — type /exit to stop, /help for commands
+OpenJarvis v<version> — type /exit to stop, /help for commands
 
 oj> 
 ```
