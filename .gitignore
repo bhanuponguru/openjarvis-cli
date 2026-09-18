@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+src/openjarvis/_version.py
 *.egg-info/
 .installed.cfg
 *.egg

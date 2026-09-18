@@ -165,20 +165,27 @@ specialists:
 
 ## Versioning & Releases
 
-OpenJarvis CLI uses **Semantic Versioning (SemVer)** with a single source of truth in `src/openjarvis/_version.py`, integrated with Hatchling dynamic versioning:
+OpenJarvis CLI uses **Git-tag and commit-based VCS dynamic versioning** powered by `hatch-vcs`:
+
+- **Tagged Releases**: Creating an annotated Git tag (e.g. `v0.2.0`) automatically sets the exact package and CLI version to `0.2.0`.
+- **Development Builds**: Commits ahead of a release tag automatically generate PEP 440 dev versions (e.g. `0.2.1.dev2`) reflecting the exact commit distance from the last tag.
+- **Automated Tag Bumping**:
 
 ```bash
-# Bump patch release (e.g. 0.2.0 -> 0.2.1)
+# Bump patch release tag (v0.2.0 -> v0.2.1)
 python scripts/bump-version.py patch
 
-# Bump minor release (e.g. 0.2.0 -> 0.3.0)
+# Bump minor release tag (v0.2.0 -> v0.3.0)
 python scripts/bump-version.py minor
 
-# Bump major release (e.g. 0.2.0 -> 1.0.0)
+# Bump major release tag (v0.2.0 -> v1.0.0)
 python scripts/bump-version.py major
+
+# Or create an annotated tag manually:
+git tag -a v0.3.0 -m "Release v0.3.0"
 ```
 
-Build and publish:
+To build and publish:
 ```bash
 uv build
 uv publish
