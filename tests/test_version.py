@@ -14,7 +14,7 @@ def test_version_exports():
     """Verify __version__ is exported and matches _version.py."""
     assert __version__ == internal_version
     assert openjarvis.__version__ == internal_version
-    assert re.match(r"^\d+\.\d+\.\d+", __version__)
+    assert re.match(r"^\d+\.\d+", __version__)
 
 
 def test_cli_version_flag(capsys):

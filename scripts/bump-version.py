@@ -8,10 +8,10 @@ Usage:
     python scripts/bump-version.py <patch|minor|major|X.Y.Z>
 
 Examples:
-    python scripts/bump-version.py patch   # v0.2.0 -> creates v0.2.1 tag
-    python scripts/bump-version.py minor   # v0.2.0 -> creates v0.3.0 tag
-    python scripts/bump-version.py major   # v0.2.0 -> creates v1.0.0 tag
-    python scripts/bump-version.py 0.3.0   # Explicit version tag
+    python scripts/bump-version.py patch   # e.g. v0.1.0 -> creates v0.1.1 tag
+    python scripts/bump-version.py minor   # e.g. v0.1.0 -> creates v0.2.0 tag
+    python scripts/bump-version.py major   # e.g. v0.1.0 -> creates v1.0.0 tag
+    python scripts/bump-version.py 0.1.0   # Explicit version tag
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ SEMVER_REGEX = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+([0
 
 
 def get_latest_tag() -> str:
-    """Get the latest git tag, or fallback to '0.2.0'."""
+    """Get the latest git tag, or fallback to '0.0.0' if no tags exist yet."""
     try:
         proc = subprocess.run(
             ["git", "describe", "--tags", "--abbrev=0"],
@@ -34,7 +34,7 @@ def get_latest_tag() -> str:
         )
         return proc.stdout.strip().lstrip("v")
     except Exception:
-        return "0.2.0"
+        return "0.0.0"
 
 
 def calculate_next_version(current: str, part: str) -> str:

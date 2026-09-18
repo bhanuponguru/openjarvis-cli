@@ -6,11 +6,9 @@ Routes a user's request across a generalist and a team of specialists via LangGr
 try:
     from openjarvis._version import __version__
 except ImportError:
-    try:
-        from importlib.metadata import version as _get_version
-        __version__ = _get_version("openjarvis-cli")
-    except Exception:
-        __version__ = "0.2.0"
+    from importlib.metadata import version as _get_version
+
+    __version__ = _get_version("openjarvis-cli")
 from openjarvis.builtin_tools import create_builtin_registry
 from openjarvis.conductor import Conductor
 from openjarvis.llm_factory import create_chat_model

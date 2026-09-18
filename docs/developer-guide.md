@@ -70,8 +70,8 @@ The compiled standalone binary will be placed in `dist/openjarvis`.
 
 OpenJarvis CLI implements **Git-tag and commit-based dynamic versioning** powered by `hatch-vcs`. The version is calculated automatically from Git metadata without needing manually edited version strings:
 
-- **Official Releases**: Pushing an annotated Git tag (e.g. `v0.2.0`) sets the exact version to `0.2.0`.
-- **Development Builds**: Commits ahead of the latest tag automatically generate PEP 440 dev versions (e.g. `0.2.1.dev3`) representing the exact commit distance.
+- **Official Releases**: Pushing an annotated Git tag (e.g. `v0.1.0`) sets the exact version to `0.1.0`.
+- **Development Builds**: Commits ahead of the latest tag automatically generate PEP 440 dev versions (e.g. `0.1.1.dev3`) representing the exact commit distance.
 - **Build Hook**: `hatch-vcs` automatically generates `src/openjarvis/_version.py` during `uv build` and `uv sync`, embedding the exact calculated version into packages.
 
 ### Automated Release Tagging
@@ -79,17 +79,17 @@ OpenJarvis CLI implements **Git-tag and commit-based dynamic versioning** powere
 Use the bumper script to calculate the next SemVer tag, create the annotated Git tag, and build distribution wheels:
 
 ```bash
-# Calculate next patch release tag (v0.2.0 -> v0.2.1), tag, and build
+# Calculate next patch release tag (v0.1.0 -> v0.1.1), tag, and build
 python scripts/bump-version.py patch
 
-# Calculate next minor release tag (v0.2.0 -> v0.3.0), tag, and build
+# Calculate next minor release tag (v0.1.0 -> v0.2.0), tag, and build
 python scripts/bump-version.py minor
 
-# Calculate next major release tag (v0.2.0 -> v1.0.0), tag, and build
+# Calculate next major release tag (v0.1.0 -> v1.0.0), tag, and build
 python scripts/bump-version.py major
 
 # Or set an explicit release tag:
-python scripts/bump-version.py 0.3.0
+python scripts/bump-version.py 0.1.0
 ```
 
 ### Packaging & Publishing to PyPI
@@ -99,7 +99,7 @@ python scripts/bump-version.py 0.3.0
 uv build
 
 # 2. Push git tag to GitHub
-git push origin v0.2.0
+git push origin v0.1.0
 
 # 3. Publish to PyPI
 uv publish --token pypi-...
