@@ -135,6 +135,6 @@ For air-gapped or 100% offline environments, avoid prompts that require live web
 
 ## See Also
 
-- [Tools Overview](overview.md) — All 29 built-in tools
+- [Tools Overview](overview.md) — All 49 built-in tools
 - [Configuration Guide](../configuration/overview.md) — Configuring specialists
 - [Troubleshooting](../troubleshooting.md) — Common connection issues

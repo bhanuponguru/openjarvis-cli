@@ -33,14 +33,16 @@ Yes! Each specialist in `specialists.yaml` can have its own `base_url`, `model`,
 ## Built-In Tools
 
 ### How many built-in tools are included?
-OpenJarvis includes **29 production-ready tools** across 7 categories:
-1. **Date & Time (4)**: `get_current_datetime`, `date_arithmetic`, `format_datetime`, `days_between`
-2. **Math (4)**: `evaluate_expression`, `convert_units`, `solve_equation`, `prime_factorize`
-3. **File I/O (6)**: `read_file`, `write_file`, `list_directory`, `search_in_files`, `file_info`, `delete_file`
-4. **Web (3)**: `fetch_url`, `search_web`, `fetch_wikipedia`
-5. **Code Execution (3)**: `run_python`, `run_shell`, `lint_python`
-6. **Data Processing (5)**: `parse_json`, `jq_query`, `parse_csv`, `regex_search`, `regex_replace`
-7. **Session Memory (4)**: `store_note`, `recall_note`, `list_notes`, `delete_note`
+OpenJarvis includes **49 production-ready tools** across 9 categories:
+1. **File I/O (9)**: `read_file`, `write_file`, `list_directory`, `search_in_files`, `search_dir`, `search_file`, `find_file`, `file_info`, `delete_file`
+2. **Git & Version Control (4)**: `git_diff`, `git_status`, `git_log`, `apply_patch`
+3. **Web & API (5)**: `fetch_url`, `search_web`, `fetch_wikipedia`, `http_request`, `parse_openapi_spec`
+4. **Code Execution (4)**: `run_python`, `run_shell`, `lint_python`, `run_pytest`
+5. **Code Editor & Terminal (3)**: `str_replace_editor`, `execute_bash`, `bash`
+6. **Data Processing (6)**: `parse_json`, `jq_query`, `parse_csv`, `regex_search`, `regex_replace`, `sql_query`
+7. **Math (4)**: `evaluate_expression`, `convert_units`, `solve_equation`, `prime_factorize`
+8. **Date & Time (4)**: `get_current_datetime`, `date_arithmetic`, `format_datetime`, `days_between`
+9. **Session & Memory (10)**: `save_memory`, `read_memory`, `update_memory`, `delete_memory`, `list_memories`, `search_memories`, and backwards-compatible note storage aliases
 
 ### Do I need to tell OpenJarvis which tool to use?
 No. OpenJarvis supplies native function schemas to the models. When a calculation, file inspection, or search is required, the model triggers the tool automatically.

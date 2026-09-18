@@ -19,14 +19,16 @@ docs/
 │   ├── providers.md               # LLM Provider setups (Ollama, OpenAI, Anthropic, etc.)
 │   └── advanced.md                # Multi-specialist routing & air-gapped setup
 ├── tools/
-│   ├── overview.md                # 29 Built-in tools overview
-│   ├── web.md                     # Web browsing & DDGS search
+│   ├── overview.md                # 49 Built-in tools overview
+│   ├── editor.md                  # Code editor (str_replace) & bash execution
+│   ├── git.md                     # Git diff, status, log, and patch tools
+│   ├── web.md                     # Web browsing, DDGS search, HTTP REST, OpenAPI
+│   ├── files.md                   # File I/O, search, & directory operations
+│   ├── code.md                    # Sandboxed python execution, linting, pytest
 │   ├── math.md                    # SymPy, stats, & math solvers
-│   ├── files.md                   # File I/O, inspection, & directory operations
-│   ├── code.md                    # Sandboxed python execution & linting
 │   ├── datetime.md                # Timezone & date arithmetic
-│   ├── data.md                    # JSON/CSV transforms & statistics
-│   └── memory.md                  # Session memory operations
+│   ├── data.md                    # JSON/CSV transforms, regex, SQLite
+│   └── memory.md                  # Session and persistent memory operations
 ├── usage/
 │   ├── cli.md                     # Command-line options & flags
 │   └── routing.md                 # Specialist routing protocol
@@ -89,7 +91,7 @@ This documentation is included in your OpenJarvis distribution. It provides:
 - **Configuration:** Setting up `specialists.yaml`
 - **Usage:** Command-line options and features
 - **Troubleshooting:** Common issues and solutions
-- **Tools Reference:** All 29 built-in tools
+- **Tools Reference:** All 49 built-in tools across 9 domains
 - **FAQ:** Answers to common questions
 
 Everything you need is self-contained in this documentation.

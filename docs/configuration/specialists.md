@@ -94,7 +94,7 @@ specialists:
 
 ## Tool Access for Specialists
 
-All 29 built-in tools (web search, math solving, file I/O, code execution, datetime, data parsing, session memory) are provided directly to models via standard OpenAI function calling.
+All 49 built-in tools (file inspection, Git & patch tools, web search, REST requests, code execution, AST math solving, SQLite querying, datetime, and persistent memory) are provided directly to models via standard OpenAI function calling.
 
 Models call tools automatically whenever their prompt requires it. Results are executed by OpenJarvis and fed back into the model conversation before the specialist emits `[RETURN]`.
 
@@ -132,5 +132,5 @@ specialists:
 ## Next Steps
 
 - **[Providers Guide →](providers.md)** — Connect Ollama, OpenAI, Groq, or OpenRouter
-- **[Built-in Tools Reference →](../tools/overview.md)** — List of all 29 tools available to specialists
+- **[Built-in Tools Reference →](../tools/overview.md)** — List of all 49 tools available to specialists
 - **[Routing Protocol →](../usage/routing.md)** — Detailed mechanics of routing tags and return tokens

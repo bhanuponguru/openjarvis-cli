@@ -152,6 +152,6 @@ The solution is **x = -4**.
 
 ## See Also
 
-- [Tools Overview](overview.md) — All 29 built-in tools
+- [Tools Overview](overview.md) — All 49 built-in tools
 - [Date & Time Tools](datetime.md) — Date calculations and timestamps
 - [Data Processing](data.md) — Parsing and data transformations

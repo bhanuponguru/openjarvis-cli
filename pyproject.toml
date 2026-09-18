@@ -1,6 +1,6 @@
 [project]
 name = "openjarvis-cli"
-version = "0.2.0"
+dynamic = ["version"]
 description = "OpenJarvis CLI — Autonomous agentic orchestration client and terminal interface routing tasks across LLMs"
 readme = "README.md"
 license = "Apache-2.0"
@@ -77,6 +77,9 @@ build = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/openjarvis/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/openjarvis"]

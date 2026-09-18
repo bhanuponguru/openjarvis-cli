@@ -149,6 +149,6 @@ There are **46 days** remaining until September 30.
 
 ## See Also
 
-- [Tools Overview](overview.md) — All 29 built-in tools
+- [Tools Overview](overview.md) — All 49 built-in tools
 - [Math Tools](math.md) — Arithmetic and calculations
 - [Data Processing](data.md) — JSON and text manipulations

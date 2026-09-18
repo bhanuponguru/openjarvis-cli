@@ -169,6 +169,6 @@ oj> exit
 ## Next Steps
 
 - **[Configuration Overview →](../configuration/overview.md)** — Detailed configuration options
-- **[Built-in Tools Reference →](../tools/overview.md)** — Explore all 29 tools
+- **[Built-in Tools Reference →](../tools/overview.md)** — Explore all 49 tools
 - **[Troubleshooting →](../troubleshooting.md)** — Common questions and solutions
 

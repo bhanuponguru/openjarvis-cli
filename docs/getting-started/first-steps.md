@@ -129,5 +129,5 @@ When OpenJarvis processes a request, it displays real-time routing hops in dim t
 ## Next Steps
 
 - **[Configuration Overview →](../configuration/overview.md)** — Customizing models and providers
-- **[Built-in Tools Reference →](../tools/overview.md)** — Detailed parameters for all 29 tools
+- **[Built-in Tools Reference →](../tools/overview.md)** — Detailed parameters for all 49 tools
 - **[Troubleshooting Guide →](../troubleshooting.md)** — Common questions and solutions

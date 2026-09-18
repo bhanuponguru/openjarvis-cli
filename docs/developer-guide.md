@@ -64,3 +64,49 @@ scripts\build-binary.bat
 
 The compiled standalone binary will be placed in `dist/openjarvis`.
 
+---
+
+## 5. Version Management & Releases
+
+OpenJarvis CLI implements **single-source semantic versioning** centered in `src/openjarvis/_version.py`. This single source dynamically feeds `pyproject.toml` (via Hatchling), `openjarvis.__version__`, the CLI banner, and `--version` output.
+
+### Bumping Versions
+
+Use the automated bumper script:
+
+```bash
+# Bump patch version (bug fixes, small tool additions): 0.2.0 -> 0.2.1
+python scripts/bump-version.py patch
+
+# Bump minor version (new features, major tool modules): 0.2.0 -> 0.3.0
+python scripts/bump-version.py minor
+
+# Bump major version (breaking changes or redesigns): 0.2.0 -> 1.0.0
+python scripts/bump-version.py major
+
+# Set explicit version:
+python scripts/bump-version.py 0.3.0
+```
+
+### Packaging & Publishing to PyPI
+
+```bash
+# 1. Clean build of sdist and wheel
+uv build
+
+# 2. Publish to PyPI
+uv publish --token pypi-...
+```
+
+---
+
+## 6. Pre-Commit Verification (Mandatory)
+
+Before committing code or opening a PR, ensure all three mandatory checks pass with zero errors:
+
+```bash
+uv run ruff check .
+uv run mypy
+uv run pytest -q
+```
+

@@ -1,16 +1,58 @@
 # Installation Guide
 
-OpenJarvis can be installed via pre-built standalone binaries or via Python's `uv` workspace package manager.
+OpenJarvis can be run instantly via `uvx`, installed as a CLI tool with `uv tool`, installed with standard `pip`, or used via pre-built standalone binaries.
 
 ---
 
-## Option 1: Standalone Binary (Recommended)
+## Option 1: Instant Execution with `uvx` (Fastest)
 
-Pre-built binaries include all dependencies and the embedded user documentation. No Python runtime or build tools are required.
+Run OpenJarvis immediately without installing anything permanently:
+
+```bash
+uvx openjarvis-cli
+```
+
+---
+
+## Option 2: Install via `uv tool` (Recommended)
+
+Install OpenJarvis as an isolated, globally accessible CLI tool:
+
+```bash
+uv tool install openjarvis-cli
+```
+
+Once installed, simply run:
+```bash
+openjarvis
+# or use the short alias:
+oj
+```
+
+To update to the latest release:
+```bash
+uv tool upgrade openjarvis-cli
+```
+
+---
+
+## Option 3: Install via `pip`
+
+Install into any Python 3.13+ virtual environment:
+
+```bash
+pip install openjarvis-cli
+```
+
+---
+
+## Option 4: Standalone Binary (Zero Python Required)
+
+Pre-built binaries include all dependencies and embedded documentation. No Python runtime or build tools are required.
 
 ### Download
 
-Download the release archive for your operating system and architecture from GitHub Releases:
+Download the release archive for your operating system and architecture from [GitHub Releases](https://github.com/bhanuponguru/openjarvis-cli/releases):
 - **Linux (x86_64, aarch64)**: `openjarvis-<version>-linux-x86_64.tar.gz`
 - **macOS (Apple Silicon arm64, Intel x86_64)**: `openjarvis-<version>-macos-arm64.tar.gz`
 - **Windows (x86_64)**: `openjarvis-<version>-windows-x86_64.zip`
@@ -40,7 +82,7 @@ sudo mv openjarvis /usr/local/bin/
 
 ---
 
-## Option 2: Running from Source with `uv`
+## Option 5: Running from Source with `uv`
 
 If you are developing or prefer running from source:
 
@@ -56,17 +98,9 @@ uv run openjarvis
 
 ---
 
-## What Is Included in Release Packages
-
-- **`openjarvis`**: Self-contained executable CLI binary.
-- **`specialists.example.yaml`**: Pre-configured example configuration file.
-- **`README.md`**: Quick reference manual.
-- **`docs/`**: Complete offline HTML user documentation site.
-
----
-
 ## Next Steps
 
 - **[Quick Start Guide →](quick-start.md)** — Run the setup wizard and start chatting
 - **[Configuration Overview →](../configuration/overview.md)** — Configure AI providers
-- **[Built-in Tools →](../tools/overview.md)** — Explore all 29 built-in tools
+- **[Built-in Tools →](../tools/overview.md)** — Explore all 49 built-in tools
+

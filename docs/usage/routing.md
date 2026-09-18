@@ -66,7 +66,7 @@ All routing tags (`[ROUTE: ...]`, `[RETURN]`, `[DELEGATE: ...]`) are parsed and 
 
 ## Tool Invocation During Routing
 
-Specialists and the generalist have direct access to OpenJarvis's 29 built-in tools via OpenAI function calling schemas. When a tool is triggered:
+Specialists and the generalist have direct access to OpenJarvis's 49 built-in tools via OpenAI function calling schemas. When a tool is triggered:
 
 1. The model issues a structured tool call (e.g. `evaluate_expression`, `search_web`).
 2. OpenJarvis executes the tool locally.

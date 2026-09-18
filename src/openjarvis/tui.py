@@ -10,9 +10,10 @@ from prompt_toolkit.history import FileHistory
 from rich.console import Console
 from rich.markdown import Markdown
 
+from openjarvis._version import __version__
 from openjarvis.conductor import Conductor
 
-_COMMANDS = ["/exit", "/quit", "/clear", "/help", "/update-tools"]
+_COMMANDS = ["/exit", "/quit", "/clear", "/help", "/version", "/update-tools"]
 _HISTORY_PATH = Path.home() / ".openjarvis" / "history.txt"
 _LEGACY_HISTORY_PATH = Path.home() / ".config" / "openjarvis" / "history.txt"
 
@@ -81,7 +82,7 @@ def run_repl(conductor: Conductor, console: Console) -> None:
     """Run the interactive REPL using prompt_toolkit input and Rich output."""
     session = create_session()
     console.print(
-        "[bold]OpenJarvis[/bold] — type [dim]/exit[/dim] to stop, "
+        f"[bold]OpenJarvis[/bold] [dim]v{__version__}[/dim] — type [dim]/exit[/dim] to stop, "
         "[dim]/help[/dim] for commands\n"
     )
 
@@ -99,6 +100,10 @@ def run_repl(conductor: Conductor, console: Console) -> None:
             console.clear()
             continue
 
+        if user_input in ("/version", "/v"):
+            console.print(f"  [cyan]openjarvis-cli[/cyan] v{__version__}\n")
+            continue
+
         if user_input == "/update-tools":
             if conductor._retriever:
                 console.print("  [cyan]Updating tool embedding vectors...[/cyan]")
@@ -113,6 +118,7 @@ def run_repl(conductor: Conductor, console: Console) -> None:
                 "  [bold]Commands:[/bold]\n"
                 "  [cyan]/exit[/cyan], [cyan]/quit[/cyan]      — exit OpenJarvis\n"
                 "  [cyan]/clear[/cyan]               — clear the screen\n"
+                "  [cyan]/version[/cyan], [cyan]/v[/cyan]         — show openjarvis-cli version\n"
                 "  [cyan]/update-tools[/cyan]        — re-index and update tool embeddings\n"
                 "  [cyan]/help[/cyan]                — show this message\n"
                 "  [dim]Up/Down[/dim]                — browse input history\n"

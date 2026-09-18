@@ -173,6 +173,6 @@ Found 2 email addresses: **alice@example.com** and **admin@company.org**.
 
 ## See Also
 
-- [Tools Overview](overview.md) — All 29 built-in tools
+- [Tools Overview](overview.md) — All 49 built-in tools
 - [File Tools](files.md) — Reading and writing files
 - [Code Tools](code.md) — Running scripts and linting code

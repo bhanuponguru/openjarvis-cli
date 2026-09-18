@@ -227,6 +227,6 @@ File tools operate with the permissions of the active user:
 
 ## See Also
 
-- [Tools Overview](overview.md) — All 29 built-in tools
+- [Tools Overview](overview.md) — All 49 built-in tools
 - [Code Execution](code.md) — Subprocess execution
 - [Data Processing](data.md) — Parsing CSV, JSON, and regex searches

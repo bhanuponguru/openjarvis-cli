@@ -11,8 +11,8 @@ OpenJarvis coordinates a team of specialized language models across any OpenAI-c
 Traditional AI assistants send all requests to a single model. OpenJarvis enables:
 
 - 🎯 **Specialized Precision**: Direct calculations to a math specialist, programming questions to a code specialist, and research to a knowledge specialist.
-- 🔌 **Provider Freedom**: Mix and match Ollama (free & private local models), OpenAI, Groq, OpenRouter, or custom OpenAI-compatible endpoints in one session.
-- 🛠️ **29 Production-Ready Built-In Tools**: Automated tools for web searches, math solving, code execution, file I/O, datetime operations, data processing, and session memory.
+- 🔌 **Provider Freedom**: Mix and match Ollama (free & private local models), OpenAI, Anthropic, Gemini, Groq, or custom OpenAI-compatible endpoints in one session.
+- 🛠️ **49 Production-Ready Built-In Tools**: Automated tools for file inspection, Git/patch management, web requests, code execution, AST math solving, SQLite queries, datetime operations, and persistent memory.
 - 🪄 **Zero-Fuss Onboarding**: First-run interactive setup wizard creates your configuration automatically.
 - 🔍 **Full Visibility**: See every routing decision and tool invocation as your request is being processed.
 
@@ -48,17 +48,19 @@ def calculate_percentage(part_percent: float, total: float) -> float:
 ### 1. Multi-Model Orchestration
 The **generalist** coordinates conversations, deciding whether to answer directly or route to a specialist. Specialists complete their domain task, call required tools, and return results to synthesize a final answer.
 
-### 2. Built-In Tools Suite (29 Tools)
+### 2. Built-In Tools Suite (49 Tools Across 9 Modules)
 
 | Category | Count | Highlight Capabilities |
 | :--- | :--- | :--- |
+| **[File I/O](tools/files.md)** | 9 | Read/write files, recursive directory search, file regex match, glob locator, delete file |
+| **[Git & Version Control](tools/git.md)** | 4 | Unified git diff inspection, short status summary, commit log history, patch application |
+| **[Web & API](tools/web.md)** | 5 | Web search via DuckDuckGo, web page text extraction, Wikipedia lookups, REST HTTP, OpenAPI parsing |
+| **[Code Execution](tools/code.md)** | 4 | Sandboxed Python execution, shell commands, syntax linting, pytest test suite runner |
+| **[Code Editor & Terminal](tools/editor.md)** | 3 | Atomic string replacement editor with undo history, bash command execution |
+| **[Data Processing](tools/data.md)** | 6 | JSON pretty-printing, jq queries, CSV table formatting, regex search/replace, SQLite querying |
+| **[Math & Arithmetic](tools/math.md)** | 4 | Safe expression evaluation, unit conversions, algebraic equation solving, prime factorization |
 | **[Date & Time](tools/datetime.md)** | 4 | ISO timestamps, timezone conversions, date arithmetic, days between dates |
-| **[Math](tools/math.md)** | 4 | Safe expression evaluation, unit conversions, algebraic equation solving, prime factorization |
-| **[File I/O](tools/files.md)** | 6 | Read/write text files, directory listing, regex search across files, file metadata |
-| **[Web](tools/web.md)** | 3 | Web search via DuckDuckGo, web page text extraction, Wikipedia lookups |
-| **[Code Execution](tools/code.md)** | 3 | Sandboxed subprocess Python execution, shell command execution, Python syntax linting |
-| **[Data Processing](tools/data.md)** | 5 | JSON pretty-printing, jq-style dot queries, CSV table formatting, regex search/replace |
-| **[Session Memory](tools/memory.md)** | 4 | Store notes, recall notes, list keys, and delete session notes |
+| **[Session & Memory](tools/memory.md)** | 10 | Save/read/search persistent memories, session notes storage with backwards compatibility |
 
 ### 3. Provider Agnostic
 Configure each specialist to point to different endpoints, models, temperatures, and timeouts in your `specialists.yaml` file.
@@ -67,9 +69,10 @@ Configure each specialist to point to different endpoints, models, temperatures,
 
 ## Next Steps
 
-1. **[Installation Guide →](getting-started/installation.md)** — Download pre-built binaries or install from source
+1. **[Installation Guide →](getting-started/installation.md)** — Install via `uvx`, `uv tool`, `pip`, pre-built binaries, or source
 2. **[Quick Start Guide →](getting-started/quick-start.md)** — Run the setup wizard and start chatting
 3. **[Configuration Overview →](configuration/overview.md)** — Learn the `specialists.yaml` format
-4. **[Built-in Tools Manual →](tools/overview.md)** — Explore all 29 tools in detail
-5. **[Command-Line Usage →](usage/cli.md)** — Terminal shortcuts and REPL commands
+4. **[Built-in Tools Manual →](tools/overview.md)** — Explore all 49 tools in detail
+5. **[Command-Line Usage →](usage/cli.md)** — Terminal shortcuts, CLI flags, and REPL commands
+
 

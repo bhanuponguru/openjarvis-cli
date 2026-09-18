@@ -14,7 +14,7 @@ class ToolSafetySample:
 
 
 def generate_synthetic_safety_dataset() -> list[ToolSafetySample]:
-    """Generate a synthetic dataset of safe vs harmful tool calls for the 29 built-in tools."""
+    """Generate a synthetic dataset of safe vs harmful tool calls for the 49 built-in tools."""
     samples: list[ToolSafetySample] = []
 
     # 1. Math & Date tools (always safe)

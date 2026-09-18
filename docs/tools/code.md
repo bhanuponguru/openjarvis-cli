@@ -126,6 +126,6 @@ Code execution tools run directly in isolated subprocesses using the active user
 
 ## See Also
 
-- [Tools Overview](overview.md) — All 29 built-in tools
+- [Tools Overview](overview.md) — All 49 built-in tools
 - [File Tools](files.md) — Reading, writing, and searching files
 - [Data Processing](data.md) — JSON, CSV, and regex operations

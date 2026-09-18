@@ -18,17 +18,64 @@ You can also use the short binary alias if available:
 oj
 ```
 
-On launch, OpenJarvis discovers your configuration and opens the interactive prompt:
+---
+
+## Command-Line Arguments & Options
+
+OpenJarvis supports both interactive and non-interactive command-line invocation:
 
 ```text
-OpenJarvis (type 'exit' or 'quit' to stop)
+Usage: openjarvis [-h] [-c CONFIG] [--model MODEL] [--provider PROVIDER]
+                  [--update-tools] [-V] [query ...]
 
-oj> 
+Options:
+  -c, --config CONFIG  Path to specialists.yaml configuration file
+  --model MODEL        Override generalist model name
+  --provider PROVIDER  Override default provider (e.g. ollama, openai, anthropic)
+  --update-tools       Re-index and update tool embedding vectors
+  -V, --version        Show program's version number and exit
+  -h, --help           Show this help message and exit
+```
+
+### Non-Interactive Single Prompt
+
+To execute a one-off instruction without entering the interactive prompt:
+
+```bash
+oj "List the largest files in the current directory"
+```
+
+### Overriding Configuration on the Fly
+
+```bash
+# Use a specific configuration file:
+oj -c /path/to/custom-specialists.yaml
+
+# Override the generalist provider and model:
+oj --provider openai --model gpt-4o
 ```
 
 ---
 
 ## Interactive REPL
+
+On launch without arguments, OpenJarvis discovers your configuration and opens the interactive prompt:
+
+```text
+OpenJarvis v0.2.0 — type /exit to stop, /help for commands
+
+oj> 
+```
+
+### REPL Commands
+
+| Command | Shortcut | Description |
+| :--- | :--- | :--- |
+| `/help` | | Show available REPL commands and shortcuts |
+| `/version` | `/v` | Print the current `openjarvis-cli` version |
+| `/clear` | | Clear the terminal screen |
+| `/update-tools` | | Re-compute and cache tool embedding vectors |
+| `/exit`, `/quit` | `exit`, `quit` | End the session |
 
 Type your question or instruction at the `oj>` prompt and press `Enter`:
 
