@@ -90,9 +90,8 @@ def main() -> None:
     subprocess.run(["uv", "build"], check=True)
 
     print(f"\n✓ Successfully built openjarvis-cli {new_version}!")
-    print("\nPublishing instructions:")
+    print("\nNext steps:")
     print(f"  git push origin {tag_name}")
-    print("  uv publish")
 
 
 if __name__ == "__main__":

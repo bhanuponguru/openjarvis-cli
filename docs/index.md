@@ -69,7 +69,7 @@ Configure each specialist to point to different endpoints, models, temperatures,
 
 ## Next Steps
 
-1. **[Installation Guide →](getting-started/installation.md)** — Install via `uvx`, `uv tool`, `pip`, pre-built binaries, or source
+1. **[Installation Guide →](getting-started/installation.md)** — Run via standalone pre-built binaries or from source
 2. **[Quick Start Guide →](getting-started/quick-start.md)** — Run the setup wizard and start chatting
 3. **[Configuration Overview →](configuration/overview.md)** — Learn the `specialists.yaml` format
 4. **[Built-in Tools Manual →](tools/overview.md)** — Explore all 49 tools in detail

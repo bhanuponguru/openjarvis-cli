@@ -1,52 +1,10 @@
 # Installation Guide
 
-OpenJarvis can be run instantly via `uvx`, installed as a CLI tool with `uv tool`, installed with standard `pip`, or used via pre-built standalone binaries.
+OpenJarvis can be run using pre-built standalone binaries (zero Python required) or run directly from source using `uv`.
 
 ---
 
-## Option 1: Instant Execution with `uvx` (Fastest)
-
-Run OpenJarvis immediately without installing anything permanently:
-
-```bash
-uvx openjarvis-cli
-```
-
----
-
-## Option 2: Install via `uv tool` (Recommended)
-
-Install OpenJarvis as an isolated, globally accessible CLI tool:
-
-```bash
-uv tool install openjarvis-cli
-```
-
-Once installed, simply run:
-```bash
-openjarvis
-# or use the short alias:
-oj
-```
-
-To update to the latest release:
-```bash
-uv tool upgrade openjarvis-cli
-```
-
----
-
-## Option 3: Install via `pip`
-
-Install into any Python 3.13+ virtual environment:
-
-```bash
-pip install openjarvis-cli
-```
-
----
-
-## Option 4: Standalone Binary (Zero Python Required)
+## Option 1: Standalone Binary (Zero Python Required)
 
 Pre-built binaries include all dependencies and embedded documentation. No Python runtime or build tools are required.
 
@@ -82,7 +40,7 @@ sudo mv openjarvis /usr/local/bin/
 
 ---
 
-## Option 5: Running from Source with `uv`
+## Option 2: Running from Source with `uv`
 
 If you are developing or prefer running from source:
 

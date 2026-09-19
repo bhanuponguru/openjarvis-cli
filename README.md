@@ -4,7 +4,6 @@
 
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![PyPI version](https://badge.fury.io/py/openjarvis-cli.svg)](https://pypi.org/project/openjarvis-cli/)
 [![Documentation](https://img.shields.io/badge/docs-mkdocs--material-blue.svg)](https://bhanuponguru.tech/openjarvis-cli)
 
 OpenJarvis CLI is an intelligent terminal client that coordinates a team of specialized language models across any model provider. Instead of forcing one generalist model to do everything, OpenJarvis dynamically routes tasks to specialized agents (coding, mathematics, web research, data processing, and planning) and executes built-in tools with real-time feedback.
@@ -18,7 +17,7 @@ OpenJarvis CLI is an intelligent terminal client that coordinates a team of spec
 - 🛠️ **49 Production-Ready Built-In Tools**: Comprehensive tools spanning 9 functional domains (file inspection, Git & patch management, web lookups, REST requests, code execution, AST math solvers, SQLite queries, datetime operations, and persistent memory).
 - 🛡️ **Interactive Security Sandbox**: Granular permission manager intercepting tool calls with interactive user approvals and directory constraints.
 - 💻 **Modern Terminal Interface**: Interactive REPL with syntax-highlighted Markdown rendering, multiline input, live routing events, and history search.
-- 📦 **Instant Execution & Packaging**: Run immediately with `uvx`, install via `uv tool` or `pip`, or run compiled standalone binaries.
+- 📦 **Native Packaging & Execution**: Run compiled zero-dependency standalone binaries, or run directly from source with `uv`.
 - 🏷️ **Single-Source Versioning**: Integrated semantic versioning with automatic package, CLI, and documentation synchronization.
 
 ---
@@ -27,25 +26,11 @@ OpenJarvis CLI is an intelligent terminal client that coordinates a team of spec
 
 ### 1. Installation
 
-#### Instant Run (No Installation Needed)
-```bash
-uvx openjarvis-cli
-```
+#### Option 1: Standalone Binary (Zero Python Required)
+Download precompiled self-contained executables for Linux, macOS, or Windows from [GitHub Releases](https://github.com/bhanuponguru/openjarvis-cli/releases). No Python runtime or dependencies required.
 
-#### Via `uv` (Recommended Tool Install)
-```bash
-uv tool install openjarvis-cli
-```
-
-#### Via `pip`
-```bash
-pip install openjarvis-cli
-```
-
-#### Standalone Binary (Zero Python Required)
-Download precompiled self-contained executables for Linux, macOS, or Windows from [GitHub Releases](https://github.com/bhanuponguru/openjarvis-cli/releases).
-
-#### From Source
+#### Option 2: From Source
+Clone the repository and run with `uv`:
 ```bash
 git clone https://github.com/bhanuponguru/openjarvis-cli.git
 cd openjarvis-cli
@@ -185,10 +170,9 @@ python scripts/bump-version.py major
 git tag -a v<version> -m "Release v<version>"
 ```
 
-To build and publish:
+To build release packages:
 ```bash
 uv build
-uv publish
 ```
 
 ---

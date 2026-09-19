@@ -92,7 +92,7 @@ python scripts/bump-version.py major
 python scripts/bump-version.py 0.1.0
 ```
 
-### Packaging & Publishing to PyPI
+### Packaging & Distribution Builds
 
 ```bash
 # 1. Clean build of sdist and wheel
@@ -100,9 +100,6 @@ uv build
 
 # 2. Push git tag to GitHub
 git push origin v<version>
-
-# 3. Publish to PyPI
-uv publish --token pypi-...
 ```
 
 ---
