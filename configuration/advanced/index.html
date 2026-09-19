@@ -882,6 +882,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#per-specialist-tool-permissions-scoped-tool-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Specialist Tool Permissions &amp; Scoped Tool RAG
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Per-Specialist Tool Permissions &amp; Scoped Tool RAG">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#defense-in-depth-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defense-in-Depth Enforcement
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#fine-tuning-performance-timeouts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1601,6 +1629,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#per-specialist-tool-permissions-scoped-tool-rag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Specialist Tool Permissions &amp; Scoped Tool RAG
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Per-Specialist Tool Permissions &amp; Scoped Tool RAG">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#defense-in-depth-enforcement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defense-in-Depth Enforcement
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#fine-tuning-performance-timeouts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1743,6 +1799,35 @@
 <p><strong>Offline Tool Behavior</strong>: When offline, local tools (math evaluation, file operations, date/time calculations, data parsing, and code execution) work fully. Web search (<code>search_web</code>) and URL fetching (<code>fetch_url</code>) require an active internet connection.</p>
 </blockquote>
 <hr />
+<h2 id="per-specialist-tool-permissions-scoped-tool-rag">Per-Specialist Tool Permissions &amp; Scoped Tool RAG</h2>
+<p>Advanced users can restrict tool access per specialist using the <code>tools</code> list:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">specialists</span><span class="p">:</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">math</span><span class="p">:</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s">"You</span><span class="nv"> </span><span class="s">are</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">math</span><span class="nv"> </span><span class="s">specialist."</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="c1"># Allow math specialist ONLY mathematical tools</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="nt">tools</span><span class="p">:</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"calculator"</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"evaluate_expression"</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"solve_linear_equation"</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"solve_quadratic_equation"</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="nt">creative</span><span class="p">:</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">    </span><span class="nt">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s">"You</span><span class="nv"> </span><span class="s">are</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">creative</span><span class="nv"> </span><span class="s">writer."</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">    </span><span class="c1"># Pure reasoning agent: no tools exposed or callable</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">    </span><span class="nt">tools</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[]</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">  </span><span class="nt">system_admin</span><span class="p">:</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="w">    </span><span class="nt">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="s">"You</span><span class="nv"> </span><span class="s">are</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">system</span><span class="nv"> </span><span class="s">administrator."</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">    </span><span class="c1"># Unrestricted access to all tools (default behavior)</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">    </span><span class="nt">tools</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</code></pre></div>
+<h3 id="defense-in-depth-enforcement">Defense-in-Depth Enforcement</h3>
+<ol>
+<li><strong>Context Scoping</strong>: Only permitted tools are serialized into the model's function-calling tool schema.</li>
+<li><strong>Scoped Tool RAG</strong>: If Two-Phase Tool Retrieval is enabled (<code>tool_retrieval.enabled: true</code>), semantic retrieval and always-on tool injection are strictly evaluated <em>only</em> against the specialist's permitted tools.</li>
+<li><strong>Execution Guard</strong>: If a model generates a hallucinated or unpermitted tool call, OpenJarvis intercepts and rejects execution with a security block event before any code or tool runs.</li>
+</ol>
+<hr />
 <h2 id="fine-tuning-performance-timeouts">Fine-Tuning Performance &amp; Timeouts</h2>
 <h3 id="temperature-per-domain">Temperature per Domain</h3>
 <ul>
@@ -1752,9 +1837,9 @@
 </ul>
 <h3 id="request-timeouts">Request Timeouts</h3>
 <p>The default per-request timeout is <code>60.0</code> seconds. For slower local models or deep reasoning queries, increase the timeout:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">specialists</span><span class="p">:</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">math</span><span class="p">:</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">120.0</span><span class="w"> </span><span class="c1"># 2 minutes</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">specialists</span><span class="p">:</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">math</span><span class="p">:</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">120.0</span><span class="w"> </span><span class="c1"># 2 minutes</span>
 </code></pre></div>
 <hr />
 <h2 id="see-also">See Also</h2>
