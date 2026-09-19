@@ -1,14 +1,7 @@
-"""Build configuration for Cython + PyInstaller pipeline."""
+"""Build configuration for PyInstaller pipeline."""
 
 import platform
 import sys
-
-# Cython compiler directives applied to all openjarvis source files.
-CYTHON_DIRECTIVES: dict[str, object] = {
-    "language_level": "3str",
-    "always_allow_keywords": True,
-    "annotation_typing": False,
-}
 
 
 def get_platform_options(target_arch: str | None = None) -> list[str]:

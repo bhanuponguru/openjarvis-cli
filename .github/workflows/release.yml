@@ -1,0 +1,122 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-packages:
+    name: Build Distribution Packages (Wheel & Sdist)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository (full history for VCS versioning)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Build wheel and sdist
+        run: uv build
+
+      - name: Upload distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: dist/*
+          if-no-files-found: error
+
+  build-binaries:
+    name: Build Standalone Binary (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+            archive_ext: tar.gz
+          - os: macos-latest
+            platform: macos-arm64
+            archive_ext: tar.gz
+          - os: windows-latest
+            platform: windows-x86_64
+            archive_ext: zip
+
+    steps:
+      - name: Checkout repository (full history for VCS versioning)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.13
+        run: uv python install 3.13
+
+      - name: Install build dependencies
+        run: uv sync --group build --python 3.13
+
+      - name: Build binary (Linux / macOS)
+        if: runner.os != 'Windows'
+        run: bash scripts/build-binary.sh
+
+      - name: Archive binary (Linux / macOS)
+        if: runner.os != 'Windows'
+        run: |
+          tar -czvf "openjarvis-${{ github.ref_name }}-${{ matrix.platform }}.tar.gz" -C dist openjarvis
+
+      - name: Build binary (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: uv run python build/build.py --output-dir dist
+
+      - name: Archive binary (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist/openjarvis.exe -DestinationPath "openjarvis-${{ github.ref_name }}-${{ matrix.platform }}.zip"
+
+      - name: Upload standalone binary archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.platform }}
+          path: openjarvis-${{ github.ref_name }}-${{ matrix.platform }}.${{ matrix.archive_ext }}
+          if-no-files-found: error
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-packages, build-binaries]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Display release assets
+        run: ls -la release-assets
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false

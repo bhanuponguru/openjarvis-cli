@@ -7,9 +7,6 @@ src/openjarvis/_version.py
 .installed.cfg
 *.egg
 dist/
-build/cython_out/
-build/_cython_build/
-build/_cython_temp/
 build/_pyinstaller_work/
 wheels/
 *.so

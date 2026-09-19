@@ -25,7 +25,7 @@
 - `uv run ruff check --fix .`: Auto-fix linting issues.
 - `uv run mypy`: Static type-checking across package source.
 - `uv run mkdocs serve`: Serve documentation locally on `http://127.0.0.1:8000`.
-- `bash scripts/build-binary.sh`: Build compiled standalone executable with Cython + PyInstaller.
+- `bash scripts/build-binary.sh`: Build compiled standalone executable with PyInstaller.
 
 ---
 

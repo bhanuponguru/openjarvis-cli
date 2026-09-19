@@ -18,17 +18,6 @@ echo Usage: %0 [--output-dir DIR]
 exit /b 1
 
 :check_toolchain
-echo Checking build toolchain...
-where gcc >nul 2>&1
-if %errorlevel% neq 0 (
-    where cl >nul 2>&1
-    if !errorlevel! neq 0 (
-        echo Error: No C compiler found.
-        echo Install Visual Studio Build Tools: https://visualstudio.microsoft.com/visual-cpp-build-tools/
-        exit /b 1
-    )
-)
-
 echo Installing build dependencies...
 uv sync --group build
 

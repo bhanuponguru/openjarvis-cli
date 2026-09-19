@@ -50,7 +50,7 @@ uv run mypy
 
 ---
 
-## 4. Building Standalone Binaries (Cython + PyInstaller)
+## 4. Building Standalone Binaries (PyInstaller)
 
 OpenJarvis CLI can be compiled into a self-contained executable that runs on machines without Python installed:
 
