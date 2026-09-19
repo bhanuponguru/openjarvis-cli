@@ -70,7 +70,7 @@ The compiled standalone binary will be placed in `dist/openjarvis`.
 
 OpenJarvis CLI implements **Git-tag and commit-based dynamic versioning** powered by `hatch-vcs`. The version is calculated automatically from Git metadata without needing manually edited version strings:
 
-- **Official Releases**: Pushing an annotated Git tag (e.g. `v0.1.0`) sets the exact version to `0.1.0`.
+- **Official Releases**: Pushing an annotated Git tag (e.g. `v{{ version }}`) sets the exact version to `{{ version }}`.
 - **Development Builds**: Commits ahead of the latest tag automatically generate PEP 440 dev versions (e.g. `0.1.1.dev3`) representing the exact commit distance.
 - **Build Hook**: `hatch-vcs` automatically generates `src/openjarvis/_version.py` during `uv build` and `uv sync`, embedding the exact calculated version into packages.
 
@@ -99,7 +99,7 @@ python scripts/bump-version.py 0.1.0
 uv build
 
 # 2. Push git tag to GitHub
-git push origin v<version>
+git push origin v{{ version }}
 ```
 
 ---

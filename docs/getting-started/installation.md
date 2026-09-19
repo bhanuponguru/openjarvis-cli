@@ -11,9 +11,9 @@ Pre-built binaries include all dependencies and embedded documentation. No Pytho
 ### Download
 
 Download the release archive for your operating system and architecture from [GitHub Releases](https://github.com/bhanuponguru/openjarvis-cli/releases):
-- **Linux (x86_64, aarch64)**: `openjarvis-<version>-linux-x86_64.tar.gz`
-- **macOS (Apple Silicon arm64, Intel x86_64)**: `openjarvis-<version>-macos-arm64.tar.gz`
-- **Windows (x86_64)**: `openjarvis-<version>-windows-x86_64.zip`
+- **Linux (x86_64)**: `openjarvis-v{{ version }}-linux-x86_64.tar.gz`
+- **macOS (Apple Silicon arm64)**: `openjarvis-v{{ version }}-macos-arm64.tar.gz`
+- **Windows (x86_64)**: `openjarvis-v{{ version }}-windows-x86_64.zip`
 
 ### Linux & macOS
 

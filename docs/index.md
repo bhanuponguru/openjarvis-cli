@@ -1,6 +1,6 @@
 # OpenJarvis User Manual
 
-> **Intelligent AI Orchestrator with Multi-Model Routing**
+> **Intelligent AI Orchestrator with Multi-Model Routing** — *v{{ version }}*
 
 OpenJarvis coordinates a team of specialized language models across any OpenAI-compatible API. Instead of relying on one model to handle everything, OpenJarvis routes each part of your conversation to dedicated specialists (such as code, mathematics, factual knowledge, and planning) and executes built-in tools when needed.
 

@@ -58,6 +58,7 @@ exclude_docs: |
 
 plugins:
   - search
+  - macros
 
 nav:
   - Home: index.md
