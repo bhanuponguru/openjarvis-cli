@@ -181,25 +181,25 @@ plt.show()
 
 ---
 
-## Getting Started in 3 Steps
+## Getting Started
 
-=== "uv tool (Recommended)"
+=== "Standalone Binary (Recommended)"
+    Download the pre-compiled standalone executable for your operating system from the [GitHub Releases](https://github.com/bhanuponguru/openjarvis-cli/releases) page:
     ```bash
-    uv tool install openjarvis-cli
-    openjarvis
-    ```
-
-=== "pip / pipx"
-    ```bash
-    pipx install openjarvis-cli
-    openjarvis
-    ```
-
-=== "Standalone Binary"
-    Download the pre-compiled standalone executable from the [GitHub Releases](https://github.com/bhanu/openjarvis-cli/releases) page:
-    ```bash
+    # Extract and run (zero Python runtime required)
+    tar xzf openjarvis-v{{ version }}-linux-x86_64.tar.gz
+    cd openjarvis-*
     chmod +x openjarvis
     ./openjarvis
+    ```
+
+=== "From Source"
+    Clone the repository and run directly with `uv`:
+    ```bash
+    git clone https://github.com/bhanuponguru/openjarvis-cli.git
+    cd openjarvis-cli
+    uv sync
+    uv run openjarvis
     ```
 
 ---
