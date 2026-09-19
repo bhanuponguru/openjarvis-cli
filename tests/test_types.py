@@ -5,12 +5,16 @@ def test_specialist_config():
     cfg = SpecialistConfig(
         name="math",
         system_prompt="You are a math expert",
+        description="Handles mathematical calculations",
         base_url="http://localhost:11434/v1",
         model="llama3",
         delegates_to=["tool_use"],
+        tools=["calculator"],
     )
     assert cfg.name == "math"
+    assert cfg.description == "Handles mathematical calculations"
     assert "tool_use" in cfg.delegates_to
+    assert cfg.tools == ["calculator"]
 
 
 def test_specialist_config_defaults():
@@ -20,6 +24,8 @@ def test_specialist_config_defaults():
     assert cfg.delegates_to == []
     assert cfg.max_tokens is None
     assert cfg.timeout == 60.0
+    assert cfg.description is None
+    assert cfg.tools is None
 
 
 def test_conductor_config():

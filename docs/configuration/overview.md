@@ -30,13 +30,11 @@ max_hops: 10 # Maximum specialist transitions per query
 
 generalist:
   name: "generalist"
+  description: "Primary orchestrator and router."
   system_prompt: |
-    You are the ROUTER of OpenJarvis. Your job is to choose the best specialist
-    and emit a single routing tag at the end of your response:
-    [ROUTE: math] - Mathematics, statistics, equations
-    [ROUTE: code] - Programming, debugging, architecture
-    [ROUTE: knowledge] - Factual questions and research
-    [ROUTE: return] - Direct answer or tool response
+    You are the router and coordinator of OpenJarvis.
+    Analyze user requests, route domain-specific tasks to qualified specialists,
+    and synthesize final responses when specialists return their work.
   provider: "openai"
   base_url: "https://api.openai.com/v1"
   model: "gpt-4o-mini"
@@ -47,39 +45,42 @@ generalist:
 specialists:
   math:
     name: "math"
+    description: "Calculations, arithmetic, algebra, equations, and statistics."
     system_prompt: |
-      You are the MATH specialist. Solve mathematics and quantitative problems.
-      End your response with [RETURN].
+      You are the MATH specialist. Solve mathematics and quantitative problems with rigor.
     provider: "openai"
     base_url: "https://api.openai.com/v1"
     model: "gpt-4o-mini"
     api_key_env: "OPENAI_API_KEY"
     temperature: 0.0
-    delegates_to: []
+    delegates_to: ["code"]
+    tools: ["calculator", "evaluate_expression", "solve_linear_equation"]
 
   code:
     name: "code"
+    description: "Software engineering, writing, analyzing, and debugging code."
     system_prompt: |
-      You are the CODE specialist. Write and debug software.
-      End with [RETURN] or [DELEGATE: math].
+      You are the CODE specialist. Write, inspect, and debug software.
     provider: "openai"
     base_url: "https://api.openai.com/v1"
     model: "gpt-4o-mini"
     api_key_env: "OPENAI_API_KEY"
     temperature: 0.0
     delegates_to: ["math"]
+    tools: ["str_replace_editor", "bash", "execute_python"]
 
   knowledge:
     name: "knowledge"
+    description: "Factual concepts, historical research, and general definitions."
     system_prompt: |
       You are the KNOWLEDGE specialist. Answer factual questions and explain concepts.
-      End with [RETURN].
     provider: "openai"
     base_url: "https://api.openai.com/v1"
     model: "gpt-4o-mini"
     api_key_env: "OPENAI_API_KEY"
     temperature: 0.2
     delegates_to: []
+    tools: ["fetch_webpage", "search_web", "query_wikipedia"]
 ```
 
 ---
@@ -96,8 +97,9 @@ specialists:
 
 | Field | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `system_prompt` | String | **Required** | Instructions defining the role, capabilities, and routing tags for this model. |
+| `system_prompt` | String | **Required** | Functional instructions defining role and domain boundaries. Routing protocols are injected automatically. |
 | `name` | String | Section key | Identifier for this role (e.g. `generalist`, `math`, `code`). |
+| `description` | String | `null` | Optional concise summary of role expertise, provided to the generalist router for intelligent dispatching. |
 | `provider` | String | `"openai"` | Provider protocol (all OpenAI-compatible endpoints use `"openai"`). |
 | `base_url` | String | `"http://localhost:11434/v1"` | The HTTP base URL of the API endpoint. |
 | `model` | String | `"llama3"` | Model name requested from the provider. |
@@ -107,6 +109,7 @@ specialists:
 | `stop` | List[String] | `[]` | Optional list of stop sequences. |
 | `timeout` | Float | `60.0` | HTTP request timeout in seconds. |
 | `delegates_to` | List[String] | `[]` | List of specialist names this specialist is permitted to delegate to. |
+| `tools` | List[String] | `null` | Optional allowlist of permitted tool names. If `null`, inherits all available tools. If `[]`, pure reasoning agent (0 tools). |
 
 ---
 

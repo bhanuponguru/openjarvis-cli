@@ -13,6 +13,7 @@ from openjarvis.builtin_tools import create_builtin_registry
 from openjarvis.conductor import Conductor
 from openjarvis.llm_factory import create_chat_model
 from openjarvis.model_types import ConductorConfig, SpecialistConfig
+from openjarvis.prompts import build_specialist_prompt
 from openjarvis.workspace import Workspace
 
 __all__ = [
@@ -21,6 +22,7 @@ __all__ = [
     "SpecialistConfig",
     "Workspace",
     "__version__",
+    "build_specialist_prompt",
     "create_builtin_registry",
     "create_chat_model",
 ]

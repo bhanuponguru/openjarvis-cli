@@ -133,3 +133,41 @@ def test_merge_configs():
     assert merged.max_hops == 15
     assert merged.tool_retrieval.enabled is True
     assert merged.tool_retrieval.top_k == 3
+
+
+def test_load_config_with_description_and_tools(tmp_path):
+    path = tmp_path / "tools.yaml"
+    path.write_text("""
+generalist:
+  system_prompt: "Generalist"
+  description: "Primary router"
+specialists:
+  math:
+    system_prompt: "Math"
+    description: "Calculations"
+    tools:
+      - "calculator"
+      - "solve_equation"
+  reasoner:
+    system_prompt: "Pure thoughts"
+    tools: []
+""")
+    cfg = load_config(str(path))
+    assert cfg.generalist.description == "Primary router"
+    assert cfg.specialists["math"].description == "Calculations"
+    assert cfg.specialists["math"].tools == ["calculator", "solve_equation"]
+    assert cfg.specialists["reasoner"].tools == []
+
+
+def test_load_config_rejects_invalid_tools_type(tmp_path):
+    path = tmp_path / "bad_tools.yaml"
+    path.write_text("""
+generalist:
+  system_prompt: "Generalist"
+specialists:
+  math:
+    system_prompt: "Math"
+    tools: "calculator"
+""")
+    with pytest.raises(ValueError, match="tools"):
+        load_config(str(path))

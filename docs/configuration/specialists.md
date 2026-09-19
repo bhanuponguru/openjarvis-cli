@@ -2,7 +2,20 @@
 
 Specialists are domain-specific language model roles configured to handle distinct types of tasks (such as writing code, solving mathematics, answering factual questions, or decomposing complex plans).
 
-The **generalist** coordinates the team, while **specialists** execute tasks, call built-in tools as needed, and either return answers or delegate to peer specialists.
+The **generalist** coordinates the team, while **specialists** execute tasks, call permitted tools as needed, and either return answers or delegate to peer specialists.
+
+---
+
+## Declarative Prompts & Harness Templating
+
+OpenJarvis uses **internal harness prompt templating**. You no longer need to write manual routing tags (`[ROUTE: ...]`, `[DELEGATE: ...]`, or `[RETURN]`) in your system prompts.
+
+Your configuration only needs to declare:
+1. **Domain functionality & boundaries**: What the specialist does and what it refuses.
+2. **Delegation targets (`delegates_to`)**: Which peer specialists it is permitted to delegate to.
+3. **Tool permissions (`tools`)**: Which tools the specialist is allowed to access (optional).
+
+At runtime, the OpenJarvis harness dynamically injects the standardized routing protocol, active specialists directory, and completion contracts into the system prompt.
 
 ---
 
@@ -13,15 +26,12 @@ The `generalist` role is required for all configurations. It receives user promp
 ```yaml
 generalist:
   name: "generalist"
+  description: "Router and coordinator managing task dispatch and final answer synthesis."
   system_prompt: |
-    You are the ROUTER and DISPATCHER of OpenJarvis.
-    Your SOLE responsibility is to analyze the user request and route to the best specialist.
-    CRITICAL: Do NOT attempt to solve specialized domain tasks yourself.
-    Route strictly using exactly ONE tag on its own line at the end:
-    - [ROUTE: math] for calculations, algebra, equations, and statistics
-    - [ROUTE: code] for programming, debugging, algorithms, and software engineering
-    - [ROUTE: knowledge] for factual questions, research, and concept explanations
-    - [ROUTE: return] ONLY for basic conversational greetings or delivering the final synthesis.
+    You are the router and coordinator of OpenJarvis.
+    Your responsibility is to analyze incoming user requests and dispatch them to the most qualified specialist.
+    Under no circumstances should you solve domain-specific mathematical problems, write software code, conduct deep research, compose creative fiction, or build execution roadmaps yourself.
+    Coordinate execution across your specialist team, and synthesize clear, helpful responses when specialists return their work.
   provider: "openai"
   base_url: "https://api.openai.com/v1"
   model: "gpt-4o-mini"
@@ -29,108 +39,108 @@ generalist:
   temperature: 0.0
 ```
 
-### Generalist Prompt Guidelines
-
-1. **Explicit Routing Tags**: List each specialist tag (`[ROUTE: <specialist>]`) clearly on its own line.
-2. **Direct Answer Tag**: Specify `[ROUTE: return]` when the query does not need specialist delegation.
-3. **Low Temperature**: Set `temperature: 0.0` or `0.1` so the router makes reliable, deterministic decisions.
-4. **Hard Non-Solving Constraint**: Strongly instruct the router NOT to attempt solving domain tasks directly.
+### Generalist Guidelines
+- **Pure Role Definition**: Focus instructions on dispatching tasks and synthesizing final answers.
+- **Negative Constraints**: Instruct the router not to execute domain tasks directly when specialists are available.
+- **Low Temperature**: Set `temperature: 0.0` or `0.1` so routing decisions are deterministic and reliable.
 
 ---
 
-## Defining Specialists with Hard Role Boundaries
+## Defining Specialists with Domain Boundaries
 
-Under the `specialists:` section, define custom specialist roles. To prevent specialists from "answering everything" and stepping outside their expertise, system prompts should strictly enforce domain boundaries and explicit negative constraints:
+Under the `specialists:` section, define custom specialist roles:
 
 ```yaml
 specialists:
   math:
     name: "math"
+    description: "Calculations, arithmetic, algebra, calculus, equations, statistics, quantitative reasoning, and numerical proofs."
     system_prompt: |
-      You are EXCLUSIVELY the MATH specialist of OpenJarvis.
-      Your SOLE job is to solve mathematics, calculations, numerical equations, formal proofs, and statistics.
-      STRICT BOUNDARIES: Act ONLY on mathematical and quantitative tasks.
-      Do NOT write software application code, do NOT answer general trivia or history, and do NOT engage in casual conversation.
-      Focus strictly on mathematical derivation. You MUST end your response with [RETURN].
+      You are the MATH specialist of OpenJarvis.
+      Your sole job is to solve mathematics, calculations, numerical equations, formal proofs, statistics, and quantitative reasoning.
+      Focus purely on rigorous, clear mathematical derivations and solutions.
+      Act only on mathematical and quantitative tasks. Leave software code, factual research, creative writing, and project planning to their respective specialists.
     provider: "openai"
     base_url: "https://api.openai.com/v1"
     model: "gpt-4o-mini"
     api_key_env: "OPENAI_API_KEY"
     temperature: 0.0
-    delegates_to: []
+    delegates_to: ["code"]
+    tools:
+      - "calculator"
+      - "evaluate_expression"
+      - "solve_linear_equation"
+      - "solve_quadratic_equation"
+      - "convert_units"
+      - "compute_statistics"
 
   code:
     name: "code"
+    description: "Software engineering, writing, analyzing, debugging, reviewing, refactoring code, algorithms, and technical architecture."
     system_prompt: |
-      You are EXCLUSIVELY the CODE specialist of OpenJarvis.
-      Your SOLE job is software engineering: writing, analyzing, debugging, and explaining code, architecture, and algorithms.
-      STRICT BOUNDARIES: Act ONLY on programming tasks. Do NOT perform non-programming domain tasks, essays, or trivia.
-      For complex manual math derivations, delegate to math using [DELEGATE: math].
-      Focus strictly on programming. End your response with [RETURN] or [DELEGATE: math].
+      You are the CODE specialist of OpenJarvis.
+      Your sole job is software engineering: writing, analyzing, debugging, reviewing, refactoring, and explaining computer software, technical architecture, algorithms, and data structures.
+      Act only on programming, scripting, and software engineering tasks.
     provider: "openai"
     base_url: "https://api.openai.com/v1"
     model: "gpt-4o-mini"
     api_key_env: "OPENAI_API_KEY"
     temperature: 0.0
     delegates_to: ["math"]
+    tools:
+      - "str_replace_editor"
+      - "bash"
+      - "execute_python"
+      - "lint_python_code"
+      - "git_status"
+      - "git_diff"
+      - "git_log"
+      - "git_show"
 
-  planning:
-    name: "planning"
+  creative:
+    name: "creative"
+    description: "Fiction, storytelling, poetry, creative writing, metaphors, and stylistic rewrites."
     system_prompt: |
-      You are EXCLUSIVELY the PLANNING specialist of OpenJarvis.
-      Your SOLE job is task decomposition and workflow planning: breaking down complex objectives into structured, sequential, actionable roadmaps.
-      STRICT BOUNDARIES: Do NOT execute the tasks yourself (do not write code or perform heavy calculations).
-      Delegate factual questions to knowledge with [DELEGATE: knowledge] and math to math with [DELEGATE: math].
-      End your completed plan with [RETURN].
+      You are the CREATIVE specialist of OpenJarvis.
+      Your sole job is creative writing: storytelling, narrative development, poetry, metaphorical explorations, creative copywriting, and stylistic rewriting.
+      Deliver imaginative, stylistically refined output matching the requested tone.
     provider: "openai"
     base_url: "https://api.openai.com/v1"
     model: "gpt-4o-mini"
     api_key_env: "OPENAI_API_KEY"
-    temperature: 0.2
-    delegates_to: ["knowledge", "math"]
+    temperature: 0.8
+    delegates_to: []
+    tools: []
 ```
 
 ---
 
-## Tool Access for Specialists
+## Per-Specialist Tool Access Control
 
-All 49 built-in tools (file inspection, Git & patch tools, web search, REST requests, code execution, AST math solving, SQLite querying, datetime, and persistent memory) are provided directly to models via standard OpenAI function calling.
+By default, specialists have access to all registered built-in tools. For greater control, safety, and token efficiency, you can configure explicit tool access per specialist using the optional `tools` field:
 
-Models call tools automatically whenever their prompt requires it. Results are executed by OpenJarvis and fed back into the model conversation before the specialist emits `[RETURN]`.
+- **Omitted or `null`**: The specialist has access to all registered tools (default).
+- **`tools: []`**: Pure reasoning agent with zero tool access. No tools are bound to the model, preventing tool hallucinations or accidental execution.
+- **`tools: ["tool_a", "tool_b"]`**: The specialist is strictly restricted to the specified tools. Only these tools are included in the model's function schema, and execution of any unpermitted tool is automatically blocked with permission errors.
 
----
+### Scoped Tool RAG
 
-## Peer Delegation Rules (`delegates_to`)
-
-The `delegates_to` field defines which other specialists a specialist is allowed to call:
+When Two-Phase Tool Retrieval (RAG) is enabled:
 
 ```yaml
-specialists:
-  code:
-    delegates_to: ["math"] # code can delegate to math
-  planning:
-    delegates_to: ["knowledge", "math"] # planning can delegate to knowledge or math
+tool_retrieval:
+  enabled: true
+  top_k: 5
 ```
 
-- **Allowed Target**: If a specialist emits `[DELEGATE: math]` and `"math"` is in its `delegates_to` list, OpenJarvis transitions execution to the `math` specialist.
-- **Unapproved Target**: If a specialist attempts to delegate to an unlisted specialist, OpenJarvis safely intercepts the request and routes back to the generalist to recover.
+OpenJarvis dynamically performs semantic similarity search **only across the tools permitted to the active specialist**. Tools outside the specialist's `tools` list are never indexed, scored, or retrieved for that specialist.
 
 ---
 
-## Common Specialist Roles
+## Delegation Rules (`delegates_to`)
 
-| Role | Domain Focus | Recommended Settings |
-| :--- | :--- | :--- |
-| **`math`** | Arithmetic, algebra, statistics, equations | Temperature `0.0`, high precision |
-| **`code`** | Software architecture, algorithms, bug fixes | Temperature `0.0`, code-tuned models (e.g. `codellama`, `gpt-4o`) |
-| **`knowledge`** | Research, explanations, current facts | Temperature `0.2` - `0.4`, web tools enabled |
-| **`creative`** | Brainstorming, copywriting, fiction | Temperature `0.7` - `0.9` |
-| **`planning`** | Project roadmap, step-by-step decomposition | Temperature `0.2`, delegates to `knowledge` & `math` |
+The `delegates_to` list declares which peer specialists a specialist is allowed to invoke.
 
----
-
-## Next Steps
-
-- **[Providers Guide →](providers.md)** — Connect Ollama, OpenAI, Groq, or OpenRouter
-- **[Built-in Tools Reference →](../tools/overview.md)** — List of all 49 tools available to specialists
-- **[Routing Protocol →](../usage/routing.md)** — Detailed mechanics of routing tags and return tokens
+- If `delegates_to: ["code"]`, the harness teaches the specialist how to delegate subtasks to `code` using `[DELEGATE: code]`.
+- If a model attempts to delegate to an unpermitted target, the conductor intercepts the call and safely redirects back to the generalist for recovery.
+- If `delegates_to: []`, the harness only instructs the specialist on task completion (`[RETURN]`).

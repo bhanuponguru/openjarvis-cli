@@ -181,20 +181,42 @@ class ToolRetriever:
         if (not self._tool_vectors or len(self._tool_vectors) != len(self.registry.get_tools())) and not self.load_cache():
             self.build_index()
 
-    def retrieve(self, reasoning: str) -> list[Tool]:
-        """Retrieve top-K tools matching the reasoning text plus any always-on tools."""
+    def retrieve(
+        self,
+        reasoning: str,
+        allowed_tools: list[str] | set[str] | None = None,
+    ) -> list[Tool]:
+        """Retrieve top-K tools matching the reasoning text plus any always-on tools.
+
+        If allowed_tools is specified, candidate tools, similarity ranking, and
+        always-on inclusion are strictly constrained to that permitted subset.
+        """
         self.ensure_index()
         all_tools = self.registry.get_tools()
-        if not all_tools or not self._tool_vectors:
-            return list(all_tools.values())
+        if not all_tools:
+            return []
+
+        allowed_set = set(allowed_tools) if allowed_tools is not None else None
+        if allowed_set is not None:
+            candidate_tools = {k: v for k, v in all_tools.items() if k in allowed_set}
+        else:
+            candidate_tools = dict(all_tools)
+
+        if not candidate_tools:
+            return []
+
+        if not self._tool_vectors:
+            return list(candidate_tools.values())
 
         reasoning_vecs = self._embed_texts([reasoning])
         if not reasoning_vecs:
-            return list(all_tools.values())
+            return list(candidate_tools.values())
         query_vec = reasoning_vecs[0]
 
         scored: list[tuple[float, str]] = []
         for name, vec in zip(self._tool_names, self._tool_vectors, strict=False):
+            if allowed_set is not None and name not in allowed_set:
+                continue
             sim = _cosine_similarity(query_vec, vec)
             scored.append((sim, name))
 
@@ -206,20 +228,24 @@ class ToolRetriever:
             if sim >= self.config.similarity_threshold or not selected_names:
                 selected_names.add(name)
 
-        # Include always-on tools
+        # Include always-on tools, constrained to permitted candidates
         for always_on in self.config.always_on_tools:
-            if always_on in all_tools:
+            if always_on in candidate_tools:
                 selected_names.add(always_on)
 
-        # Fallback: if no tools selected, return all
+        # Fallback: if no tools selected, return all candidates (never unpermitted tools)
         if not selected_names:
-            return list(all_tools.values())
+            return list(candidate_tools.values())
 
-        return [all_tools[n] for n in selected_names if n in all_tools]
+        return [candidate_tools[n] for n in selected_names if n in candidate_tools]
 
-    def create_retrieved_registry(self, reasoning: str) -> ToolRegistry:
+    def create_retrieved_registry(
+        self,
+        reasoning: str,
+        allowed_tools: list[str] | set[str] | None = None,
+    ) -> ToolRegistry:
         """Create a fresh ToolRegistry populated only with retrieved tools."""
-        retrieved = self.retrieve(reasoning)
+        retrieved = self.retrieve(reasoning, allowed_tools=allowed_tools)
         new_registry = ToolRegistry()
         for t in retrieved:
             new_registry._tools[t.name] = t

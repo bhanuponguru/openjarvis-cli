@@ -33,6 +33,11 @@ User Input
 
 ---
 
+## Harness Prompt Injection
+
+> [!NOTE]
+> All routing and delegation tag instructions are automatically injected by the OpenJarvis orchestration harness using internal prompt templates. You do **not** need to manually include tag syntax in your `specialists.yaml` system prompts.
+
 ## Routing Tags
 
 ### Generalist Routing Tags

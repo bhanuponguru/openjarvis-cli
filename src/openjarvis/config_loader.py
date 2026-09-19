@@ -38,6 +38,14 @@ def _build_specialist(name: str, spec: dict, section: str) -> SpecialistConfig:
     if "system_prompt" not in spec:
         raise ValueError(f"{section} '{name}' is missing required key 'system_prompt'")
 
+    if "tools" in spec and spec["tools"] is not None and (
+        not isinstance(spec["tools"], list) or any(not isinstance(t, str) for t in spec["tools"])
+    ):
+        raise ValueError(f"{section} '{name}' key 'tools' must be a list of strings or null")
+
+    if "description" in spec and spec["description"] is not None and not isinstance(spec["description"], str):
+        raise ValueError(f"{section} '{name}' key 'description' must be a string or null")
+
     return SpecialistConfig(**spec)
 
 

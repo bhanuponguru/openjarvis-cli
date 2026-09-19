@@ -213,6 +213,15 @@ class ToolRegistry:
         """Return a copy of all registered tools mapping name -> Tool."""
         return dict(self._tools)
 
+    def subset(self, tool_names: list[str] | set[str]) -> ToolRegistry:
+        """Return a new ToolRegistry containing only the specified tools."""
+        names = set(tool_names)
+        new_registry = ToolRegistry()
+        for name, tool in self._tools.items():
+            if name in names:
+                new_registry._tools[name] = tool
+        return new_registry
+
     def execute(self, tool_call: dict) -> Any:
         """Execute a single tool call and return its result.
 

@@ -100,6 +100,39 @@ specialists:
 
 ---
 
+## Per-Specialist Tool Permissions & Scoped Tool RAG
+
+Advanced users can restrict tool access per specialist using the `tools` list:
+
+```yaml
+specialists:
+  math:
+    system_prompt: "You are the math specialist."
+    # Allow math specialist ONLY mathematical tools
+    tools:
+      - "calculator"
+      - "evaluate_expression"
+      - "solve_linear_equation"
+      - "solve_quadratic_equation"
+
+  creative:
+    system_prompt: "You are the creative writer."
+    # Pure reasoning agent: no tools exposed or callable
+    tools: []
+
+  system_admin:
+    system_prompt: "You are the system administrator."
+    # Unrestricted access to all tools (default behavior)
+    tools: null
+```
+
+### Defense-in-Depth Enforcement
+1. **Context Scoping**: Only permitted tools are serialized into the model's function-calling tool schema.
+2. **Scoped Tool RAG**: If Two-Phase Tool Retrieval is enabled (`tool_retrieval.enabled: true`), semantic retrieval and always-on tool injection are strictly evaluated *only* against the specialist's permitted tools.
+3. **Execution Guard**: If a model generates a hallucinated or unpermitted tool call, OpenJarvis intercepts and rejects execution with a security block event before any code or tool runs.
+
+---
+
 ## Fine-Tuning Performance & Timeouts
 
 ### Temperature per Domain

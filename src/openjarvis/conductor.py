@@ -25,6 +25,7 @@ from openjarvis.llm_factory import create_chat_model
 from openjarvis.model_types import ConductorConfig, SpecialistConfig
 from openjarvis.parser import is_route_tag, parse_route_tag
 from openjarvis.permissions import PermissionManager
+from openjarvis.prompts import build_specialist_prompt
 from openjarvis.safety_classifier import SafetyClassifier
 from openjarvis.tool_retriever import ToolRetriever
 from openjarvis.workspace import Workspace, discover_workspace, set_current_workspace
@@ -151,7 +152,7 @@ class Conductor:
             return os.environ.get(spec.api_key_env)
         return None
 
-    def _get_effective_config(self, spec: SpecialistConfig) -> SpecialistConfig:
+    def _get_effective_config(self, spec: SpecialistConfig, is_generalist: bool = False) -> SpecialistConfig:
         prefix_parts: list[str] = []
         if self.workspace:
             inst = self.workspace.instructions()
@@ -160,21 +161,29 @@ class Conductor:
             ctx = self.workspace.context()
             if ctx:
                 prefix_parts.append(f"### Context\n{ctx}")
+        effective_prompt = spec.system_prompt
         if prefix_parts:
             merged_prefix = "\n\n".join(prefix_parts)
-            effective_prompt = f"{merged_prefix}\n\n{spec.system_prompt}"
-            return replace(spec, system_prompt=effective_prompt)
-        return spec
+            effective_prompt = f"{merged_prefix}\n\n{effective_prompt}"
+
+        templated_prompt = build_specialist_prompt(
+            spec=replace(spec, system_prompt=effective_prompt),
+            available_specialists=self.config.specialists,
+            is_generalist=is_generalist,
+        )
+        return replace(spec, system_prompt=templated_prompt)
 
     def _get_specialist(self, name: str) -> SpecialistConfig | None:
         spec: SpecialistConfig | None = None
+        is_generalist = False
         if name == "generalist" or name == self.config.generalist.name:
             spec = self.config.generalist
+            is_generalist = True
         else:
             spec = self.config.specialists.get(name)
         if spec is None:
             return None
-        return self._get_effective_config(spec)
+        return self._get_effective_config(spec, is_generalist=is_generalist)
 
     def _get_chat_model(self, name: str, **kwargs: Any) -> Any:
         spec = self._get_specialist(name)
@@ -263,9 +272,18 @@ class Conductor:
             lc_messages = self._format_messages_for_langchain(messages_history)
             full_lc_messages: list[BaseMessage] = [SystemMessage(content=spec.system_prompt)] + lc_messages
 
-            # Resolve active tools (applying Two-Phase RAG if enabled)
+            # Resolve active tools (applying specialist-level tool permissions)
             active_tools = self._tools
-            if active_tools and self.config.tool_retrieval.enabled and self._retriever:
+            allowed_tools = spec.tools
+            if active_tools is not None and allowed_tools is not None:
+                active_tools = active_tools.subset(allowed_tools)
+
+            if (
+                active_tools
+                and len(active_tools.get_tools()) > 0
+                and self.config.tool_retrieval.enabled
+                and self._retriever
+            ):
                 reasoning_prompt = SystemMessage(
                     content=(
                         "Before responding, briefly state your reasoning and whether you need external tools "
@@ -277,12 +295,18 @@ class Conductor:
                     base_model = self._get_chat_model(role_name)
                     reasoning_resp = base_model.invoke(full_lc_messages + [reasoning_prompt])
                     reasoning_text = _extract_text(reasoning_resp.content)
-                    active_tools = self._retriever.create_retrieved_registry(reasoning_text)
+                    active_tools = self._retriever.create_retrieved_registry(
+                        reasoning_text,
+                        allowed_tools=allowed_tools,
+                    )
                 except Exception as exc:
-                    logger.warning("RAG tool retrieval failed, using all tools: %s", exc)
-                    active_tools = self._tools
+                    logger.warning("RAG tool retrieval failed, using permitted tools: %s", exc)
 
-            openai_tools = active_tools.to_openai_format() if active_tools else []
+            openai_tools = (
+                active_tools.to_openai_format()
+                if active_tools and len(active_tools.get_tools()) > 0
+                else []
+            )
             model = self._get_chat_model(role_name)
             if openai_tools:
                 with contextlib.suppress(Exception):
@@ -395,7 +419,13 @@ class Conductor:
         tool_calls = state.get("last_tool_calls", [])
         events: list[dict] = []
         messages_history = list(state.get("messages", []))
+        calling_role = state.get("current_role", "generalist")
+        calling_spec = self._get_specialist(calling_role)
+        allowed_tools = calling_spec.tools if calling_spec else None
+
         active_tools = self._tools
+        if active_tools is not None and allowed_tools is not None:
+            active_tools = active_tools.subset(allowed_tools)
 
         for tc in tool_calls:
             func = tc.get("function", {})
@@ -410,29 +440,37 @@ class Conductor:
             elif isinstance(raw_args, dict):
                 parsed_args = raw_args
 
-            decision = self.permissions.check(name, parsed_args)
-            if decision.action == "deny":
-                result = {"error": f"Permission denied: {decision.reason}"}
-                events.append({"type": "error", "content": f"Security blocked tool '{name}': {decision.reason}"})
-            elif decision.action == "confirm" and self.confirm_callback:
-                approved = self.confirm_callback(name, parsed_args, decision.reason)
-                if approved:
+            # Check specialist-level tool permissions
+            if allowed_tools is not None and name not in set(allowed_tools):
+                result = {"error": f"Tool '{name}' is not permitted for specialist '{calling_role}'."}
+                events.append({
+                    "type": "error",
+                    "content": f"Security blocked unpermitted tool '{name}' for specialist '{calling_role}'.",
+                })
+            else:
+                decision = self.permissions.check(name, parsed_args)
+                if decision.action == "deny":
+                    result = {"error": f"Permission denied: {decision.reason}"}
+                    events.append({"type": "error", "content": f"Security blocked tool '{name}': {decision.reason}"})
+                elif decision.action == "confirm" and self.confirm_callback:
+                    approved = self.confirm_callback(name, parsed_args, decision.reason)
+                    if approved:
+                        events.append({"type": "tool_call", "name": name, "arguments": raw_args})
+                        result = (
+                            active_tools.execute({"name": name, "arguments": raw_args})
+                            if active_tools else {"error": "No tool registry"}
+                        )
+                        events.append({"type": "tool_result", "name": name, "result": result})
+                    else:
+                        result = {"error": "Tool call cancelled by user"}
+                        events.append({"type": "error", "content": f"User denied permission for tool '{name}'"})
+                else:
                     events.append({"type": "tool_call", "name": name, "arguments": raw_args})
                     result = (
                         active_tools.execute({"name": name, "arguments": raw_args})
                         if active_tools else {"error": "No tool registry"}
                     )
                     events.append({"type": "tool_result", "name": name, "result": result})
-                else:
-                    result = {"error": "Tool call cancelled by user"}
-                    events.append({"type": "error", "content": f"User denied permission for tool '{name}'"})
-            else:
-                events.append({"type": "tool_call", "name": name, "arguments": raw_args})
-                result = (
-                    active_tools.execute({"name": name, "arguments": raw_args})
-                    if active_tools else {"error": "No tool registry"}
-                )
-                events.append({"type": "tool_result", "name": name, "result": result})
 
             messages_history.append(
                 {

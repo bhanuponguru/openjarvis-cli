@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 class SpecialistConfig:
     name: str
     system_prompt: str
+    description: str | None = None
     provider: str = "openai"
     base_url: str = "http://localhost:11434/v1"
     model: str = "llama3"
@@ -14,6 +15,7 @@ class SpecialistConfig:
     stop: list[str] = field(default_factory=list)
     timeout: float = 60.0
     delegates_to: list[str] = field(default_factory=list)
+    tools: list[str] | None = None
 
 
 @dataclass
