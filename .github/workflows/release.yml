@@ -121,3 +121,36 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: false
+
+  deploy-docs:
+    name: Build & Deploy Documentation
+    needs: [create-release]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository (full history for VCS versioning)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.13
+        run: uv python install 3.13
+
+      - name: Install documentation dependencies
+        run: uv sync --group docs --python 3.13
+
+      - name: Build documentation
+        run: uv run mkdocs build --strict
+
+      - name: Deploy documentation to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          cname: openjarvis-cli.bhanuponguru.tech
+
