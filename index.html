@@ -633,21 +633,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#getting-started-in-3-steps" class="md-nav__link">
+  <a href="#getting-started" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Getting Started in 3 Steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#documentation-navigation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Documentation Navigation
+        Getting Started
       
     </span>
   </a>
@@ -1700,21 +1689,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#getting-started-in-3-steps" class="md-nav__link">
+  <a href="#getting-started" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Getting Started in 3 Steps
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#documentation-navigation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Documentation Navigation
+        Getting Started
       
     </span>
   </a>
@@ -2002,24 +1980,26 @@
 </tbody>
 </table>
 <hr />
-<h2 id="getting-started-in-3-steps">Getting Started in 3 Steps</h2>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">uv tool (Recommended)</label><label for="__tabbed_1_2">pip / pipx</label><label for="__tabbed_1_3">Standalone Binary</label></div>
+<h2 id="getting-started">Getting Started</h2>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Standalone Binary (Recommended)</label><label for="__tabbed_1_2">From Source</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<p><code>bash
-uv tool install openjarvis-cli
-openjarvis</code></p>
-</div>
-<div class="tabbed-block">
-<p><code>bash
-pipx install openjarvis-cli
-openjarvis</code></p>
-</div>
-<div class="tabbed-block">
-<p>Download the pre-compiled standalone executable from the <a href="https://github.com/bhanu/openjarvis-cli/releases">GitHub Releases</a> page:
-<code>bash
+<p>Download the pre-compiled standalone executable for your operating system from the <a href="https://github.com/bhanuponguru/openjarvis-cli/releases">GitHub Releases</a> page:
+```bash</p>
+<h1 id="extract-and-run-zero-python-runtime-required">Extract and run (zero Python runtime required)</h1>
+<p>tar xzf openjarvis-v0.2.0-linux-x86_64.tar.gz
+cd openjarvis-*
 chmod +x openjarvis
-./openjarvis</code></p>
+./openjarvis
+```</p>
+</div>
+<div class="tabbed-block">
+<p>Clone the repository and run directly with <code>uv</code>:
+<code>bash
+git clone https://github.com/bhanuponguru/openjarvis-cli.git
+cd openjarvis-cli
+uv sync
+uv run openjarvis</code></p>
 </div>
 </div>
 </div>
