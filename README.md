@@ -4,7 +4,7 @@
 
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-mkdocs--material-blue.svg)](https://bhanuponguru.tech/openjarvis-cli)
+[![Documentation](https://img.shields.io/badge/docs-mkdocs--material-blue.svg)](https://openjarvis-cli.bhanuponguru.tech)
 
 OpenJarvis CLI is an intelligent terminal client that coordinates a team of specialized language models across any model provider. Instead of forcing one generalist model to do everything, OpenJarvis dynamically routes tasks to specialized agents (coding, mathematics, web research, data processing, and planning) and executes built-in tools with real-time feedback.
 
@@ -179,7 +179,7 @@ uv build
 
 ## Documentation
 
-Comprehensive documentation is available at [https://bhanuponguru.tech/openjarvis-cli](https://bhanuponguru.tech/openjarvis-cli):
+Comprehensive documentation is available at [https://openjarvis-cli.bhanuponguru.tech](https://openjarvis-cli.bhanuponguru.tech):
 - [Installation Guide](docs/getting-started/installation.md)
 - [Quick Start Guide](docs/getting-started/quick-start.md)
 - [Configuration Reference](docs/configuration/overview.md)

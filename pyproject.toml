@@ -49,7 +49,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/bhanuponguru/openjarvis-cli"
-Documentation = "https://bhanuponguru.tech/openjarvis-cli"
+Documentation = "https://openjarvis-cli.bhanuponguru.tech"
 Repository = "https://github.com/bhanuponguru/openjarvis-cli"
 Issues = "https://github.com/bhanuponguru/openjarvis-cli/issues"
 
