@@ -10,7 +10,7 @@ Download a pre-built standalone binary or install via `uv`:
 
 ```bash
 # Extract and run standalone binary (Linux / macOS)
-tar xzf openjarvis-*.tar.gz
+tar xzf openjarvis-v{{ version }}-linux-x86_64.tar.gz
 cd openjarvis-*
 ./openjarvis
 ```
