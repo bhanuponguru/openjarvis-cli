@@ -204,10 +204,9 @@ Your `.openjarvis/config.yaml` defines the Root Agent coordinator and specialize
 ```text
 oj> List the files here and write a quick summary to summary.md
 
-  ↳ routing: generalist → code
-  ⚙ tool: list_directory {"path": "."}
+  [agent-coder] ⚙ list_directory {"path": "."}
     → ["src", "tests", "README.md", "pyproject.toml"]
-  ⚙ tool: write_file {"path": "summary.md", "content": "# Project Summary\n..."}
+  [agent-coder] ⚙ write_file {"path": "summary.md", "content": "# Project Summary\n..."}
     → "Successfully wrote to summary.md"
 
 I have inspected the project directory and generated `summary.md`.

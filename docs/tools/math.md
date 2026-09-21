@@ -111,8 +111,7 @@ Factorize a positive integer into its prime factors.
 ```text
 oj> How much is a 20% tip on a $85 restaurant bill?
 
-  ↳ routing: generalist → math
-  ⚙ tool: evaluate_expression {"expression": "0.20 * 85"}
+  [agent-math] ⚙ evaluate_expression {"expression": "0.20 * 85"}
     → 17.0
 
 A 20% tip on an $85 bill is **$17.00**.
@@ -123,8 +122,7 @@ A 20% tip on an $85 bill is **$17.00**.
 ```text
 oj> How many miles is a 10K run?
 
-  ↳ routing: generalist → math
-  ⚙ tool: convert_units {"value": 10, "from_unit": "km", "to_unit": "mi"}
+  [agent-math] ⚙ convert_units {"value": 10, "from_unit": "km", "to_unit": "mi"}
     → 6.2137...
 
 A 10K race is approximately **6.21 miles**.
@@ -135,8 +133,7 @@ A 10K race is approximately **6.21 miles**.
 ```text
 oj> Solve for x: 3*x + 12 = 0
 
-  ↳ routing: generalist → math
-  ⚙ tool: solve_equation {"equation": "3*x + 12 = 0", "variable": "x"}
+  [agent-math] ⚙ solve_equation {"equation": "3*x + 12 = 0", "variable": "x"}
     → "[-4]"
 
 The solution is **x = -4**.

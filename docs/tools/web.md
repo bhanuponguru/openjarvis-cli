@@ -114,8 +114,7 @@ You don't need to call tools manually — models invoke them automatically when 
 ```text
 oj> What's the latest price of Bitcoin?
 
-  ↳ routing: generalist → knowledge
-  ⚙ tool: search_web {"query": "Bitcoin price current USD"}
+  [agent-researcher] ⚙ search_web {"query": "Bitcoin price current USD"}
     → [{"title": "Bitcoin Price...", "url": "...", "snippet": "..."}]
 
 The current price of Bitcoin is approximately $65,000 USD...

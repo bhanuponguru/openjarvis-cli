@@ -150,8 +150,7 @@ Execute SQL statements against a SQLite database file or in-memory database.
 ```text
 oj> Extract the user email from: {"status": "ok", "user": {"name": "Alice", "email": "alice@example.com"}}
 
-  ↳ routing: generalist → code
-  ⚙ tool: jq_query {"json_str": "{\"status\": \"ok\", ...}", "path": "user.email"}
+  [agent-coder] ⚙ jq_query {"json_str": "{\"status\": \"ok\", ...}", "path": "user.email"}
     → "alice@example.com"
 
 The user's email address is **alice@example.com**.
@@ -162,8 +161,7 @@ The user's email address is **alice@example.com**.
 ```text
 oj> Find all email addresses in: user alice@example.com logged in; error sent to admin@company.org
 
-  ↳ routing: generalist → code
-  ⚙ tool: regex_search {"pattern": "[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+", "text": "..."}
+  [agent-coder] ⚙ regex_search {"pattern": "[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+", "text": "..."}
     → ["alice@example.com", "admin@company.org"]
 
 Found 2 email addresses: **alice@example.com** and **admin@company.org**.

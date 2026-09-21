@@ -92,8 +92,7 @@ Run pytest on a test suite or specific test file and return execution output wit
 ```text
 oj> Calculate the sum of squares from 1 to 100 using Python
 
-  ↳ routing: generalist → code
-  ⚙ tool: run_python {"code": "print(sum(i**2 for i in range(1, 101)))"}
+  [agent-coder] ⚙ run_python {"code": "print(sum(i**2 for i in range(1, 101)))"}
     → 338350
 
 The sum of squares from 1 to 100 is **338,350**.
@@ -104,8 +103,7 @@ The sum of squares from 1 to 100 is **338,350**.
 ```text
 oj> Check if this Python function has any syntax issues: def foo(x): return x + 1
 
-  ↳ routing: generalist → code
-  ⚙ tool: lint_python {"code": "def foo(x):\n    return x + 1"}
+  [agent-coder] ⚙ lint_python {"code": "def foo(x):\n    return x + 1"}
     → "Syntax OK"
 
 The snippet contains valid Python syntax without errors.

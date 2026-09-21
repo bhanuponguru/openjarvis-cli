@@ -1,160 +1,192 @@
 # Advanced Configuration
 
-This page covers power-user configuration techniques, environment management, and specialized setups for OpenJarvis.
+Configuration strategies for environment isolation, air-gapped deployments, tool retrieval, and execution controls in OpenJarvis CLI.
 
 ---
 
-## Managing Multiple Configurations
+## 1. Multi-Configuration Workflows
 
-You can maintain different agent configurations for different tasks (e.g. coding, research, writing):
+You can maintain distinct configurations tailored for specific workloads:
 
 ```text
 ~/.openjarvis/
-├── config.yaml       # Default MAS setup
-├── coding.yaml       # Code-focused agents (low temp, local code models)
-└── research.yaml     # Research setup (high-capacity models, web search)
+├── config.yaml       # Default coordinator setup
+├── coding.yaml       # Low-temperature, local code models with compiler tools
+└── research.yaml     # High-context models with web and literature tools
 ```
 
-To run OpenJarvis with a specific configuration:
+To invoke OpenJarvis with a specific configuration:
 
 ```bash
 OJ_CONFIG=~/.openjarvis/coding.yaml openjarvis
+# Or via CLI option:
+openjarvis --config ~/.openjarvis/coding.yaml
 ```
 
 ---
 
-## Per-Project Configuration
+## 2. Project Workspace Configuration
 
-You can place a `config.yaml` file in the `.openjarvis/` folder of any project workspace. When you run `openjarvis` inside that directory, it automatically loads `./.openjarvis/config.yaml` and merges it over your global user config.
+Place `.openjarvis/config.yaml` in the root of any repository. When executed within that directory tree, OpenJarvis discovers the local configuration and merges it on top of global user defaults (`~/.openjarvis/config.yaml`).
 
 ```text
-my-web-app/
+my-project/
 ├── .openjarvis/
-│   └── config.yaml   # Custom agent profiles and limits for this codebase
-├── package.json
+│   ├── config.yaml           # Project-specific agents and execution limits
+│   └── config/
+│       └── permissions.yaml  # Persisted tool permissions for this repository
+├── pyproject.toml
 └── src/
 ```
 
+Workspace-specific configurations override:
+- `root_agent` and `agents` definitions.
+- `tool_permissions` allowlists, blocklists, and pattern rules.
+- Execution limits (`max_active_agents`, `max_spawn_depth`, `max_agent_turns`).
+
 ---
 
-## Environment Variable Management
+## 3. Environment & Credential Resolution
 
-All API credentials are read from environment variables defined by `api_key_env` in your configuration:
+API credentials are resolved from shell environment variables specified by `api_key_env` in profile definitions:
 
 ```yaml
-generalist:
+root_agent:
   api_key_env: "OPENAI_API_KEY"
 
-specialists:
-  knowledge:
-    api_key_env: "GROQ_API_KEY"
+agents:
+  researcher:
+    api_key_env: "ANTHROPIC_API_KEY"
+  coder:
+    api_key_env: "OPENAI_API_KEY"
 ```
 
-### Setting Credentials
-
-Export variables in your active shell or shell profile:
+Export required keys in your environment:
 
 ```bash
-# ~/.bashrc or ~/.zshrc
 export OPENAI_API_KEY="sk-..."
-export GROQ_API_KEY="gsk_..."
-export OPENROUTER_API_KEY="sk-or-..."
+export ANTHROPIC_API_KEY="sk-ant-..."
+export GEMINI_API_KEY="..."
 ```
 
 ---
 
-## Offline / Air-Gapped Setup
+## 4. Air-Gapped & Offline Deployment
 
-For completely offline, air-gapped environments, configure OpenJarvis with Ollama:
+In restricted or air-gapped networks, configure OpenJarvis to communicate strictly with local inference endpoints:
 
 ```yaml
-max_hops: 8
-
-generalist:
+# .openjarvis/config.yaml
+root_agent:
+  name: "root"
+  role: "coordinator"
   system_prompt: |
-    You are OpenJarvis.
-    Route requests using:
-    [ROUTE: math] - Math problems
-    [ROUTE: code] - Programming tasks
-    [ROUTE: return] - Final answer
+    You are the Root Coordinator. Spawn local child agents to solve user tasks.
+    Call `complete_task` when all child agents have terminated.
+  provider: "ollama"
   base_url: "http://localhost:11434/v1"
-  model: "llama3"
-  temperature: 0.0
+  model: "llama3.1"
+  temperature: 0.1
+  tools:
+    - "spawn_agent"
+    - "connect_agents"
+    - "report_findings"
+    - "exit_agent"
+    - "complete_task"
+    - "read_file"
 
-specialists:
+agents:
+  coder:
+    role: "coder"
+    provider: "ollama"
+    base_url: "http://localhost:11434/v1"
+    model: "qwen2.5-coder:7b"
+    temperature: 0.0
+    tools:
+      - "str_replace_editor"
+      - "bash"
+      - "run_python"
+      - "run_pytest"
+      - "lint_python"
+
   math:
-    system_prompt: "You are the math specialist. Solve step-by-step. End with [RETURN]."
+    role: "math"
+    provider: "ollama"
     base_url: "http://localhost:11434/v1"
-    model: "llama3"
+    model: "llama3.1"
     temperature: 0.0
-    delegates_to: []
-
-  code:
-    system_prompt: "You are the code specialist. End with [RETURN]."
-    base_url: "http://localhost:11434/v1"
-    model: "codellama"
-    temperature: 0.0
-    delegates_to: []
+    tools:
+      - "evaluate_expression"
+      - "solve_equation"
+      - "convert_units"
+      - "prime_factorize"
 ```
 
-> **Offline Tool Behavior**: When offline, local tools (math evaluation, file operations, date/time calculations, data parsing, and code execution) work fully. Web search (`search_web`) and URL fetching (`fetch_url`) require an active internet connection.
+In offline environments, all deterministic local tools (`read_file`, `write_file`, `str_replace_editor`, `bash`, `run_python`, `run_pytest`, `evaluate_expression`, `parse_json`, etc.) operate without network egress.
 
 ---
 
-## Per-Specialist Tool Permissions & Scoped Tool RAG
+## 5. Tool Scoping & Two-Phase Retrieval (Tool RAG)
 
-Advanced users can restrict tool access per specialist using the `tools` list:
+### Scoped Tool Allowlists
+You can restrict tool access per agent profile:
 
 ```yaml
-specialists:
+agents:
   math:
-    system_prompt: "You are the math specialist."
-    # Allow math specialist ONLY mathematical tools
+    # Only mathematical calculation tools
     tools:
-      - "calculator"
       - "evaluate_expression"
-      - "solve_linear_equation"
-      - "solve_quadratic_equation"
+      - "solve_equation"
+      - "convert_units"
+      - "prime_factorize"
 
-  creative:
-    system_prompt: "You are the creative writer."
-    # Pure reasoning agent: no tools exposed or callable
+  writer:
+    # Pure reasoning agent: no tools exposed
     tools: []
 
-  system_admin:
-    system_prompt: "You are the system administrator."
-    # Unrestricted access to all tools (default behavior)
+  operator:
+    # Unrestricted access to all registered tools
     tools: null
 ```
 
-### Defense-in-Depth Enforcement
-1. **Context Scoping**: Only permitted tools are serialized into the model's function-calling tool schema.
-2. **Scoped Tool RAG**: If Two-Phase Tool Retrieval is enabled (`tool_retrieval.enabled: true`), semantic retrieval and always-on tool injection are strictly evaluated *only* against the specialist's permitted tools.
-3. **Execution Guard**: If a model generates a hallucinated or unpermitted tool call, OpenJarvis intercepts and rejects execution with a security block event before any code or tool runs.
+### Two-Phase Tool Retrieval (FastEmbed)
+When the tool catalog is extensive, enable semantic tool retrieval:
+
+```yaml
+tool_retrieval:
+  enabled: true
+  top_k: 5
+  similarity_threshold: 0.35
+  always_on_tools:
+    - "read_file"
+    - "spawn_agent"
+    - "exit_agent"
+```
+
+- **Scope-Constrained Indexing**: Retrieval is constrained strictly within the agent's permitted `tools` list. Unpermitted tools are never indexed or exposed.
+- **Always-On Pinning**: Specified tools in `always_on_tools` are always bound to the model schema regardless of query relevance.
+- **Execution Guard**: If an unpermitted tool name is generated, the invocation is intercepted and denied before execution.
 
 ---
 
-## Fine-Tuning Performance & Timeouts
+## 6. Execution Limits & Concurrency Caps
 
-### Temperature per Domain
-- **Deterministic Tasks (`0.0` - `0.1`)**: Math calculations, symbolic algebra, code generation, JSON transformation.
-- **Balanced Reasoning (`0.2` - `0.4`)**: Generalist orchestration, factual summaries, planning.
-- **Creative Generation (`0.7` - `0.9`)**: Ideation, storytelling, brainstorming.
-
-### Request Timeouts
-The default per-request timeout is `60.0` seconds. For slower local models or deep reasoning queries, increase the timeout:
+Control resource consumption across concurrent actor nodes:
 
 ```yaml
-specialists:
-  math:
-    timeout: 120.0 # 2 minutes
+limits:
+  max_active_agents: 8          # Maximum concurrent active agent nodes in the MAS graph
+  max_spawn_depth: 3            # Maximum parent-to-child spawning depth
+  max_agent_turns: 15           # Maximum turns per agent before termination
+  turn_timeout_seconds: 300.0   # Per-turn wall-clock timeout
 ```
 
 ---
 
 ## See Also
 
-- [Configuration Overview](overview.md) — All configuration fields
-- [Agents & Profiles Guide](agents.md) — Agent personas, consensus, and tool scoping
-- [Providers Guide](providers.md) — Provider-specific setup
-- [Troubleshooting](../troubleshooting.md) — Common issues and fixes
+- [Configuration Overview](overview.md)
+- [Agents & Profiles](agents.md)
+- [Providers Guide](providers.md)
+- [Security & Permissions](../security.md)

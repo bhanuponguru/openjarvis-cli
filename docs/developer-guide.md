@@ -1,6 +1,6 @@
 # Developer & Contributing Guide
 
-Thank you for contributing to OpenJarvis CLI! This guide covers setting up your development environment, running tests, linting, and building standalone binaries.
+Technical guide for development environment setup, test suites, static typing, packaging, and standalone binary compilation.
 
 ---
 

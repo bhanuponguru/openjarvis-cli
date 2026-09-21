@@ -1,103 +1,132 @@
 # Command Line Interface
 
-OpenJarvis runs as a terminal application with an interactive REPL, rich syntax highlighting, multi-agent coordination, and live progress indicators.
+OpenJarvis operates as a terminal application with an interactive REPL, rich formatting, multi-agent event tracing, and non-interactive batch execution.
 
 ---
 
-## Starting OpenJarvis
+## 1. Invocation
 
-Launch OpenJarvis from your terminal:
+Launch OpenJarvis using either the standard binary name or short alias:
 
 ```bash
 openjarvis
-```
-
-You can also use the short binary alias:
-
-```bash
+# Or using the short alias:
 oj
 ```
 
 ---
 
-## Command-Line Arguments & Options
-
-OpenJarvis supports both interactive and non-interactive command-line invocation:
+## 2. CLI Options & Flags
 
 ```text
 Usage: openjarvis [-h] [-c CONFIG] [-v] [--model MODEL] [--provider PROVIDER]
-                  [--update-tools] [-V] [query ...]
+                  [--update-tools] [-y] [--mode {interactive,autonomous,allowlist}]
+                  [-V] [query ...]
+
+Autonomous dynamic Multi-Agent System (MAS) coordinating specialized Conductor agents
+
+Positional Arguments:
+  query                 Optional non-interactive query or instruction to execute
 
 Options:
-  -c, --config CONFIG  Path to config.yaml configuration file
-  -v, --verbose        Display live inter-agent messaging, spawning, and tool events
-  --model MODEL        Override root agent model name
-  --provider PROVIDER  Override default provider (e.g. ollama, openai, anthropic)
-  --update-tools       Re-index and update tool embedding vectors
-  -V, --version        Show program's version number and exit
-  -h, --help           Show this help message and exit
-```
-
-### Non-Interactive Single Prompt
-
-To execute a one-off instruction without entering the interactive prompt:
-
-```bash
-oj "Analyze the repository and summarize key architectural components"
-```
-
-### Verbose Mode (`-v` / `--verbose`)
-
-By default, OpenJarvis displays a clean spinner while child agents coordinate in the background, printing only the final response and generated artifacts.
-
-To inspect the real-time multi-agent graph lifecycle (spawning, neighbor consensus, and tool calls), pass the `-v` or `--verbose` flag:
-
-```bash
-oj -v "Research and implement a caching layer for database queries"
-```
-
-### Overriding Configuration on the Fly
-
-```bash
-# Use a specific configuration file:
-oj -c /path/to/custom-config.yaml
-
-# Override the root agent provider and model:
-oj --provider openai --model gpt-4o
+  -c, --config CONFIG   Path to config.yaml configuration file
+  -v, --verbose         Display live inter-agent messaging, spawning, and tool events
+  --model MODEL         Override root agent model name
+  --provider PROVIDER   Override default provider (e.g. ollama, openai, anthropic)
+  --update-tools        Re-index and update tool embedding vectors
+  -y, --auto-approve    Automatically approve tool executions without prompting
+  --mode {interactive,autonomous,allowlist}
+                        Tool permission enforcement mode
+  -V, --version         Show program's version number and exit
+  -h, --help            Show this help message and exit
 ```
 
 ---
 
-## Interactive REPL
+## 3. Execution Modes
 
-On launch without arguments, OpenJarvis opens the interactive prompt:
+### Interactive REPL Mode
+Invoking `openjarvis` without positional arguments launches the interactive terminal prompt:
 
-```text
-OpenJarvis Multi-Agent System v{{ version }} — type /exit to stop, /help for commands
-
-oj> 
+```bash
+openjarvis
 ```
 
-### REPL Commands
+Prompt controls:
+- Submit: `Enter`
+- Multiline newline: `Escape` followed by `Enter` (or `Alt+Enter`)
+- History navigation: `Up` / `Down` arrows
+- Exit: `/exit`, `/quit`, `exit`, `quit`, or `Ctrl+D`
 
-| Command | Description |
+### Non-Interactive (Single-Shot) Execution
+Pass the task string as positional arguments:
+
+```bash
+oj "Inspect pyproject.toml and summarize installed package dependencies"
+```
+
+### Unattended / Headless Execution (`-y` / `--auto-approve`)
+For scripts, CI/CD runners, and non-interactive automation where stdin cannot receive confirmation prompts, specify `-y` or `--auto-approve` (which sets permission mode to `autonomous`):
+
+```bash
+oj -y "Run pytest and generate summary report"
+```
+
+### Real-Time Event Tracing (`-v` / `--verbose`)
+By default, OpenJarvis displays a status spinner during agent coordination and renders final responses and error events.
+Passing `-v` enables streaming log events for:
+- Agent spawning (`spawn_agent`)
+- Graph topology edges (`connect_agents`)
+- Tool execution parameters and outputs
+- Intermediate findings reports (`report_findings`)
+- Agent exit notifications (`exit_agent`)
+- Deliverable artifact saves
+
+```bash
+oj -v "Analyze git log and identify the last 5 merged features"
+```
+
+---
+
+## 4. Configuration Overrides
+
+Override configuration parameters per command invocation:
+
+```bash
+# Explicit configuration path:
+oj -c ~/.openjarvis/coding.yaml
+
+# Override model and provider:
+oj --provider openai --model gpt-4o "Refactor src/parser.py"
+
+# Enforce strict allowlist permissions:
+oj --mode allowlist "Review codebase"
+```
+
+---
+
+## 5. Built-in REPL Commands
+
+Within the interactive terminal, slash commands provide utility functions:
+
+| Command | Action |
 | :--- | :--- |
-| `/help` | Show available REPL commands and shortcuts |
-| `/version` | Print the current `openjarvis-cli` version |
-| `/clear` | Clear the terminal screen |
-| `/update-tools` | Re-compute and cache tool embedding vectors |
-| `/exit`, `/quit` | End the session |
+| `/help` | Display list of interactive commands and navigation shortcuts |
+| `/version` | Display active version identifier |
+| `/clear` | Clear terminal scrollback buffer |
+| `/update-tools` | Re-index vector embeddings for Two-Phase Tool Retrieval |
+| `/exit`, `/quit` | Terminate session |
 
 ---
 
-## Artifact Deliverables
+## 6. Generated Artifact Storage
 
-Artifacts produced by child agents upon exit are automatically saved under your project's `.openjarvis/artifacts/` directory:
+Deliverables produced by agents calling `exit_agent` or `complete_task` are persisted to disk via the content-addressable `ArtifactStore`:
 
 ```text
 .openjarvis/artifacts/
-├── art-8a12bc4f_researcher_output.md
-└── art-f9c312da_coder_patch.py
+├── art-6c2e391b_researcher_output.md
+└── art-b94f18da_final_output.md
 ```
 
-When execution concludes, OpenJarvis prints a summary of all generated artifacts with clickable local paths.
+The CLI prints clickable file paths upon task conclusion.

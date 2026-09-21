@@ -126,8 +126,7 @@ Calculate the number of days between two dates.
 ```text
 oj> What time is it in Sydney right now?
 
-  ↳ routing: generalist → knowledge
-  ⚙ tool: get_current_datetime {"timezone": "Australia/Sydney"}
+  [agent-coordinator] ⚙ get_current_datetime {"timezone": "Australia/Sydney"}
     → 2026-08-16T06:45:12 Sunday
 
 It is currently **6:45 AM on Sunday, August 16** in Sydney, Australia.
@@ -138,8 +137,7 @@ It is currently **6:45 AM on Sunday, August 16** in Sydney, Australia.
 ```text
 oj> My project deadline is 2026-09-30. How many days from 2026-08-15 is that?
 
-  ↳ routing: generalist → math
-  ⚙ tool: days_between {"date_a": "2026-08-15", "date_b": "2026-09-30"}
+  [agent-planner] ⚙ days_between {"date_a": "2026-08-15", "date_b": "2026-09-30"}
     → 46
 
 There are **46 days** remaining until September 30.

@@ -1,75 +1,82 @@
 # Agents & Profiles Configuration
 
-OpenJarvis models every node in the Multi-Agent System (MAS) as an autonomous **Conductor** instance. Agents are declared under the `agents:` section in your configuration, alongside the top-level `root_agent:`.
+OpenJarvis models execution nodes in the Multi-Agent System (MAS) as autonomous **Conductor** instances. Profiles are declared under `agents:` and `root_agent:` in the configuration file.
 
 ---
 
 ## Agent Configuration Schema
 
-Each agent profile specifies its identity, persona, execution limits, and scoped access to tools and specialists:
+Each profile under `agents:` configures persona, model hyperparameters, execution boundaries, and permitted tools:
 
 ```yaml
 agents:
   <agent_name>:
-    name: "<agent_name>"            # Unique identifier / role label
-    role: "<role>"                  # Functional role (e.g. researcher, coder, math, planner)
-    description: "..."              # Human-readable summary of capability
-    system_prompt: |                # Instruction set defining mission, behavior, and boundaries
+    name: "<agent_name>"            # Profile identifier
+    role: "<role>"                  # Functional role label (e.g. researcher, coder, math)
+    description: "..."              # Summary of role capabilities
+    system_prompt: |                # System prompt instructions defining role boundaries
       You are the ...
-    provider: "openai"              # LLM provider (openai, anthropic, google, ollama, custom)
+    provider: "openai"              # Provider type (openai, anthropic, gemini, ollama)
     base_url: "https://api.openai.com/v1"
     model: "gpt-4o"
     api_key_env: "OPENAI_API_KEY"   # Environment variable holding API key
-    temperature: 0.0                # Temperature (0.0 for deterministic, higher for creative)
-    timeout: 60.0                   # Per-request timeout in seconds
-    max_hops: 10                    # Hop limit for this agent's internal Conductor
-    tools:                          # Scoped tool list (null for full registry access)
+    temperature: 0.1                # Sampling temperature
+    max_tokens: 4096                # Maximum generation tokens
+    timeout: 60.0                   # Per-request HTTP timeout in seconds
+    max_hops: 10                    # Hop limit for this agent's internal conductor turn
+    tools:                          # Permitted tool list (null permits all tools)
       - "str_replace_editor"
       - "bash"
-      - "execute_python"
-    allowed_specialists:            # Scoped domain specialists for inner delegation
-      - "math"
+      - "run_python"
+      - "run_pytest"
 ```
 
 ---
 
 ## Canonical Agent Profiles
 
-OpenJarvis ships with four standard pre-configured agent profiles:
-
 ### 1. Researcher (`researcher`)
-- **Role**: Factual verification, academic literature search, documentation retrieval.
-- **Default Tools**: `fetch_webpage`, `search_web`, `query_wikipedia`.
-- **Mission**: Ingests external web data, summarizes findings, and reports them to neighbor agents.
+- **Role**: Factual verification, web searches, and documentation lookup.
+- **Default Tools**: `search_web`, `fetch_url`, `fetch_wikipedia`, `read_file`.
+- **Function**: Ingests external web data, summarizes findings, and passes structured summaries to neighbor agents via `report_findings`.
 
 ### 2. Coder (`coder`)
-- **Role**: Software engineering, testing, debugging, architecture, refactoring.
-- **Default Tools**: `str_replace_editor`, `bash`, `execute_python`, `lint_python_code`, `git_status`, `git_diff`.
-- **Mission**: Writes, inspects, and verifies code; produces software deliverables as artifacts upon exit.
+- **Role**: Software engineering, file editing, syntax verification, and test execution.
+- **Default Tools**: `str_replace_editor`, `bash`, `run_python`, `run_pytest`, `lint_python`, `git_status`, `git_diff`, `apply_patch`.
+- **Function**: Inspects, edits, and verifies source code. Generates code deliverables and test outputs.
 
 ### 3. Math Specialist (`math`)
-- **Role**: Formal derivations, quantitative reasoning, arithmetic, statistical analysis.
-- **Default Tools**: `calculator`, `evaluate_expression`, `solve_linear_equation`, `solve_quadratic_equation`, `convert_units`, `compute_statistics`.
-- **Mission**: Solves numeric problems with symbolic precision and shares mathematical derivations.
+- **Role**: Quantitative reasoning, arithmetic, symbolic algebra, and unit conversion.
+- **Default Tools**: `evaluate_expression`, `solve_equation`, `convert_units`, `prime_factorize`.
+- **Function**: Solves numeric expressions and equation systems with symbolic precision.
 
 ### 4. Planner (`planner`)
-- **Role**: High-level task decomposition, critical path analysis, dependency graphs.
-- **Default Tools**: `get_current_time`, `calculate_date_difference`.
-- **Mission**: Decomposes complex user goals into sub-tasks for sibling agents to execute.
+- **Role**: Task decomposition, timeline analysis, and schedule tracking.
+- **Default Tools**: `get_current_datetime`, `date_arithmetic`, `days_between`, `format_datetime`.
+- **Function**: Evaluates milestone dependencies and decomposes user goals into structured sub-tasks.
 
 ---
 
-## Dynamic Runtime Agents
+## Dynamic Runtime Instantiation
 
-In addition to static profiles declared in `.openjarvis/config.yaml`, the Root Agent (and intermediate agents) can dynamically instantiate custom agents at runtime using the `spawn_agent` tool:
+Agents can dynamically spawn subordinate agents using the `spawn_agent` meta-tool:
 
 ```json
 {
-  "role": "auditor",
-  "task": "Audit src/security.py for potential SQL and command injections",
-  "agent_id": "security_auditor_1"
+  "role": "coder",
+  "task": "Refactor src/permissions.py to support regex patterns",
+  "agent_id": "coder_refactor_1",
+  "connect_to": ["researcher_1"]
 }
 ```
 
-If the role matches a declared profile in `agents:`, the spawned agent inherits that profile's configurations. If an undeclared role is requested, OpenJarvis automatically constructs a custom Conductor with a dedicated persona prompt matching the assignment.
+- **Known Profile Resolution**: If `role` matches a declared profile under `agents:` (or a recognized role alias such as `code` -> `coder`), the child node inherits that profile's model, temperature, and permitted tool allowlist.
+- **Dynamic Profile Fallback**: If an undeclared role is passed, OpenJarvis constructs an agent node with root model defaults and generates a role-tailored persona prompt.
 
+---
+
+## Exit Hierarchy Invariants
+
+1. **Child Lifetime Precedence**: A parent agent cannot exit while any spawned child agents remain in an active state.
+2. **Deliverable Publishing**: When a child agent calls `exit_agent`, its output artifact is saved to the content-addressable `ArtifactStore`, and notification envelopes are dispatched to connected neighbors.
+3. **Task Completion**: The root coordinator must verify that all child nodes have exited before issuing `complete_task`.

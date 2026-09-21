@@ -1,18 +1,18 @@
-# First Steps with OpenJarvis
+# First Steps
 
-Now that OpenJarvis is installed and configured, let's explore how to make the most of your interactive assistant.
+This guide demonstrates basic interaction patterns, multi-agent coordination, and tool execution in OpenJarvis CLI.
 
 ---
 
-## Interactive Chat
+## Interactive REPL
 
-Start an interactive session:
+Start an interactive terminal session:
 
 ```bash
 openjarvis
 ```
 
-You will see the interactive prompt:
+The interactive prompt accepts multi-turn queries, tasks, and slash directives:
 
 ```text
 OpenJarvis (type 'exit' or 'quit' to stop)
@@ -20,114 +20,104 @@ OpenJarvis (type 'exit' or 'quit' to stop)
 oj> 
 ```
 
-Type your prompt and press `Enter`. OpenJarvis analyzes the task, selects appropriate specialists, runs any needed tools, and presents the synthesized result.
+Submit a prompt by pressing `Enter`. To insert a newline without submitting, press `Escape` followed by `Enter` (or `Alt+Enter`).
 
 ---
 
-## Example Interactions
+## Example Execution Traces
 
-### 1. Mathematics & Calculation
+### 1. Arithmetic & Symbolic Computation
 
 ```text
-oj> Solve for x: 3*x + 15 = 45 and factorize the answer
+oj> Solve for x: 3*x + 15 = 45 and factorize the result
 
-  ↳ routing: generalist → math
-  ⚙ tool: solve_equation {"equation": "3*x + 15 = 45", "variable": "x"}
+  [root] ⚙ spawn_agent {"role": "math", "task": "Solve 3*x + 15 = 45 and factorize x"}
+    → Agent 'agent-math' spawned
+  [agent-math] ⚙ solve_equation {"equation": "3*x + 15 = 45", "variable": "x"}
     → "[10]"
-  ⚙ tool: prime_factorize {"n": 10}
+  [agent-math] ⚙ prime_factorize {"n": 10}
     → "[2, 5]"
+  [agent-math] ⚙ report_findings {"recipient": "root", "findings": "x = 10, prime factors: [2, 5]"}
+    → Findings delivered to 'root'
+  [agent-math] ⚙ exit_agent {"status": "success"}
+    → Agent 'agent-math' terminated
+  [root] ⚙ complete_task {"summary": "Solved equation: x = 10, prime factorization: 2 * 5"}
 
 For the equation `3x + 15 = 45`:
-- Solving gives **x = 10**.
-- The prime factorization of 10 is **2 × 5**.
+- **x = 10**
+- Prime factorization: **2 × 5**
 ```
 
-### 2. Live Web Search & Factual Lookups
+### 2. Live Web Search & Extraction
 
 ```text
-oj> What are the primary features released in Python 3.13?
+oj> Search for Python 3.14 release schedule
 
-  ↳ routing: generalist → knowledge
-  ⚙ tool: search_web {"query": "Python 3.13 key features release"}
-    → [{"title": "What's New In Python 3.13", ...}]
+  [root] ⚙ spawn_agent {"role": "researcher", "task": "Find Python 3.14 release schedule details"}
+    → Agent 'agent-researcher' spawned
+  [agent-researcher] ⚙ search_web {"query": "Python 3.14 release schedule PEP 745"}
+    → [{"title": "PEP 745 – Python 3.14 Release Schedule", "url": "https://peps.python.org/pep-0745/", ...}]
+  [agent-researcher] ⚙ fetch_url {"url": "https://peps.python.org/pep-0745/"}
+    → "..."
+  [agent-researcher] ⚙ report_findings {"recipient": "root", "findings": "Python 3.14 alpha/beta schedule and final release target"}
+    → Findings delivered to 'root'
+  [agent-researcher] ⚙ exit_agent {"status": "success"}
+    → Agent 'agent-researcher' terminated
+  [root] ⚙ complete_task {"summary": "Extracted release dates from PEP 745"}
 
-Python 3.13 introduces several notable features:
-1. An experimental free-threaded build (disabling the GIL).
-2. A preliminary Just-In-Time (JIT) compiler.
-3. Enhanced interactive REPL with multi-line editing and color support.
-4. Improved error messages and typing improvements.
+Python 3.14 is scheduled under PEP 745 with the final release targeted for October 2025...
 ```
 
-### 3. Software Engineering & Code Generation
+### 3. Repository Inspection & File Operations
 
 ```text
-oj> Write a Python function to validate and format an email address
+oj> Inspect src/openjarvis/permissions.py and list the supported permission modes
 
-  ↳ routing: generalist → code
+  [root] ⚙ spawn_agent {"role": "coder", "task": "Inspect permissions.py for supported modes"}
+    → Agent 'agent-coder' spawned
+  [agent-coder] ⚙ search_in_files {"pattern": "def check", "path": "src/openjarvis/permissions.py"}
+    → "Line 100: def check(self, tool_name: str, ...)"
+  [agent-coder] ⚙ read_file {"file_path": "src/openjarvis/permissions.py", "start_line": 140, "line_count": 30}
+    → "..."
+  [agent-coder] ⚙ report_findings {"recipient": "root", "findings": "PermissionManager supports: interactive, autonomous, allowlist"}
+    → Findings delivered to 'root'
+  [agent-coder] ⚙ exit_agent {"status": "success"}
+    → Agent 'agent-coder' terminated
+  [root] ⚙ complete_task {"summary": "Extracted permission modes from permissions.py"}
 
-Here is a robust function to validate and normalize email addresses:
-
-```python
-import re
-
-def normalize_email(email: str) -> str | None:
-    """Validate and lower-case an email address. Returns None if invalid."""
-    pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
-    email = email.strip()
-    if re.match(pattern, email):
-        return email.lower()
-    return None
-```
-```
-
-### 4. File Operations & Local Inspection
-
-```text
-oj> Read the first 10 lines of config.yaml
-
-  ↳ routing: generalist → code
-  ⚙ tool: read_file {"path": "config.yaml", "max_chars": 500}
-    → "max_hops: 10\ngeneralist:\n..."
-
-Here are the first lines of `config.yaml`:
-```yaml
-max_hops: 10
-generalist:
-  name: "generalist"
-```
+`src/openjarvis/permissions.py` defines three operational modes:
+1. `interactive`: Prompts user confirmation before executing unlisted tools.
+2. `autonomous`: Automatically executes allowed tools, constrained by pattern rules and the safety classifier.
+3. `allowlist`: Restricts automatic execution strictly to tools in `allowed_tools`.
 ```
 
 ---
 
-## Understanding Routing
+## Event Trace Indicators
 
-When OpenJarvis processes a request, it displays real-time routing hops in dim text:
+During execution, the CLI displays real-time event logs detailing agent lifecycle steps:
 
-```text
-  ↳ routing: generalist → math
-  ⚙ tool: evaluate_expression {"expression": "..."}
-  ↳ routing: math → code
-```
-
-- `↳ routing: generalist → <specialist>`: Indicates the generalist routed the task to a specialist.
-- `⚙ tool: <name>`: Indicates a specialist called a built-in tool via function calling.
-- `↳ routing: <specialist> → <specialist>`: Indicates approved delegation between specialists.
+- `[<agent-id>] ⚙ spawn_agent`: A parent conductor creates a child agent with a specific role and task.
+- `[<agent-id>] ⚙ connect_agents`: An agent establishes communication edges with another node in the graph topology.
+- `[<agent-id>] ⚙ <tool_name>`: An agent executes a registered tool.
+- `[<agent-id>] ⚙ report_findings`: An agent delivers intermediate results to a recipient mailbox.
+- `[<agent-id>] ⚙ exit_agent`: An agent terminates its execution node.
+- `[<agent-id>] ⚙ complete_task`: The root coordinator concludes task execution and outputs the final response.
 
 ---
 
-## Best Practices
+## Non-Interactive & Scripted Usage
 
-1. **Ask in Natural Language**: You do not need special commands to trigger tools. The models recognize when calculations, web lookups, or file reads are required.
-2. **Multi-line Editing**: Press `Escape` followed by `Enter` to create a new line before submitting.
-3. **Session Notes**: You can ask OpenJarvis to remember information within a session:
-   - *"Remember that my target deployment region is us-east-1"*
-   - *"What deployment region did I specify earlier?"*
-4. **Exit**: Type `exit`, `quit`, or press `Ctrl+D` to end the session.
+To run OpenJarvis headlessly (e.g., inside automated CI workflows or shell scripts), provide the prompt with `-p` and enable automatic tool approvals with `-y`:
+
+```bash
+openjarvis -y -p "Run pytest on tests/test_tools.py and report status"
+```
 
 ---
 
 ## Next Steps
 
-- **[Configuration Overview →](../configuration/overview.md)** — Customizing models and providers
-- **[Built-in Tools Reference →](../tools/overview.md)** — Detailed parameters for all 49 tools
-- **[Troubleshooting Guide →](../troubleshooting.md)** — Common questions and solutions
+- **[Configuration Overview →](../configuration/overview.md)** — Customizing agent profiles and parameters.
+- **[Multi-Agent Consensus & Topology →](../usage/routing.md)** — In-depth guide to the actor architecture.
+- **[Security & Guardrails →](../security.md)** — Safety settings and argument validation.

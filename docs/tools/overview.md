@@ -31,8 +31,7 @@ OpenJarvis includes **49 production-ready tools** organized into 9 functional mo
 ```text
 oj> What's the square root of 1764 plus 58?
 
-  ↳ routing: generalist → math
-  ⚙ tool: evaluate_expression {"expression": "1764**0.5 + 58"}
+  [agent-math] ⚙ evaluate_expression {"expression": "1764**0.5 + 58"}
     → 100.0
 
 The square root of 1764 (42) plus 58 is **100**.

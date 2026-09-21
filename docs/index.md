@@ -1,200 +1,199 @@
 # OpenJarvis CLI
 
-> **The Vendor-Agnostic, Multi-Model Agentic Orchestration CLI & Terminal Client** — *v{{ version }}*
+> **Autonomous Multi-Agent Orchestration CLI & Terminal Client** — *v{{ version }}*
 
-**OpenJarvis** routes complex natural language tasks across a team of specialized language models orchestrated over a deterministic **LangGraph state machine**. Instead of relying on a single monolithic model to handle coding, heavy mathematics, factual research, and planning simultaneously, OpenJarvis routes each component of your conversation to dedicated domain specialists and provides **49 production-grade built-in tools** with fine-grained access control and real-time execution.
+OpenJarvis CLI is an open-source, vendor-agnostic agentic orchestration engine and interactive terminal client. It executes complex tasks across a dynamic Multi-Agent System (MAS) of autonomous Conductor nodes coordinated via an asynchronous actor engine, strictly enforced bottom-up exit hierarchy, neighbor-based consensus, and content-addressable artifact storage.
 
 ---
 
-## Why OpenJarvis?
+## Architecture Overview
 
-Traditional AI assistants force one model to be a "jack of all trades, master of none." This leads to hallucinations in arithmetic, syntax errors in complex software, runaway token costs, and sluggish performance. 
-
-OpenJarvis introduces **heterogeneous specialist orchestration**:
+OpenJarvis models agent orchestration as a directed graph of asynchronous actor nodes communicating through typed envelopes:
 
 ```mermaid
 flowchart TD
-    User([User Prompt]) --> Conductor[Conductor Orchestrator]
-    Conductor --> Generalist[Generalist Router]
-    
-    Generalist -->|"[ROUTE: math]"| Math[Math Specialist]
-    Generalist -->|"[ROUTE: code]"| Code[Code Specialist]
-    Generalist -->|"[ROUTE: knowledge]"| Knowledge[Knowledge Specialist]
-    Generalist -->|"[ROUTE: planning]"| Planning[Planning Specialist]
-    Generalist -->|"[ROUTE: return]"| Return([Direct User Response])
-    
-    Math -->|"[DELEGATE: code]"| Code
-    Math -->|"[RETURN]"| Generalist
-    Code -->|"[DELEGATE: math]"| Math
-    Code -->|"[RETURN]"| Generalist
-    Knowledge -->|"[RETURN]"| Generalist
-    Planning -->|"[DELEGATE: knowledge]"| Knowledge
-    Planning -->|"[RETURN]"| Generalist
+    User([User Task]) --> Engine[Multi-Agent Actor Engine]
+    Engine --> Root[Root Coordinator]
 
-    subgraph Tools [Built-in Tool Ecosystem - 49 Tools]
+    subgraph DynamicActorGraph [Dynamic Actor Graph & Message Passing]
         direction TB
-        T1[Calculator & AST Math]
-        T2[Atomic String Editor & Bash]
-        T3[Git Diff, Log & Patch]
-        T4[Web Search & Extraction]
-        T5[Python Sandboxed Execution]
-        T6[SQLite & Data Processing]
+        Root <-->|spawn_agent / mailbox| WorkerA[Worker Conductor]
+        Root <-->|spawn_agent / mailbox| WorkerB[Worker Conductor]
+        WorkerA <-->|connect_agents / consensus| WorkerB
+        WorkerA <-->|spawn_agent / mailbox| SubWorker[Sub-Worker Conductor]
+
+        SubWorker -->|report_findings / exit_agent| WorkerA
+        WorkerA -->|report_findings / exit_agent| Root
+        WorkerB -->|report_findings / exit_agent| Root
     end
 
-    Math -.->|Function Calling| T1
-    Code -.->|Function Calling| T2
-    Code -.->|Function Calling| T3
-    Code -.->|Function Calling| T5
-    Knowledge -.->|Function Calling| T4
+    subgraph MemoryAndStorage [Shared State & Content Store]
+        direction LR
+        Blackboard[(Blackboard Memory)]
+        Artifacts[(ArtifactStore: SHA-256 CAS)]
+    end
+
+    subgraph ToolEcosystem [Tooling Layer: 49 Built-in + 5 Meta-Tools]
+        direction TB
+        MetaTools[Meta-Tools: spawn_agent, connect_agents,<br/>report_findings, exit_agent, complete_task]
+        DomainTools[Domain Tools: File, Git, Editor, Code,<br/>Web, Math, DateTime, Data, Memory]
+    end
+
+    Root -.-> Blackboard
+    WorkerA -.-> Artifacts
+    WorkerA -.-> ToolEcosystem
+    WorkerB -.-> ToolEcosystem
+    SubWorker -.-> ToolEcosystem
+
+    Root -->|complete_task| FinalResult([Terminal Output & Artifacts])
 ```
 
 ---
 
-## Core Architecture & Key Features
+## Technical Specifications
 
-### 1. LangGraph State Machine & Deterministic Routing
-- **Cyclic Agent Graph**: OpenJarvis models the conversation as a directed state machine using LangGraph. Agents transition deterministically between roles, execute tool calls, and hand off intermediate artifacts.
-- **Hop Limits & Loop Detection**: Enforces a strict `max_hops` cap (default: `10`) to eliminate infinite ping-pong delegation loops. If an agent loops back or hits the hop limit, the Conductor intercepts execution and forces a synthesized response rather than crashing.
-- **Streaming Tag Suppression**: Streams tokens in real time to your terminal while withholding routing protocol tags (`[ROUTE: ...]`, `[RETURN]`, `[DELEGATE: ...]`) so your output remains clean and distraction-free.
+### 1. Asynchronous Actor Engine & Lifecycle
+- **Actor Concurrency**: Every active agent runs as an isolated `AgentNode` with a dedicated `AgentMailbox` processing typed message `Envelope` instances (`task_assignment`, `peer_message`, `consensus_request`, `consensus_vote`, `shutdown`).
+- **Dynamic Topology**: Agents dynamically instantiate child conductors via `spawn_agent`, link peer communication channels via `connect_agents`, exchange intermediate results via `report_findings`, terminate via `exit_agent`, and resolve root execution via `complete_task`.
+- **Bottom-Up Exit Hierarchy**: A parent agent cannot exit until all child agents have reached a terminal state (`exit_agent`). The engine rejects unauthorized parent termination attempts and maintains graph invariants.
+- **Neighbor Consensus**: Agents broadcast proposals to adjacent graph neighbors, evaluate incoming proposals against local state, and aggregate quorum before committing shared blackboard mutations.
 
 ---
 
-### 2. Declarative Specialists & Harness Prompt Templating
-- **Clean Configuration**: You define *what* a specialist does and *who* it can delegate to in simple YAML. You never have to manually write routing syntax or protocol instructions in your system prompts.
-- **Dynamic Routing Injection**: The Conductor automatically constructs the complete system prompt at runtime, injecting:
-  - The live directory of available specialists and domain summaries.
-  - The exact delegation boundaries specified in `delegates_to`.
-  - Standardized completion protocols (`[RETURN]`).
+### 2. Content-Addressable Artifact Management
+- **SHA-256 Storage Engine**: Large text blobs, source files, and binary assets are ingested into `ArtifactStore`, indexed by content hash.
+- **Deduplication & Provenance**: Agents pass lightweight immutable hash pointers through mailbox envelopes rather than serializing entire payloads, preventing context-window exhaustion and race conditions.
+- **Session Blackboard**: Shared key-value blackboard with atomic key locks and version tags for intermediate multi-agent state sharing.
+
+---
+
+### 3. Declarative Agents & Configuration
+- **Configuration Hierarchy**: Global defaults in `~/.openjarvis/config.yaml` overridden by workspace-level `.openjarvis/config.yaml` or explicit `--config <path>`.
+- **Role Scoping**: Define specialized agent profiles with custom model providers, system prompts, temperature, and permitted tool subsets.
+- **Role Alias Resolution**: Built-in aliases resolve seamlessly to canonical profiles (e.g. `code` -> `coder`, `research` -> `researcher`).
 
 ```yaml
-specialists:
-  math:
-    name: "math"
-    description: "Arithmetic, calculus, equations, statistics, and proofs."
-    system_prompt: |
-      You are the MATH specialist. Solve mathematics and quantitative problems with rigor.
-    delegates_to: ["code"]
-    tools: ["calculator", "evaluate_expression", "solve_linear_equation"]
+# .openjarvis/config.yaml
+version: "0.3.0"
+
+default_provider: "openai"
+default_model: "gpt-4o"
+
+root_agent:
+  role: "coordinator"
+  model: "gpt-4o"
+  temperature: 0.1
+  tools:
+    - spawn_agent
+    - connect_agents
+    - report_findings
+    - exit_agent
+    - complete_task
+    - read_file
+    - search_dir
+
+agents:
+  coder:
+    model: "claude-3-5-sonnet-20241022"
+    provider: "anthropic"
+    temperature: 0.2
+    tools:
+      - str_replace_editor
+      - bash
+      - run_python
+      - run_pytest
+      - search_in_files
+
+  researcher:
+    model: "gemini-2.0-flash"
+    provider: "gemini"
+    temperature: 0.2
+    tools:
+      - search_web
+      - fetch_url
+      - read_file
 ```
 
 ---
 
-### 3. Fine-Grained Tool Permissions & Scoped Tool RAG
-- **Per-Specialist Tool Allowlist**: Configure exactly which tools each specialist can see and execute via `tools: [...]`.
-- **Pure Reasoning Agents**: Assign `tools: []` to create pure reasoning specialists (such as creative writers or high-level planners) that cannot invoke tools, eliminating tool hallucination risks.
-- **Scoped Two-Phase Tool Retrieval**: When Tool RAG is enabled, semantic vector similarity search (*FastEmbed*) and always-on tool injection operate **strictly within the specialist's permitted tool subset**. Unpermitted tools are never indexed, retrieved, or bound.
-- **Defense-in-Depth Execution Guard**: If an LLM attempts to call an unpermitted tool, OpenJarvis intercepts the call at runtime and blocks execution with an explicit security event.
+### 4. Built-in Tool Ecosystem
+The platform includes 49 deterministic built-in tools across 9 functional categories, plus 5 engine coordination meta-tools:
 
----
-
-### 4. 49 Production-Grade Built-In Tools Across 9 Modules
-OpenJarvis adheres to a strict **No Demos, No Mocks Policy**. Every tool performs real computation and returns actionable feedback:
-
-| Category | Tools | Highlight Capabilities |
+| Category | Count | Primary Tools |
 | :--- | :---: | :--- |
-| **[File Operations](tools/files.md)** | 9 | Atomic file reading/writing, recursive tree walk, regex search, glob search, file deletion |
-| **[Git & Version Control](tools/git.md)** | 4 | Unified git diff inspection, status summary, commit log history, patch application |
-| **[Web & Research](tools/web.md)** | 5 | DuckDuckGo search, HTML text extraction, Wikipedia API queries, REST HTTP client |
-| **[Code Execution](tools/code.md)** | 4 | Sandboxed Python runner, shell command execution, Python syntax linting, pytest runner |
-| **[Editor & Terminal](tools/editor.md)** | 3 | Atomic `str_replace_editor` with line-level viewing, insertion, and replacement; bash execution |
-| **[Data Processing](tools/data.md)** | 6 | JSON pretty-printing, jq filtering, CSV formatting, regex match/replace, SQLite querying |
-| **[Math & Arithmetic](tools/math.md)** | 4 | AST-based expression evaluation, algebraic equation solving, unit conversion, statistics |
-| **[Date & Time](tools/datetime.md)** | 4 | Current timestamps, timezone conversion, date delta calculations, business day counting |
-| **[Session Memory](tools/memory.md)** | 10 | Persistent note storage, semantic memory retrieval, session state management |
+| **Meta-Tools** | 5 | `spawn_agent`, `connect_agents`, `report_findings`, `exit_agent`, `complete_task` |
+| **[Editor & Terminal](tools/editor.md)** | 3 | `str_replace_editor`, `execute_bash`, `bash` |
+| **[File Operations](tools/files.md)** | 9 | `read_file`, `write_file`, `list_directory`, `search_in_files`, `search_dir`, `search_file`, `find_file`, `file_info`, `delete_file` |
+| **[Git & VCS](tools/git.md)** | 4 | `git_status`, `git_diff`, `git_log`, `apply_patch` |
+| **[Web & Network](tools/web.md)** | 5 | `search_web`, `fetch_url`, `fetch_wikipedia`, `http_request`, `parse_openapi_spec` |
+| **[Code Execution](tools/code.md)** | 4 | `run_python`, `run_shell`, `lint_python`, `run_pytest` |
+| **[Data Processing](tools/data.md)** | 6 | `parse_json`, `jq_query`, `parse_csv`, `regex_search`, `regex_replace`, `sql_query` |
+| **[Math & Arithmetic](tools/math.md)** | 4 | `evaluate_expression`, `solve_equation`, `convert_units`, `prime_factorize` |
+| **[Date & Time](tools/datetime.md)** | 4 | `get_current_datetime`, `date_arithmetic`, `format_datetime`, `days_between` |
+| **[Session Memory](tools/memory.md)** | 10 | `save_memory`, `read_memory`, `update_memory`, `delete_memory`, `list_memories`, `search_memories`, plus note aliases |
 
 ---
 
-### 5. Multi-Tiered Safety & Security
-- **Three Operational Modes**:
-  - `interactive`: Prompts user confirmation in the terminal before executing potentially destructive tools.
-  - `allowlist`: Automatically allows safe pre-approved tools while rejecting blocked actions.
-  - `autonomous`: Executes approved tools seamlessly within configured workspace boundaries.
-- **On-Device Safety Classifier**: A lightweight neural classifier inspects tool commands and parameters to detect dangerous patterns (e.g. destructive disk commands, arbitrary shell execution, sensitive path traversal).
+### 5. Execution Security & Permissions
+- **Permission Modes**:
+  - `interactive`: Prompts user confirmation in the terminal before executing unapproved tools.
+  - `autonomous`: Auto-approves tool execution, subject to argument pattern rules and safety classifier checks.
+  - `allowlist`: Enforces strict allowlist membership; prompts confirmation for unlisted tools.
+- **Rule Matching**: Glob-based argument pattern filtering (`fnmatch`) supporting granular `allow`, `deny`, or `confirm` policies per tool argument.
+- **Meta-Tool Exemption**: Engine coordination meta-tools are classified as internal primitives and bypass interactive confirmation prompts.
 
 ---
 
-### 6. Universal Provider Freedom (Pure Python)
-- **Zero GPU / CUDA Overhead**: Written in pure Python (Python 3.13 / 3.14). Operates cleanly on lightweight laptops, servers, or cloud containers without importing `torch` or `transformers`.
-- **Mix & Match Providers**: Mix local and cloud providers in the exact same session:
-  - **Local & Offline**: Ollama, vLLM, llama.cpp, LocalAI.
-  - **Cloud Providers**: OpenAI, Anthropic, Google Gemini, Groq, OpenRouter, Mistral, DeepSeek.
+### 6. Provider Agnostic Architecture
+- **Pure Python**: Implemented in Python 3.13 / 3.14 without GPU or PyTorch dependencies.
+- **Universal Provider Support**: Connects to OpenAI, Anthropic, Google Gemini, Ollama, vLLM, and any OpenAI-compatible HTTP endpoint.
 
 ---
 
-### 7. Interactive Terminal REPL & Workspace Awareness
-- **Visual Routing Tracer**: Real-time terminal feedback displaying model hops, tool calls, and intermediate results with distinct formatting.
-- **Workspace Discovery**: Automatically discovers project-local `.openjarvis/` configurations, instructions, and context files to tailor agent behaviors to your active repository.
-- **Interactive Setup Wizard**: Run `openjarvis` with no prior configuration, and the built-in wizard guides you through selecting providers, models, and tool configurations in seconds.
-
----
-
-## Live Terminal Walkthrough
+## Live Terminal Output
 
 ```text
 $ openjarvis
 
 oj> Calculate the compounded return of $5,000 at 7% over 5 years, then write a Python script to plot it.
 
-  ↳ [routing] generalist → math
-  ⚙ [tool] evaluate_expression {"expression": "5000 * (1 + 0.07)**5"}
+  [root] ⚙ spawn_agent {"role": "math", "task": "Calculate compounded return of $5000 at 7% for 5 years"}
+    → Agent 'agent-math' spawned
+  [agent-math] ⚙ evaluate_expression {"expression": "5000 * (1 + 0.07)**5"}
     → 7012.75865
-  ↳ [delegation] math → code
+  [agent-math] ⚙ report_findings {"recipient": "root", "findings": "Principal $5000 at 7% over 5 years yields $7,012.76"}
+    → Findings delivered to 'root'
+  [agent-math] ⚙ exit_agent {"status": "success"}
+    → Agent 'agent-math' terminated
+  [root] ⚙ spawn_agent {"role": "coder", "task": "Generate a script using matplotlib to plot compounded return trajectory"}
+    → Agent 'agent-coder' spawned
+  [agent-coder] ⚙ write_file {"file_path": "plot_growth.py", "content": "..."}
+    → File 'plot_growth.py' written (248 bytes)
+  [agent-coder] ⚙ report_findings {"recipient": "root", "findings": "Plot script saved to plot_growth.py"}
+    → Findings delivered to 'root'
+  [agent-coder] ⚙ exit_agent {"status": "success"}
+    → Agent 'agent-coder' terminated
+  [root] ⚙ complete_task {"summary": "Completed calculation ($7,012.76) and generated plot script at plot_growth.py"}
 
 The investment will grow to **$7,012.76** after 5 years.
-
-Here is a Python script using matplotlib to visualize the annual growth trajectory:
-
-```python
-import matplotlib.pyplot as plt
-
-principal = 5000
-rate = 0.07
-years = list(range(6))
-balances = [principal * ((1 + rate) ** y) for y in years]
-
-plt.figure(figsize=(8, 4))
-plt.plot(years, balances, marker="o", color="#4CAF50", linewidth=2)
-plt.title("Compound Growth ($5,000 at 7% Annually)")
-plt.xlabel("Years")
-plt.ylabel("Balance ($)")
-plt.grid(True, linestyle="--", alpha=0.6)
-plt.tight_layout()
-plt.show()
+The visualization script has been written to `plot_growth.py`.
 ```
-```
-
----
-
-## Feature Comparison Matrix
-
-| Capability | OpenJarvis CLI | Standard Single-Model CLI | Heavy Agent Frameworks |
-| :--- | :---: | :---: | :---: |
-| **Multi-Model Routing** | ✅ Deterministic LangGraph | ❌ Single model only | ⚠️ Custom code required |
-| **Mix Local & Cloud Models** | ✅ Per-specialist provider | ❌ No | ⚠️ Complex manual wiring |
-| **Declarative System Prompts** | ✅ Auto harness templated | ❌ Manual prompt hacks | ❌ Complex prompt code |
-| **Fine-Grained Tool Scoping** | ✅ Per-specialist allowlist | ❌ All or nothing | ⚠️ Difficult state management |
-| **Scoped Tool RAG** | ✅ FastEmbed scoped search | ❌ Unscoped or none | ⚠️ Heavy vector DB setup |
-| **Infinite Loop Protection** | ✅ Hard hop cap + cycle detect | ❌ N/A | ⚠️ Often hangs or burns tokens |
-| **Pure Python Architecture** | ✅ Zero torch/CUDA footprint | ✅ Varies | ❌ Heavy GPU dependencies |
-| **Built-in Production Tools** | ✅ 49 verified tools | ⚠️ 0–5 basic tools | ⚠️ Many mock/demo tools |
-| **Single Standalone Binary** | ✅ PyInstaller executable | ⚠️ Rare | ❌ Not practical |
 
 ---
 
 ## Getting Started
 
-=== "Standalone Binary (Recommended)"
-    Download the pre-compiled standalone executable for your operating system from the [GitHub Releases](https://github.com/bhanuponguru/openjarvis-cli/releases) page:
+=== "Standalone Binary"
+    Download the standalone executable from [GitHub Releases](https://github.com/bhanuponguru/openjarvis-cli/releases):
     ```bash
-    # Extract and run (zero Python runtime required)
     tar xzf openjarvis-v{{ version }}-linux-x86_64.tar.gz
     cd openjarvis-*
     chmod +x openjarvis
     ./openjarvis
     ```
 
-=== "From Source"
-    Clone the repository and run directly with `uv`:
+=== "From Source (uv)"
+    Clone the repository and launch directly:
     ```bash
     git clone https://github.com/bhanuponguru/openjarvis-cli.git
     cd openjarvis-cli
@@ -204,12 +203,13 @@ plt.show()
 
 ---
 
-## Documentation Navigation
+## Documentation Index
 
-- 🚀 **[Installation Guide →](getting-started/installation.md)**: Install via package managers or compiled standalone binaries.
-- ⚡ **[Quick Start Guide →](getting-started/quick-start.md)**: Walk through the first-run wizard and prompt execution.
-- ⚙️ **[Configuration Overview →](configuration/overview.md)**: Complete reference for `config.yaml`.
-- 👥 **[Agents & Profiles →](configuration/agents.md)**: Master agent personas, multi-agent consensus, and tool scoping.
-- 🛠️ **[Built-in Tools Manual →](tools/overview.md)**: Deep dive into all 49 tools across 9 modules.
-- 🔒 **[Security & Safety Model →](security.md)**: Safety classifier, permissions manager, and sandboxing.
-- 💻 **[CLI & REPL Reference →](usage/cli.md)**: Command flags, terminal keybindings, and session management.
+- **[Installation](getting-started/installation.md)**: Standalone binary installation, `uv` packaging, and shell integration.
+- **[Quick Start](getting-started/quick-start.md)**: Initial configuration, setup wizard, and prompt execution.
+- **[Configuration](configuration/overview.md)**: Specification for `config.yaml`, provider definitions, and permission schemas.
+- **[Agents & Profiles](configuration/agents.md)**: Agent configuration, multi-agent topologies, and role mapping.
+- **[Built-in Tools](tools/overview.md)**: Complete parameter and schema reference for all 49 built-in tools.
+- **[Security & Permissions](security.md)**: Permission modes, safety classifier, and pattern rules.
+- **[CLI Reference](usage/cli.md)**: Command flags, non-interactive execution, and shell completions.
+- **[Multi-Agent Topology](usage/routing.md)**: Actor engine mechanics, message passing, consensus, and meta-tools.

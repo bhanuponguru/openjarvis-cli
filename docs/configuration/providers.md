@@ -1,122 +1,192 @@
 # Provider Configuration
 
-OpenJarvis supports all LLM providers backed by LangChain, including local inference via Ollama, cloud providers (OpenAI, Anthropic, Google Gemini, Groq, OpenRouter), and custom OpenAI-compatible endpoints.
+OpenJarvis supports local and cloud LLM backends via LangChain integrations, including local inference engines, commercial APIs, and custom OpenAI-compatible endpoints.
 
 ---
 
 ## 1. Supported Providers
 
-| Provider | `provider` Field | Default Model | Environment Variable |
-|----------|-----------------|---------------|----------------------|
-| **Ollama** (Local) | `ollama` | `llama3` | None (Local, Free) |
-| **OpenAI** | `openai` | `gpt-4o` | `OPENAI_API_KEY` |
-| **Anthropic** | `anthropic` | `claude-3-5-sonnet-20241022` | `ANTHROPIC_API_KEY` |
-| **Google Gemini** | `google` | `gemini-1.5-pro` | `GOOGLE_API_KEY` |
-| **Custom / Groq / OpenRouter** | `custom` or `openai` | User-defined | User-defined |
+| Provider Identifier | Backend Class | Default Base URL | Credential Variable |
+| :--- | :--- | :--- | :--- |
+| **`ollama`** | `ChatOllama` | `http://localhost:11434` | None (Local) |
+| **`openai`** | `ChatOpenAI` | `https://api.openai.com/v1` | `OPENAI_API_KEY` |
+| **`anthropic`** | `ChatAnthropic` | `https://api.anthropic.com` | `ANTHROPIC_API_KEY` |
+| **`google`** | `ChatGoogleGenerativeAI` | Default Google API endpoint | `GOOGLE_API_KEY` |
+| **`custom`** | `ChatOpenAI` | User configured `base_url` | User configured `api_key_env` |
 
 ---
 
-## 2. Ollama (Local, Private, Free)
+## 2. Ollama (Local & Offline)
 
-Ollama runs models directly on your hardware without transmitting data to external APIs.
+Connects to a locally running Ollama daemon:
 
 ```yaml
-generalist:
-  name: "generalist"
-  system_prompt: "You are the router."
+root_agent:
+  name: "root"
+  role: "coordinator"
   provider: "ollama"
   base_url: "http://localhost:11434"
-  model: "llama3"
-  temperature: 0.7
+  model: "llama3.1"
+  temperature: 0.1
+
+agents:
+  coder:
+    role: "coder"
+    provider: "ollama"
+    base_url: "http://localhost:11434"
+    model: "qwen2.5-coder:7b"
+    temperature: 0.0
+```
+
+Start the Ollama daemon and pull the target models before running OpenJarvis:
+```bash
+ollama serve
+ollama pull llama3.1
+ollama pull qwen2.5-coder:7b
 ```
 
 ---
 
-## 3. Anthropic (Claude)
+## 3. OpenAI
+
+Connects to OpenAI API endpoints using `ChatOpenAI`:
 
 ```yaml
-generalist:
-  name: "generalist"
-  system_prompt: "You are the router."
-  provider: "anthropic"
-  model: "claude-3-5-sonnet-20241022"
-  api_key_env: "ANTHROPIC_API_KEY"
-  temperature: 0.2
-```
-
----
-
-## 4. Google Gemini
-
-```yaml
-generalist:
-  name: "generalist"
-  system_prompt: "You are the router."
-  provider: "google"
-  model: "gemini-1.5-pro"
-  api_key_env: "GOOGLE_API_KEY"
-  temperature: 0.0
-```
-
----
-
-## 5. OpenAI
-
-```yaml
-generalist:
-  name: "generalist"
-  system_prompt: "You are the router."
+root_agent:
+  name: "root"
+  role: "coordinator"
   provider: "openai"
   model: "gpt-4o"
   api_key_env: "OPENAI_API_KEY"
-  temperature: 0.0
+  temperature: 0.1
+```
+
+Set the API key in your shell:
+```bash
+export OPENAI_API_KEY="sk-..."
 ```
 
 ---
 
-## 6. Groq / OpenRouter / Custom Endpoints
+## 4. Anthropic (Claude)
 
-Any OpenAI-compatible server (vLLM, LM Studio, Groq, OpenRouter) can be connected using `provider: "custom"` or `provider: "openai"` with `base_url`:
+Connects to Anthropic API endpoints using `ChatAnthropic`:
 
 ```yaml
-specialists:
+agents:
+  coder:
+    name: "coder"
+    role: "coder"
+    provider: "anthropic"
+    model: "claude-3-5-sonnet-20241022"
+    api_key_env: "ANTHROPIC_API_KEY"
+    temperature: 0.1
+```
+
+Set the API key in your shell:
+```bash
+export ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+---
+
+## 5. Google Gemini
+
+Connects to Google Generative AI endpoints using `ChatGoogleGenerativeAI`:
+
+```yaml
+agents:
+  researcher:
+    name: "researcher"
+    role: "researcher"
+    provider: "google"
+    model: "gemini-1.5-pro"
+    api_key_env: "GOOGLE_API_KEY"
+    temperature: 0.0
+```
+
+Set the API key in your shell:
+```bash
+export GOOGLE_API_KEY="AIza..."
+```
+
+---
+
+## 6. Custom & OpenAI-Compatible Endpoints (vLLM, Groq, OpenRouter)
+
+Any backend exposing standard `/v1/chat/completions` can be declared with `provider: "custom"` (or `provider: "openai"`):
+
+### Groq
+```yaml
+agents:
   fast_coder:
     name: "fast_coder"
-    system_prompt: "You write fast code."
+    role: "coder"
     provider: "custom"
     base_url: "https://api.groq.com/openai/v1"
-    model: "llama-3.1-70b-versatile"
+    model: "llama-3.3-70b-versatile"
     api_key_env: "GROQ_API_KEY"
+    temperature: 0.0
+```
+
+### OpenRouter
+```yaml
+agents:
+  reasoner:
+    name: "reasoner"
+    role: "coordinator"
+    provider: "custom"
+    base_url: "https://openrouter.ai/api/v1"
+    model: "deepseek/deepseek-r1"
+    api_key_env: "OPENROUTER_API_KEY"
+    temperature: 0.0
+```
+
+### Local vLLM Server
+```yaml
+agents:
+  local_worker:
+    name: "local_worker"
+    role: "coder"
+    provider: "custom"
+    base_url: "http://localhost:8000/v1"
+    model: "Qwen/Qwen2.5-Coder-32B-Instruct"
     temperature: 0.0
 ```
 
 ---
 
-## 7. Hybrid Multi-Provider Setup
+## 7. Heterogeneous Multi-Provider Configuration
 
-You can configure different providers for different specialists. For example, use Claude for complex architecture, Groq for fast code generation, and local Ollama for mathematics:
+Different agents in the same session can utilize distinct providers and models tailored to specific roles:
 
 ```yaml
-generalist:
-  name: "generalist"
-  system_prompt: "Router"
-  provider: "anthropic"
-  model: "claude-3-5-sonnet-20241022"
-  api_key_env: "ANTHROPIC_API_KEY"
+root_agent:
+  name: "root"
+  role: "coordinator"
+  provider: "openai"
+  model: "gpt-4o"
+  api_key_env: "OPENAI_API_KEY"
 
-specialists:
+agents:
+  coder:
+    name: "coder"
+    role: "coder"
+    provider: "anthropic"
+    model: "claude-3-5-sonnet-20241022"
+    api_key_env: "ANTHROPIC_API_KEY"
+
+  researcher:
+    name: "researcher"
+    role: "researcher"
+    provider: "google"
+    model: "gemini-1.5-pro"
+    api_key_env: "GOOGLE_API_KEY"
+
   math:
     name: "math"
-    system_prompt: "Math expert"
+    role: "math"
     provider: "ollama"
     base_url: "http://localhost:11434"
-    model: "llama3"
-
-  code:
-    name: "code"
-    system_prompt: "Coding specialist"
-    provider: "custom"
-    base_url: "https://api.groq.com/openai/v1"
-    model: "llama-3.1-70b-versatile"
-    api_key_env: "GROQ_API_KEY"
+    model: "llama3.1"
 ```

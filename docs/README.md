@@ -31,7 +31,7 @@ docs/
 │   └── memory.md                  # Session and persistent memory operations
 ├── usage/
 │   ├── cli.md                     # Command-line options & flags
-│   └── routing.md                 # Specialist routing protocol
+│   └── routing.md                 # Multi-agent topology & consensus protocol
 ├── security.md                    # Permission levels & sandboxing
 ├── developer-guide.md             # Contributing, testing, & binary builds
 ├── troubleshooting.md             # Common errors & solutions
@@ -65,7 +65,7 @@ The release workflow builds this documentation and includes it in binary distrib
 ```
 openjarvis-X.X.X-linux-x86_64/
 ├── openjarvis                    # Binary
-├── specialists.example.yaml      # Example config
+├── config.example.yaml           # Example config
 ├── README.md                     # Quick reference
 └── docs/                         # This documentation (built HTML)
     ├── index.html

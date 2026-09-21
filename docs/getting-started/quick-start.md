@@ -1,27 +1,36 @@
 # Quick Start
 
-Get OpenJarvis running in under 2 minutes.
+Get OpenJarvis CLI running in under 2 minutes.
 
 ---
 
-## Step 1: Install OpenJarvis
+## 1. Installation
 
-Download a pre-built standalone binary or install via `uv`:
+Download a pre-compiled standalone binary or run from source with `uv`:
 
-```bash
-# Extract and run standalone binary (Linux / macOS)
-tar xzf openjarvis-v{{ version }}-linux-x86_64.tar.gz
-cd openjarvis-*
-./openjarvis
-```
+=== "Standalone Binary"
+    ```bash
+    tar xzf openjarvis-v{{ version }}-linux-x86_64.tar.gz
+    cd openjarvis-*
+    chmod +x openjarvis
+    ./openjarvis
+    ```
 
-For full installation options, see the [Installation Guide](installation.md).
+=== "From Source (uv)"
+    ```bash
+    git clone https://github.com/bhanuponguru/openjarvis-cli.git
+    cd openjarvis-cli
+    uv sync
+    uv run openjarvis
+    ```
+
+For system packages and alternative targets, see the [Installation Guide](installation.md).
 
 ---
 
-## Step 2: First Launch & Interactive Wizard
+## 2. Initial Setup Wizard
 
-When launched without a configuration file, OpenJarvis automatically starts an **interactive setup wizard**:
+When launched without an existing configuration file, OpenJarvis initiates an interactive configuration setup:
 
 ```text
 ════════ OpenJarvis Multi-Agent Setup ════════
@@ -48,72 +57,90 @@ Save location [~/.openjarvis/config.yaml]:
 oj> 
 ```
 
-Once complete, OpenJarvis enters the interactive chat session immediately!
+---
+
+## 3. Provider Configuration
+
+Configure your selected backend environment variables:
+
+### Option A: Local Endpoints (Ollama / vLLM)
+```bash
+# Start local Ollama server and pull a model
+ollama serve
+ollama pull llama3.1
+```
+
+### Option B: Cloud Providers
+```bash
+# OpenAI
+export OPENAI_API_KEY="sk-..."
+
+# Anthropic
+export ANTHROPIC_API_KEY="sk-ant-..."
+
+# Google Gemini
+export GEMINI_API_KEY="AIza..."
+```
 
 ---
 
-## Step 3: Choose Your AI Provider
+## 4. Canonical Workspace Configuration (`.openjarvis/config.yaml`)
 
-OpenJarvis works with any OpenAI-compatible API. You can configure:
-
-### Option A: Ollama (Local, Free, Private)
-- **Best for**: Total privacy, offline execution, no API bills
-- Start Ollama and pull your models:
-  ```bash
-  ollama serve
-  ollama pull llama3
-  ```
-
-### Option B: OpenAI (Cloud)
-- **Best for**: Maximum performance and model capability
-- Export your API key in your shell:
-  ```bash
-  export OPENAI_API_KEY="sk-..."
-  ```
-
-### Option C: Anthropic / Google Gemini / Custom
-- Export your respective key:
-  ```bash
-  export ANTHROPIC_API_KEY="sk-ant-..."
-  export GOOGLE_API_KEY="AIza..."
-  ```
-
----
-
-## Step 4: Example Configuration (`.openjarvis/config.yaml`)
-
-If you want to manually create or customize your configuration, create `.openjarvis/config.yaml`:
+To customize agent roles, models, and tool permissions for a project repository, define `.openjarvis/config.yaml`:
 
 ```yaml
+version: "0.3.0"
+
+default_provider: "openai"
+default_model: "gpt-4o"
+
 root_agent:
   name: "root"
   role: "coordinator"
   system_prompt: |
-    You are the Root Agent of OpenJarvis. Coordinate multi-agent tasks,
-    spawn specialized child agents with `spawn_agent`, and call `complete_task`
-    when work is done.
+    You are the Root Coordinator. Coordinate multi-agent execution,
+    spawn specialized worker agents via `spawn_agent`, and call `complete_task`
+    when all objectives are satisfied.
   provider: "openai"
-  base_url: "https://api.openai.com/v1"
   model: "gpt-4o"
-  api_key_env: "OPENAI_API_KEY"
   temperature: 0.1
+  tools:
+    - spawn_agent
+    - connect_agents
+    - report_findings
+    - exit_agent
+    - complete_task
+    - read_file
+    - search_dir
 
 agents:
   researcher:
-    name: "researcher"
     role: "researcher"
-    system_prompt: "You are the RESEARCHER agent. Report findings with `report_findings` and exit with `exit_agent`."
-    provider: "openai"
+    system_prompt: "You are the RESEARCHER agent. Report factual findings using `report_findings` and exit with `exit_agent`."
     model: "gpt-4o"
-    tools: ["fetch_webpage", "search_web"]
+    temperature: 0.2
+    tools:
+      - fetch_url
+      - search_web
+      - read_file
 
   coder:
-    name: "coder"
     role: "coder"
-    system_prompt: "You are the CODER agent. Write and verify code, then exit with `exit_agent`."
-    provider: "openai"
+    system_prompt: "You are the CODER agent. Write, edit, and test software, then report results and exit with `exit_agent`."
     model: "gpt-4o"
-    tools: ["str_replace_editor", "bash", "execute_python"]
+    temperature: 0.1
+    tools:
+      - str_replace_editor
+      - bash
+      - run_python
+      - run_pytest
+
+tool_permissions:
+  mode: "interactive"
+  allowed_tools:
+    - read_file
+    - search_dir
+    - search_in_files
 
 limits:
   max_active_agents: 8
@@ -123,46 +150,44 @@ limits:
 
 ---
 
-## Step 5: Interactive Chatting
-
-Start OpenJarvis and ask questions naturally:
+## 5. Execution Example
 
 ```text
 $ openjarvis
 
-oj> What is 15 squared plus 48?
+oj> Solve 15 squared plus 48 and check if the result is prime.
 
-  ↳ routing: generalist → math
-  ⚙ tool: evaluate_expression {"expression": "15**2 + 48"}
+  [root] ⚙ spawn_agent {"role": "math", "task": "Evaluate 15**2 + 48 and factorize result"}
+    → Agent 'agent-math' spawned
+  [agent-math] ⚙ evaluate_expression {"expression": "15**2 + 48"}
     → 273
+  [agent-math] ⚙ prime_factorize {"n": 273}
+    → [3, 7, 13]
+  [agent-math] ⚙ report_findings {"recipient": "root", "findings": "15^2 + 48 = 273. Factors: 3 * 7 * 13 (composite)."}
+    → Findings delivered to 'root'
+  [agent-math] ⚙ exit_agent {"status": "success"}
+    → Agent 'agent-math' terminated
+  [root] ⚙ complete_task {"summary": "Computed 273 and determined factors are 3, 7, 13"}
 
-15 squared (225) plus 48 is **273**.
-
-oj> Search for the latest release of Python
-
-  ↳ routing: generalist → knowledge
-  ⚙ tool: search_web {"query": "latest Python release"}
-    → [{"title": "Python 3.13 Release Notes", ...}]
-
-The latest stable release of Python is Python 3.13...
-
-oj> exit
+15 squared plus 48 is **273**. It is composite with prime factors 3, 7, and 13.
 ```
 
 ---
 
-## Tips & Shortcuts
+## CLI Shortcuts & Modes
 
-- **Multi-line input**: Press `Escape` followed by `Enter` to insert a newline.
-- **Command history**: Use the `↑` and `↓` arrow keys to navigate previous prompts.
-- **Custom config path**: Set `OJ_CONFIG=/path/to/my-config.yaml openjarvis`.
-- **Exit session**: Type `exit`, `quit`, or press `Ctrl+C` / `Ctrl+D`.
+- **Multi-line Input**: Press `Escape` followed by `Enter` (or `Alt+Enter`) to insert newlines.
+- **Headless Non-Interactive**: Pass `-p` with `-y` for script integration:
+  ```bash
+  openjarvis -y -p "Run tests and summarize failures"
+  ```
+- **Exit Session**: Type `exit`, `quit`, or send `EOF` (`Ctrl+D`).
 
 ---
 
 ## Next Steps
 
-- **[Configuration Overview →](../configuration/overview.md)** — Detailed configuration options
-- **[Built-in Tools Reference →](../tools/overview.md)** — Explore all 49 tools
-- **[Troubleshooting →](../troubleshooting.md)** — Common questions and solutions
-
+- **[Configuration Overview →](../configuration/overview.md)** — Detailed config schema and limits.
+- **[Multi-Agent System & Consensus →](../usage/routing.md)** — Actor engine mechanics and meta-tools.
+- **[Built-in Tools Reference →](../tools/overview.md)** — Reference for all 49 tools.
+- **[Security & Permissions →](../security.md)** — Permission modes and argument filtering.
