@@ -702,14 +702,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../../configuration/specialists/" class="md-nav__link">
+      <a href="../../configuration/agents/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Specialists
+    Agents & Profiles
   
 
     
@@ -1450,7 +1450,7 @@
   <span class="md-ellipsis">
     
   
-    Routing Protocol
+    Multi-Agent Topology & Consensus
   
 
     
@@ -2100,13 +2100,12 @@
 <hr />
 <h2 id="usage-examples">Usage Examples</h2>
 <h3 id="reading-a-configuration-file">Reading a Configuration File</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>oj&gt; Read my specialists.yaml and explain what it does
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>oj&gt; Read my .openjarvis/config.yaml and explain what it does
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  ↳ routing: generalist → code
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  ⚙ tool: read_file {"path": "specialists.yaml"}
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    → "max_hops: 10\ngeneralist:\n..."
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>Your `specialists.yaml` defines a generalist router and domain specialists for math and coding...
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  ⚙ tool: read_file {"path": ".openjarvis/config.yaml"}
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    → "root_agent:\n  name: root\n..."
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>Your `.openjarvis/config.yaml` defines the Root Agent coordinator and specialized agent profiles...
 </code></pre></div>
 <h3 id="writing-a-project-summary">Writing a Project Summary</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>oj&gt; List the files here and write a quick summary to summary.md

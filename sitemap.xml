@@ -2,98 +2,98 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/developer-guide/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/faq/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/security/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/troubleshooting/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/configuration/advanced/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
+    </url>
+    <url>
+         <loc>https://openjarvis-cli.bhanuponguru.tech/configuration/agents/</loc>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/configuration/overview/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/configuration/providers/</loc>
-         <lastmod>2026-09-19</lastmod>
-    </url>
-    <url>
-         <loc>https://openjarvis-cli.bhanuponguru.tech/configuration/specialists/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/getting-started/first-steps/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/getting-started/installation/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/getting-started/quick-start/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/tools/code/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/tools/data/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/tools/datetime/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/tools/editor/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/tools/files/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/tools/git/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/tools/math/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/tools/memory/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/tools/overview/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/tools/web/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/usage/cli/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
     <url>
          <loc>https://openjarvis-cli.bhanuponguru.tech/usage/routing/</loc>
-         <lastmod>2026-09-19</lastmod>
+         <lastmod>2026-09-21</lastmod>
     </url>
 </urlset>

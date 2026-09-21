@@ -702,14 +702,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../configuration/specialists/" class="md-nav__link">
+      <a href="../configuration/agents/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Specialists
+    Agents & Profiles
   
 
     
@@ -1223,7 +1223,7 @@
   <span class="md-ellipsis">
     
   
-    Routing Protocol
+    Multi-Agent Topology & Consensus
   
 
     
@@ -1807,8 +1807,8 @@
 <h2 id="1-startup-setup-issues">1. Startup &amp; Setup Issues</h2>
 <h3 id="setup-wizard-launches-unexpectedly">Setup Wizard Launches Unexpectedly</h3>
 <p><strong>Symptom:</strong> OpenJarvis enters the 3-step interactive setup wizard instead of the chat prompt.
-- <strong>Cause:</strong> No configuration file was found at <code>OJ_CONFIG</code>, <code>./specialists.yaml</code>, <code>~/.config/openjarvis/specialists.yaml</code>, or <code>/etc/openjarvis/specialists.yaml</code>.
-- <strong>Fix:</strong> Complete the wizard to generate <code>~/.config/openjarvis/specialists.yaml</code>, or set <code>OJ_CONFIG=/path/to/specialists.yaml</code>.</p>
+- <strong>Cause:</strong> No configuration file was found at <code>OJ_CONFIG</code>, <code>.openjarvis/config.yaml</code>, <code>~/.openjarvis/config.yaml</code>, or <code>/etc/openjarvis/config.yaml</code>.
+- <strong>Fix:</strong> Complete the wizard to generate <code>~/.openjarvis/config.yaml</code>, or set <code>OJ_CONFIG=/path/to/config.yaml</code>.</p>
 <h3 id="missing-api-key-error">Missing API Key Error</h3>
 <p><strong>Symptom:</strong> <code>Environment variable 'OPENAI_API_KEY' is not set.</code>
 - <strong>Cause:</strong> The active specialist configuration specifies <code>api_key_env: "OPENAI_API_KEY"</code>, but the variable is unset in the current shell environment.

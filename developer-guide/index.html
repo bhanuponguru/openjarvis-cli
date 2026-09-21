@@ -702,14 +702,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../configuration/specialists/" class="md-nav__link">
+      <a href="../configuration/agents/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Specialists
+    Agents & Profiles
   
 
     
@@ -1223,7 +1223,7 @@
   <span class="md-ellipsis">
     
   
-    Routing Protocol
+    Multi-Agent Topology & Consensus
   
 
     
@@ -1680,30 +1680,30 @@
 <h2 id="5-version-management-releases">5. Version Management &amp; Releases</h2>
 <p>OpenJarvis CLI implements <strong>Git-tag and commit-based dynamic versioning</strong> powered by <code>hatch-vcs</code>. The version is calculated automatically from Git metadata without needing manually edited version strings:</p>
 <ul>
-<li><strong>Official Releases</strong>: Pushing an annotated Git tag (e.g. <code>v0.2.0</code>) sets the exact version to <code>0.2.0</code>.</li>
-<li><strong>Development Builds</strong>: Commits ahead of the latest tag automatically generate PEP 440 dev versions (e.g. <code>0.2.0.dev1</code>) representing the exact commit distance.</li>
+<li><strong>Official Releases</strong>: Pushing an annotated Git tag (e.g. <code>v0.3.0</code>) sets the exact version to <code>0.3.0</code>.</li>
+<li><strong>Development Builds</strong>: Commits ahead of the latest tag automatically generate PEP 440 dev versions (e.g. <code>0.3.0.dev1</code>) representing the exact commit distance.</li>
 <li><strong>Build Hook</strong>: <code>hatch-vcs</code> automatically generates <code>src/openjarvis/_version.py</code> during <code>uv build</code> and <code>uv sync</code>, embedding the exact calculated version into packages.</li>
 </ul>
 <h3 id="automated-release-tagging">Automated Release Tagging</h3>
 <p>Use the bumper script to calculate the next SemVer tag, create the annotated Git tag, and build distribution wheels:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Calculate next patch release tag (e.g. from v0.2.0), tag, and build</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Calculate next patch release tag (e.g. from v0.3.0), tag, and build</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>python<span class="w"> </span>scripts/bump-version.py<span class="w"> </span>patch
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Calculate next minor release tag (e.g. from v0.2.0), tag, and build</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Calculate next minor release tag (e.g. from v0.3.0), tag, and build</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>python<span class="w"> </span>scripts/bump-version.py<span class="w"> </span>minor
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Calculate next major release tag (e.g. from v0.2.0), tag, and build</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># Calculate next major release tag (e.g. from v0.3.0), tag, and build</span>
 <a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>python<span class="w"> </span>scripts/bump-version.py<span class="w"> </span>major
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="c1"># Or set an explicit release tag:</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>python<span class="w"> </span>scripts/bump-version.py<span class="w"> </span><span class="m">0</span>.2.0
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>python<span class="w"> </span>scripts/bump-version.py<span class="w"> </span><span class="m">0</span>.3.0
 </code></pre></div>
 <h3 id="packaging-distribution-builds">Packaging &amp; Distribution Builds</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># 1. Clean build of sdist and wheel</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>uv<span class="w"> </span>build
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># 2. Push git tag to GitHub</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>v0.2.0
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>v0.3.0
 </code></pre></div>
 <hr />
 <h2 id="6-pre-commit-verification-mandatory">6. Pre-Commit Verification (Mandatory)</h2>

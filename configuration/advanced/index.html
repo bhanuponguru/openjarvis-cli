@@ -705,14 +705,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../specialists/" class="md-nav__link">
+      <a href="../agents/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Specialists
+    Agents & Profiles
   
 
     
@@ -1412,7 +1412,7 @@
   <span class="md-ellipsis">
     
   
-    Routing Protocol
+    Multi-Agent Topology & Consensus
   
 
     
@@ -1730,22 +1730,23 @@
 <p>This page covers power-user configuration techniques, environment management, and specialized setups for OpenJarvis.</p>
 <hr />
 <h2 id="managing-multiple-configurations">Managing Multiple Configurations</h2>
-<p>You can maintain different specialist configurations for different tasks (e.g. coding, research, writing):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>~/.config/openjarvis/
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── specialists.yaml  # Default setup
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── coding.yaml       # Code-focused specialists (low temp, local code models)
+<p>You can maintain different agent configurations for different tasks (e.g. coding, research, writing):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>~/.openjarvis/
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── config.yaml       # Default MAS setup
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── coding.yaml       # Code-focused agents (low temp, local code models)
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>└── research.yaml     # Research setup (high-capacity models, web search)
 </code></pre></div>
 <p>To run OpenJarvis with a specific configuration:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">OJ_CONFIG</span><span class="o">=</span>~/.config/openjarvis/coding.yaml<span class="w"> </span>openjarvis
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">OJ_CONFIG</span><span class="o">=</span>~/.openjarvis/coding.yaml<span class="w"> </span>openjarvis
 </code></pre></div>
 <hr />
 <h2 id="per-project-configuration">Per-Project Configuration</h2>
-<p>You can place a <code>specialists.yaml</code> file in the root of any project directory. When you run <code>openjarvis</code> inside that directory, it automatically loads <code>./specialists.yaml</code> before falling back to your user config.</p>
+<p>You can place a <code>config.yaml</code> file in the <code>.openjarvis/</code> folder of any project workspace. When you run <code>openjarvis</code> inside that directory, it automatically loads <code>./.openjarvis/config.yaml</code> and merges it over your global user config.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>my-web-app/
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>├── specialists.yaml  # Custom specialists for this codebase
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>├── package.json
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>└── src/
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>├── .openjarvis/
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>│   └── config.yaml   # Custom agent profiles and limits for this codebase
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>├── package.json
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>└── src/
 </code></pre></div>
 <hr />
 <h2 id="environment-variable-management">Environment Variable Management</h2>
@@ -1845,7 +1846,7 @@
 <h2 id="see-also">See Also</h2>
 <ul>
 <li><a href="../overview/">Configuration Overview</a> — All configuration fields</li>
-<li><a href="../specialists/">Specialists Guide</a> — Specialist prompt engineering</li>
+<li><a href="../agents/">Agents &amp; Profiles Guide</a> — Agent personas, consensus, and tool scoping</li>
 <li><a href="../providers/">Providers Guide</a> — Provider-specific setup</li>
 <li><a href="../../troubleshooting/">Troubleshooting</a> — Common issues and fixes</li>
 </ul>

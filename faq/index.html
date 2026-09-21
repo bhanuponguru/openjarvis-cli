@@ -700,14 +700,14 @@
   
   
     <li class="md-nav__item">
-      <a href="../configuration/specialists/" class="md-nav__link">
+      <a href="../configuration/agents/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Specialists
+    Agents & Profiles
   
 
     
@@ -1221,7 +1221,7 @@
   <span class="md-ellipsis">
     
   
-    Routing Protocol
+    Multi-Agent Topology & Consensus
   
 
     
@@ -1818,7 +1818,7 @@
 - <strong>OpenRouter</strong> (Claude 3.5, Gemini, Mistral)
 - <strong>vLLM / LM Studio / llama.cpp server</strong></p>
 <h3 id="can-i-mix-cloud-and-local-models-in-one-session">Can I mix cloud and local models in one session?</h3>
-<p>Yes! Each specialist in <code>specialists.yaml</code> can have its own <code>base_url</code>, <code>model</code>, <code>api_key_env</code>, and <code>temperature</code>. For example, you can use local Ollama for coding and OpenAI for general orchestration.</p>
+<p>Yes! Each agent or specialist in <code>config.yaml</code> can have its own <code>provider</code>, <code>base_url</code>, <code>model</code>, <code>api_key_env</code>, and <code>temperature</code>. For example, you can use local Ollama for the coder agent and OpenAI for the root coordinator.</p>
 <hr />
 <h2 id="built-in-tools">Built-In Tools</h2>
 <h3 id="how-many-built-in-tools-are-included">How many built-in tools are included?</h3>
@@ -1839,9 +1839,9 @@
 <h3 id="where-should-i-place-my-configuration-file">Where should I place my configuration file?</h3>
 <p>OpenJarvis searches in this order:
 1. File pointed to by <code>OJ_CONFIG</code> environment variable
-2. <code>./specialists.yaml</code> in current working directory
-3. <code>~/.config/openjarvis/specialists.yaml</code>
-4. <code>/etc/openjarvis/specialists.yaml</code></p>
+2. <code>./.openjarvis/config.yaml</code> in current workspace
+3. <code>~/.openjarvis/config.yaml</code> in user home directory
+4. <code>/etc/openjarvis/config.yaml</code></p>
 <p>If no configuration exists, OpenJarvis launches the setup wizard on first run.</p>
 <h3 id="how-do-i-insert-multiple-lines-in-the-chat-prompt">How do I insert multiple lines in the chat prompt?</h3>
 <p>Press <code>Escape</code> followed by <code>Enter</code> (or <code>Alt+Enter</code>) to insert a new line without submitting. Press <code>Enter</code> on its own when ready to submit.</p>
