@@ -427,6 +427,9 @@ class Conductor:
         if active_tools is not None and allowed_tools is not None:
             active_tools = active_tools.subset(allowed_tools)
 
+        is_terminal = False
+        terminal_output = ""
+
         for tc in tool_calls:
             func = tc.get("function", {})
             name = func.get("name", "")
@@ -472,6 +475,24 @@ class Conductor:
                     )
                     events.append({"type": "tool_result", "name": name, "result": result})
 
+            # Check if this tool is a successful terminal action
+            if name == "complete_task":
+                try:
+                    res_data = json.loads(result) if isinstance(result, str) else result
+                    if isinstance(res_data, dict) and res_data.get("status") == "completed":
+                        is_terminal = True
+                        terminal_output = str(parsed_args.get("reply") or parsed_args.get("response") or parsed_args.get("message") or "")
+                except Exception:
+                    pass
+            elif name == "exit_agent":
+                try:
+                    res_data = json.loads(result) if isinstance(result, str) else result
+                    if isinstance(res_data, dict) and res_data.get("status") == "exited":
+                        is_terminal = True
+                        terminal_output = str(parsed_args.get("summary") or parsed_args.get("result") or "")
+                except Exception:
+                    pass
+
             messages_history.append(
                 {
                     "role": "tool",
@@ -481,11 +502,17 @@ class Conductor:
                 }
             )
 
+        target_role = "end" if is_terminal else state.get("current_role", "generalist")
+        final_output = terminal_output if is_terminal else state.get("final_output", "")
+        if is_terminal and final_output:
+            events.append({"type": "final", "content": final_output, "role": calling_role})
+
         return {
             **state,
             "messages": messages_history,
             "last_tool_calls": [],
-            "target_role": state.get("current_role", "generalist"),
+            "target_role": target_role,
+            "final_output": final_output,
             "events": events,
         }
 
@@ -682,11 +709,16 @@ class Conductor:
         for role in all_roles:
             builder.add_conditional_edges(role, self._make_route_edge(role), destination_map)
 
-        # Return from tool execution back to active calling role
+        # Return from tool execution back to active calling role, or END if terminal
+        def _route_after_tools(state: ConductorState) -> str:
+            if state.get("target_role") == "end":
+                return "end"
+            return state.get("current_role", "generalist")
+
         builder.add_conditional_edges(
             "tool_execution",
-            lambda state: state.get("current_role", "generalist"),
-            {r: r for r in all_roles},
+            _route_after_tools,
+            {**{r: r for r in all_roles}, "end": END},
         )
 
         # Recovery nodes return to generalist
@@ -777,9 +809,11 @@ class Conductor:
                     if state.get("target_role") == "tool_execution":
                         update_dict = self._tool_execution_node(state)
                         state.update(update_dict)
+                        if state.get("target_role") == "end":
+                            break
                     else:
                         break
-                response = state.get("last_response", "")
+                response = state.get("final_output") or state.get("last_response", "")
                 if is_generalist and response:
                     yield response
             elif is_generalist:

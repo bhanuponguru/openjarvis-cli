@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import WordCompleter
@@ -11,7 +12,6 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from openjarvis._version import __version__
-from openjarvis.conductor import Conductor
 
 _COMMANDS = ["/exit", "/quit", "/clear", "/help", "/version", "/update-tools"]
 _HISTORY_PATH = Path.home() / ".openjarvis" / "history.txt"
@@ -31,11 +31,41 @@ def create_session() -> PromptSession:
     )
 
 
-def render_event(console: Console, event: dict) -> None:
-    """Render a single Conductor event to the console."""
+def render_event(console: Console, event: dict[str, Any]) -> None:
+    """Render a single Multi-Agent System or Conductor event to the console."""
     etype = event.get("type")
 
-    if etype == "route":
+    if etype == "agent_spawned":
+        console.print(
+            f"  [cyan]🌱 Spawned agent:[/cyan] [bold]{event.get('agent_id')}[/bold] "
+            f"([italic]{event.get('role')}[/italic]) — [dim]{event.get('task', '')[:80]}…[/dim]"
+        )
+
+    elif etype == "agent_connected":
+        console.print(
+            f"  [dim]🔗 Connected: {event.get('source_id')} ↔ {event.get('target_id')}[/dim]"
+        )
+
+    elif etype == "findings_reported":
+        summary = event.get("summary", "")
+        sender = event.get("sender_id", "agent")
+        console.print(
+            f"  [magenta]📢 \\[{sender}] Finding:[/magenta] {summary[:120]}"
+        )
+
+    elif etype == "agent_exited":
+        aid = event.get("agent_id", "agent")
+        console.print(
+            f"  [green]✓ \\[{aid}] Exited with artifact:[/green] "
+            f"[dim]{event.get('disk_path') or event.get('artifact_id')}[/dim]"
+        )
+
+    elif etype == "artifact_saved":
+        console.print(
+            f"  [green]📦 Artifact saved:[/green] [dim]{event.get('disk_path', '')}[/dim]"
+        )
+
+    elif etype == "route":
         from_role = event.get("from_role")
         to_role = event.get("to_role")
         if from_role != "generalist" and to_role != "generalist":
@@ -54,7 +84,7 @@ def render_event(console: Console, event: dict) -> None:
     elif etype == "intermediate":
         content = (event.get("content") or "").strip()
         if content:
-            role = event["role"]
+            role = event.get("role", "agent")
             console.print(f"  [dim italic]\\[{role}][/dim italic] {content[:300]}")
 
     elif etype == "tool_call":
@@ -73,16 +103,22 @@ def render_event(console: Console, event: dict) -> None:
             console.print()
             console.print(Markdown(content))
             console.print()
+        artifacts = event.get("artifacts") or []
+        if artifacts:
+            console.print("[bold cyan]Generated Artifacts:[/bold cyan]")
+            for art in artifacts:
+                console.print(f"  • [bold]{art.get('name')}[/bold] ([dim]{art.get('disk_path')}[/dim])")
+            console.print()
 
     elif etype == "error":
         console.print(f"  [red]⚠ {event.get('content', 'unknown error')}[/red]")
 
 
-def run_repl(conductor: Conductor, console: Console) -> None:
+def run_repl(system: Any, console: Console, verbose: bool = False) -> None:
     """Run the interactive REPL using prompt_toolkit input and Rich output."""
     session = create_session()
     console.print(
-        f"[bold]OpenJarvis[/bold] [dim]v{__version__}[/dim] — type [dim]/exit[/dim] to stop, "
+        f"[bold]OpenJarvis Multi-Agent System[/bold] [dim]v{__version__}[/dim] — type [dim]/exit[/dim] to stop, "
         "[dim]/help[/dim] for commands\n"
     )
 
@@ -100,34 +136,33 @@ def run_repl(conductor: Conductor, console: Console) -> None:
             console.clear()
             continue
 
-        if user_input in ("/version", "/v"):
-            console.print(f"  [cyan]openjarvis-cli[/cyan] v{__version__}\n")
-            continue
-
-        if user_input == "/update-tools":
-            if conductor._retriever:
-                console.print("  [cyan]Updating tool embedding vectors...[/cyan]")
-                conductor._retriever.build_index()
-                console.print("  [green]✓[/green] Tool vectors updated successfully.\n")
-            else:
-                console.print("  [yellow]Tool retriever is not active.[/yellow]\n")
-            continue
-
         if user_input == "/help":
             console.print(
-                "  [bold]Commands:[/bold]\n"
-                "  [cyan]/exit[/cyan], [cyan]/quit[/cyan]      — exit OpenJarvis\n"
-                "  [cyan]/clear[/cyan]               — clear the screen\n"
-                "  [cyan]/version[/cyan], [cyan]/v[/cyan]         — show openjarvis-cli version\n"
-                "  [cyan]/update-tools[/cyan]        — re-index and update tool embeddings\n"
-                "  [cyan]/help[/cyan]                — show this message\n"
-                "  [dim]Up/Down[/dim]                — browse input history\n"
-                "  [dim]Ctrl-R[/dim]                 — reverse history search\n"
+                "\n[bold]Commands:[/bold]\n"
+                "  /help         Show this help message\n"
+                "  /clear        Clear the terminal screen\n"
+                "  /version      Show OpenJarvis version\n"
+                "  /exit, /quit  Exit the CLI\n"
             )
+            continue
+
+        if user_input == "/version":
+            console.print(f"OpenJarvis v{__version__}")
             continue
 
         if not user_input:
             continue
 
-        for event in conductor.chat(user_input):
-            render_event(console, event)
+        try:
+            if verbose:
+                for event in system.chat(user_input):
+                    render_event(console, event)
+            else:
+                with console.status("[bold cyan]OpenJarvis agents coordinating...[/bold cyan]"):
+                    final_events = list(system.chat(user_input))
+                # Render only final or error events
+                for event in final_events:
+                    if event.get("type") in ("final", "error"):
+                        render_event(console, event)
+        except Exception as exc:
+            console.print(f"[red]Execution error:[/red] {exc}\n")

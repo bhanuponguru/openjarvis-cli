@@ -1,178 +1,117 @@
 # Configuration Overview
 
-OpenJarvis uses a simple YAML configuration file (typically `specialists.yaml`) to define the orchestrator and domain specialists.
+OpenJarvis uses a unified YAML configuration file (`config.yaml`) to define the Multi-Agent System: the primary user-facing Root Agent, reusable agent profiles, domain specialists, and runtime guardrails.
 
 ---
 
-## Configuration File Discovery Order
+## Configuration Discovery Order
 
-When you run `openjarvis`, the CLI automatically locates your configuration using this search order:
+When you launch `openjarvis` or `oj`, the CLI automatically locates your configuration using this search order:
 
 1. **`OJ_CONFIG` environment variable** (highest priority):
    ```bash
-   export OJ_CONFIG=/path/to/my-config.yaml
+   export OJ_CONFIG=/path/to/custom-config.yaml
    openjarvis
    ```
-2. **Current working directory**: `./specialists.yaml`
-3. **User configuration directory**: `~/.config/openjarvis/specialists.yaml`
-4. **System-wide configuration**: `/etc/openjarvis/specialists.yaml` (Linux / macOS)
+2. **Local project workspace**:
+   - `./.openjarvis/config.yaml`
+   - `./.openjarvis/config/config.yaml`
+3. **Global user configuration**:
+   - `~/.openjarvis/config.yaml`
+   - `~/.openjarvis/config/config.yaml`
+4. **System-wide configuration**: `/etc/openjarvis/config.yaml` (Linux / macOS only)
 
-If no configuration file is found in any location, OpenJarvis launches the **interactive setup wizard** to create one for you.
+When both global and local configurations exist, OpenJarvis automatically merges them: local workspace settings override global user defaults.
+
+If no configuration file is detected in any location, OpenJarvis automatically launches the **interactive setup wizard** to configure your provider and write your initial `config.yaml`.
 
 ---
 
-## Configuration Structure
+## Canonical Configuration Structure
 
-A complete configuration defines the global hop cap, the required `generalist` orchestrator, and optional domain `specialists`:
+A complete configuration defines the Root Agent, agent profiles, domain specialists, and multi-agent limits:
 
 ```yaml
-max_hops: 10 # Maximum specialist transitions per query
-
-generalist:
-  name: "generalist"
-  description: "Primary orchestrator and router."
+# ----------------------------------------------------------------------
+# Root Coordinator (Direct User Communication & Primary Orchestrator)
+# ----------------------------------------------------------------------
+root_agent:
+  name: "root"
+  role: "coordinator"
+  description: "Primary user-facing coordinator managing multi-agent tasks."
   system_prompt: |
-    You are the router and coordinator of OpenJarvis.
-    Analyze user requests, route domain-specific tasks to qualified specialists,
-    and synthesize final responses when specialists return their work.
+    You are the Root Agent of OpenJarvis, directly responsible for user communication
+    and multi-agent orchestration. Spawn specialized child agents with `spawn_agent`
+    when needed, connect agents with `connect_agents`, monitor their findings, and call `complete_task`
+    when all children have exited and their work is synthesized.
   provider: "openai"
   base_url: "https://api.openai.com/v1"
-  model: "gpt-4o-mini"
+  model: "gpt-4o"
   api_key_env: "OPENAI_API_KEY"
-  temperature: 0.0
-  timeout: 60.0
+  temperature: 0.1
+  max_hops: 15
 
+# ----------------------------------------------------------------------
+# Pre-Configured Agent Profiles (Spawnable by Root or Child Agents)
+# ----------------------------------------------------------------------
+agents:
+  researcher:
+    name: "researcher"
+    role: "researcher"
+    description: "Deep factual research, web queries, and documentation lookup."
+    system_prompt: |
+      You are the RESEARCHER agent in OpenJarvis. Gather facts, search documentation,
+      report findings with `report_findings`, and exit with `exit_agent`.
+    provider: "openai"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4o"
+    temperature: 0.2
+    tools:
+      - "fetch_webpage"
+      - "search_web"
+      - "query_wikipedia"
+
+  coder:
+    name: "coder"
+    role: "coder"
+    description: "Software engineering, file editing, debugging, and code execution."
+    system_prompt: |
+      You are the CODER agent in OpenJarvis. Write, debug, refactor, and test code.
+      Report findings with `report_findings`, and exit with `exit_agent`.
+    provider: "openai"
+    base_url: "https://api.openai.com/v1"
+    model: "gpt-4o"
+    temperature: 0.0
+    tools:
+      - "str_replace_editor"
+      - "bash"
+      - "execute_python"
+      - "lint_python_code"
+      - "git_status"
+      - "git_diff"
+
+# ----------------------------------------------------------------------
+# Inner Domain Specialists (For Internal Conductor Delegation)
+# ----------------------------------------------------------------------
 specialists:
   math:
     name: "math"
-    description: "Calculations, arithmetic, algebra, equations, and statistics."
-    system_prompt: |
-      You are the MATH specialist. Solve mathematics and quantitative problems with rigor.
+    description: "Calculations, equations, statistics."
+    system_prompt: "You are the MATH specialist. Solve quantitative problems with rigor."
     provider: "openai"
     base_url: "https://api.openai.com/v1"
-    model: "gpt-4o-mini"
-    api_key_env: "OPENAI_API_KEY"
-    temperature: 0.0
+    model: "gpt-4o"
     delegates_to: ["code"]
-    tools: ["calculator", "evaluate_expression", "solve_linear_equation"]
+    tools:
+      - "calculator"
+      - "evaluate_expression"
 
-  code:
-    name: "code"
-    description: "Software engineering, writing, analyzing, and debugging code."
-    system_prompt: |
-      You are the CODE specialist. Write, inspect, and debug software.
-    provider: "openai"
-    base_url: "https://api.openai.com/v1"
-    model: "gpt-4o-mini"
-    api_key_env: "OPENAI_API_KEY"
-    temperature: 0.0
-    delegates_to: ["math"]
-    tools: ["str_replace_editor", "bash", "execute_python"]
-
-  knowledge:
-    name: "knowledge"
-    description: "Factual concepts, historical research, and general definitions."
-    system_prompt: |
-      You are the KNOWLEDGE specialist. Answer factual questions and explain concepts.
-    provider: "openai"
-    base_url: "https://api.openai.com/v1"
-    model: "gpt-4o-mini"
-    api_key_env: "OPENAI_API_KEY"
-    temperature: 0.2
-    delegates_to: []
-    tools: ["fetch_webpage", "search_web", "query_wikipedia"]
+# ----------------------------------------------------------------------
+# Multi-Agent Resource & Safety Limits
+# ----------------------------------------------------------------------
+limits:
+  max_active_agents: 8          # Maximum concurrent active agent nodes
+  max_spawn_depth: 3            # Maximum nesting depth from Root Agent
+  max_agent_turns: 15           # Maximum message exchanges per agent before forced exit
+  turn_timeout_seconds: 300.0   # Wall-clock timeout per agent step
 ```
-
----
-
-## Field Reference
-
-### Global Settings
-
-| Field | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `max_hops` | Integer | `10` | Maximum number of model hops allowed for a single prompt to prevent infinite delegation loops. |
-
-### Specialist Settings (`generalist` and each `specialists` entry)
-
-| Field | Type | Default | Description |
-| :--- | :--- | :--- | :--- |
-| `system_prompt` | String | **Required** | Functional instructions defining role and domain boundaries. Routing protocols are injected automatically. |
-| `name` | String | Section key | Identifier for this role (e.g. `generalist`, `math`, `code`). |
-| `description` | String | `null` | Optional concise summary of role expertise, provided to the generalist router for intelligent dispatching. |
-| `provider` | String | `"openai"` | Provider protocol (all OpenAI-compatible endpoints use `"openai"`). |
-| `base_url` | String | `"http://localhost:11434/v1"` | The HTTP base URL of the API endpoint. |
-| `model` | String | `"llama3"` | Model name requested from the provider. |
-| `api_key_env` | String | `null` | Name of the environment variable holding the API key (e.g. `"OPENAI_API_KEY"`). |
-| `temperature` | Float | `0.7` | Sampling temperature (0.0 for deterministic, 1.0 for creative). |
-| `max_tokens` | Integer | `null` | Optional max tokens to generate. If omitted, no limit is sent. |
-| `stop` | List[String] | `[]` | Optional list of stop sequences. |
-| `timeout` | Float | `60.0` | HTTP request timeout in seconds. |
-| `delegates_to` | List[String] | `[]` | List of specialist names this specialist is permitted to delegate to. |
-| `tools` | List[String] | `null` | Optional allowlist of permitted tool names. If `null`, inherits all available tools. If `[]`, pure reasoning agent (0 tools). |
-
----
-
-## Configuration Recipes
-
-### 1. Completely Local & Free with Ollama
-```yaml
-generalist:
-  system_prompt: "You are OpenJarvis. Route using [ROUTE: math], [ROUTE: code], or [ROUTE: return]."
-  base_url: "http://localhost:11434/v1"
-  model: "llama3"
-  temperature: 0.0
-
-specialists:
-  math:
-    system_prompt: "You are the math specialist. End with [RETURN]."
-    base_url: "http://localhost:11434/v1"
-    model: "llama3"
-    temperature: 0.0
-
-  code:
-    system_prompt: "You are the code specialist. End with [RETURN]."
-    base_url: "http://localhost:11434/v1"
-    model: "codellama"
-    temperature: 0.0
-```
-
-### 2. High-Speed Hybrid Setup
-```yaml
-generalist:
-  base_url: "https://api.openai.com/v1"
-  model: "gpt-4o-mini"
-  api_key_env: "OPENAI_API_KEY"
-  temperature: 0.0
-
-specialists:
-  knowledge:
-    base_url: "https://api.groq.com/openai/v1"
-    model: "llama-3.1-70b-versatile"
-    api_key_env: "GROQ_API_KEY"
-    temperature: 0.2
-
-  math:
-    base_url: "http://localhost:11434/v1"
-    model: "llama3"
-    temperature: 0.0
-```
-
----
-
-## Validation & Startup Checks
-
-OpenJarvis validates your configuration when starting:
-- **Unknown Keys**: Reports the exact line/section and lists allowed keys if a typo occurs.
-- **Missing Prompts**: Flags missing required `system_prompt` entries immediately.
-- **Invalid Delegation**: Ensures all `delegates_to` names exist in the `specialists` map.
-- **Missing API Keys**: Alerts you with the environment variable name if an API key is missing.
-
----
-
-## Next Steps
-
-- **[Specialists Guide →](specialists.md)** — Designing specialist prompts and delegation
-- **[Providers Guide →](providers.md)** — Setting up Ollama, OpenAI, Groq, and OpenRouter
-- **[Advanced Options →](advanced.md)** — Fine-tuning timeouts, temperatures, and hop limits
-

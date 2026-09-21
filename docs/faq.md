@@ -26,7 +26,7 @@ Any endpoint implementing the standard OpenAI `/v1/chat/completions` REST API, i
 - **vLLM / LM Studio / llama.cpp server**
 
 ### Can I mix cloud and local models in one session?
-Yes! Each specialist in `specialists.yaml` can have its own `base_url`, `model`, `api_key_env`, and `temperature`. For example, you can use local Ollama for coding and OpenAI for general orchestration.
+Yes! Each agent or specialist in `config.yaml` can have its own `provider`, `base_url`, `model`, `api_key_env`, and `temperature`. For example, you can use local Ollama for the coder agent and OpenAI for the root coordinator.
 
 ---
 
@@ -54,9 +54,9 @@ No. OpenJarvis supplies native function schemas to the models. When a calculatio
 ### Where should I place my configuration file?
 OpenJarvis searches in this order:
 1. File pointed to by `OJ_CONFIG` environment variable
-2. `./specialists.yaml` in current working directory
-3. `~/.config/openjarvis/specialists.yaml`
-4. `/etc/openjarvis/specialists.yaml`
+2. `./.openjarvis/config.yaml` in current workspace
+3. `~/.openjarvis/config.yaml` in user home directory
+4. `/etc/openjarvis/config.yaml`
 
 If no configuration exists, OpenJarvis launches the setup wizard on first run.
 

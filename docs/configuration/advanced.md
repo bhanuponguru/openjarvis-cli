@@ -6,30 +6,31 @@ This page covers power-user configuration techniques, environment management, an
 
 ## Managing Multiple Configurations
 
-You can maintain different specialist configurations for different tasks (e.g. coding, research, writing):
+You can maintain different agent configurations for different tasks (e.g. coding, research, writing):
 
 ```text
-~/.config/openjarvis/
-├── specialists.yaml  # Default setup
-├── coding.yaml       # Code-focused specialists (low temp, local code models)
+~/.openjarvis/
+├── config.yaml       # Default MAS setup
+├── coding.yaml       # Code-focused agents (low temp, local code models)
 └── research.yaml     # Research setup (high-capacity models, web search)
 ```
 
 To run OpenJarvis with a specific configuration:
 
 ```bash
-OJ_CONFIG=~/.config/openjarvis/coding.yaml openjarvis
+OJ_CONFIG=~/.openjarvis/coding.yaml openjarvis
 ```
 
 ---
 
 ## Per-Project Configuration
 
-You can place a `specialists.yaml` file in the root of any project directory. When you run `openjarvis` inside that directory, it automatically loads `./specialists.yaml` before falling back to your user config.
+You can place a `config.yaml` file in the `.openjarvis/` folder of any project workspace. When you run `openjarvis` inside that directory, it automatically loads `./.openjarvis/config.yaml` and merges it over your global user config.
 
 ```text
 my-web-app/
-├── specialists.yaml  # Custom specialists for this codebase
+├── .openjarvis/
+│   └── config.yaml   # Custom agent profiles and limits for this codebase
 ├── package.json
 └── src/
 ```
@@ -154,6 +155,6 @@ specialists:
 ## See Also
 
 - [Configuration Overview](overview.md) — All configuration fields
-- [Specialists Guide](specialists.md) — Specialist prompt engineering
+- [Agents & Profiles Guide](agents.md) — Agent personas, consensus, and tool scoping
 - [Providers Guide](providers.md) — Provider-specific setup
 - [Troubleshooting](../troubleshooting.md) — Common issues and fixes

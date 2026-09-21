@@ -4,7 +4,7 @@
 
 ## Project Overview
 
-`openjarvis-cli` is an open-source, vendor-agnostic agentic orchestration CLI and terminal client. It routes natural language tasks across a team of specialist LLMs (e.g. generalist, coder, reasoning, terminal execution) orchestrated via a LangGraph state graph.
+`openjarvis-cli` is an open-source, vendor-agnostic agentic orchestration CLI and terminal client. It executes tasks across a dynamic Multi-Agent System (MAS) of autonomous Conductor agents coordinated via an asynchronous actor engine, strict bottom-up exit hierarchy, and neighbor-based consensus.
 
 ### Architectural Invariants
 1. **Pure Python Architecture**: `openjarvis-cli` is strictly pure Python (target: Python 3.13+ / 3.14). It MUST NEVER import `torch`, `transformers`, or depend on CUDA/GPU hardware.
@@ -17,9 +17,9 @@
 ## Build, Test, and Development Commands
 
 - `uv sync --group dev --group docs --group build`: Install package and all tooling groups.
-- `uv run openjarvis`: Launch interactive terminal interface with `specialists.yaml`.
+- `uv run openjarvis`: Launch interactive terminal interface with `.openjarvis/config.yaml`.
 - `uv run oj`: Short alias for `openjarvis`.
-- `OJ_CONFIG=custom.yaml uv run openjarvis`: Run with a custom specialist configuration.
+- `OJ_CONFIG=custom.yaml uv run openjarvis`: Run with a custom configuration.
 - `uv run pytest -q`: Run fast test suite (<5s execution time).
 - `uv run ruff check .`: Lint and check import formatting.
 - `uv run ruff check --fix .`: Auto-fix linting issues.

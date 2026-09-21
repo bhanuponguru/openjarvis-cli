@@ -12,7 +12,7 @@ OpenJarvis CLI is an intelligent terminal client that coordinates a team of spec
 
 ## Key Features
 
-- 🎯 **Multi-Model Orchestration**: Dynamic LangGraph state machine routing requests across specialized agents.
+- 🎯 **Dynamic Multi-Agent System (MAS)**: Asynchronous actor graph of autonomous Conductor agents dynamically spawning child agents, defining edges, consensus via neighbor findings, and strict bottom-up exit hierarchy with dual-persisted deliverables.
 - 🔌 **Provider Agnostic**: Mix and match Ollama (free & private local models), OpenAI, Anthropic, Gemini, Groq, or any OpenAI-compatible API in one session.
 - 🛠️ **49 Production-Ready Built-In Tools**: Comprehensive tools spanning 9 functional domains (file inspection, Git & patch management, web lookups, REST requests, code execution, AST math solvers, SQLite queries, datetime operations, and persistent memory).
 - 🛡️ **Interactive Security Sandbox**: Granular permission manager intercepting tool calls with interactive user approvals and directory constraints.
@@ -56,12 +56,13 @@ On first launch, if no configuration is found, an interactive setup wizard will 
 ### 3. Command-Line Options
 
 ```text
-Usage: openjarvis [-h] [-c CONFIG] [--model MODEL] [--provider PROVIDER]
+Usage: openjarvis [-h] [-c CONFIG] [-v] [--model MODEL] [--provider PROVIDER]
                   [--update-tools] [-V] [query ...]
 
 Options:
-  -c, --config CONFIG  Path to specialists.yaml configuration file
-  --model MODEL        Override generalist model name
+  -c, --config CONFIG  Path to config.yaml configuration file
+  -v, --verbose        Display live inter-agent messaging, spawning, and tool events
+  --model MODEL        Override root agent model name
   --provider PROVIDER  Override default provider (e.g. ollama, openai, anthropic)
   --update-tools       Re-index and update tool embedding vectors
   -V, --version        Show version and exit
@@ -72,6 +73,12 @@ Options:
 Run a one-off prompt directly without entering the REPL:
 ```bash
 oj "Calculate compound interest on $10,000 at 5% for 10 years and write a python script to verify"
+```
+
+#### Verbose Multi-Agent Trace Mode
+Display live inter-agent messaging, spawning, and tool executions:
+```bash
+oj -v "Analyze repository architecture and suggest refactorings"
 ```
 
 #### Override Models on the Fly
@@ -116,34 +123,35 @@ OpenJarvis includes 49 native tools automatically invoked by models via function
 
 ---
 
-## Configuration (`specialists.yaml`)
+## Configuration (`.openjarvis/config.yaml`)
 
-OpenJarvis uses a clean YAML configuration defining your generalist router and specialized agents:
+OpenJarvis uses a clean YAML configuration defining your Root coordinator, reusable agent profiles, and limits:
 
 ```yaml
-generalist:
+root_agent:
   provider: "ollama"
-  model: "llama3.2"
-  temperature: 0.0
+  model: "llama3"
+  temperature: 0.1
 
-specialists:
-  code:
+agents:
+  coder:
     provider: "ollama"
     model: "qwen2.5-coder:7b"
     temperature: 0.0
-    system_prompt: "You are an expert programming specialist..."
+    system_prompt: "You are an expert programming agent..."
+    tools: ["str_replace_editor", "bash", "execute_python"]
 
   math:
     provider: "openai"
-    model: "gpt-4o-mini"
+    model: "gpt-4o"
     temperature: 0.0
-    system_prompt: "You are a mathematical calculation and reasoning specialist..."
+    system_prompt: "You are a mathematical calculation and reasoning agent..."
+    tools: ["calculator", "evaluate_expression"]
 
-  knowledge:
-    provider: "anthropic"
-    model: "claude-3-5-haiku-20241022"
-    temperature: 0.2
-    system_prompt: "You are a research and factual knowledge specialist..."
+limits:
+  max_active_agents: 8
+  max_spawn_depth: 3
+  max_agent_turns: 15
 ```
 
 ---

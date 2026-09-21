@@ -14,8 +14,8 @@ docs/
 │   ├── quick-start.md             # First CLI conversation
 │   └── first-steps.md             # Key interactive concepts
 ├── configuration/
-│   ├── overview.md                # Specialists YAML configuration
-│   ├── specialists.md             # Specialist roles & delegations
+│   ├── overview.md                # Config YAML configuration
+│   ├── agents.md                  # Agent profiles, personas & tool scoping
 │   ├── providers.md               # LLM Provider setups (Ollama, OpenAI, Anthropic, etc.)
 │   └── advanced.md                # Multi-specialist routing & air-gapped setup
 ├── tools/
@@ -88,7 +88,7 @@ When deployed online, this documentation will be at a user-facing URL like:
 This documentation is included in your OpenJarvis distribution. It provides:
 
 - **Installation:** Already done! You have the binary.
-- **Configuration:** Setting up `specialists.yaml`
+- **Configuration:** Setting up `.openjarvis/config.yaml`
 - **Usage:** Command-line options and features
 - **Troubleshooting:** Common issues and solutions
 - **Tools Reference:** All 49 built-in tools across 9 domains

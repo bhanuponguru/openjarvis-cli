@@ -41,6 +41,7 @@ def write_file(path: str, content: str, append: bool = False) -> str:
         Success or error message.
     """
     try:
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
         mode = "a" if append else "w"
         with open(path, mode, encoding="utf-8") as f:
             f.write(content)

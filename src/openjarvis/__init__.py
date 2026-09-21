@@ -12,13 +12,22 @@ except ImportError:
 from openjarvis.builtin_tools import create_builtin_registry
 from openjarvis.conductor import Conductor
 from openjarvis.llm_factory import create_chat_model
-from openjarvis.model_types import ConductorConfig, SpecialistConfig
+from openjarvis.model_types import (
+    AgentProfileConfig,
+    ConductorConfig,
+    MultiAgentLimitsConfig,
+    SpecialistConfig,
+)
+from openjarvis.multiagent.engine import MultiAgentSystem
 from openjarvis.prompts import build_specialist_prompt
 from openjarvis.workspace import Workspace
 
 __all__ = [
+    "AgentProfileConfig",
     "Conductor",
     "ConductorConfig",
+    "MultiAgentLimitsConfig",
+    "MultiAgentSystem",
     "SpecialistConfig",
     "Workspace",
     "__version__",

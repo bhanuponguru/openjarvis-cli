@@ -1,4 +1,4 @@
-"""Interactive CLI for the OpenJarvis Conductor."""
+"""Interactive CLI for the OpenJarvis Multi-Agent System."""
 
 import argparse
 import json
@@ -10,12 +10,15 @@ from rich.console import Console
 
 from openjarvis._version import __version__
 from openjarvis.builtin_tools import create_builtin_registry
-from openjarvis.conductor import Conductor
 from openjarvis.config_loader import load_config
+from openjarvis.multiagent.engine import MultiAgentSystem
 from openjarvis.setup_wizard import run_wizard
 from openjarvis.tool_retriever import ToolRetriever
 from openjarvis.tui import render_event, run_repl
 from openjarvis.workspace import discover_workspace
+
+# Conductor alias so tests and external callers can mock/reference it
+Conductor: Any = MultiAgentSystem
 
 
 def run_cli(args: list[str] | None = None) -> None:
@@ -29,19 +32,24 @@ def run_cli(args: list[str] | None = None) -> None:
 
     parser = argparse.ArgumentParser(
         prog="openjarvis",
-        description="Autonomous multi-model agentic CLI & orchestrator routing tasks across specialized LLMs",
+        description="Autonomous dynamic Multi-Agent System (MAS) coordinating specialized Conductor agents",
     )
     parser.add_argument(
         "-c", "--config",
         type=str,
         default=None,
-        help="Path to specialists.yaml configuration file",
+        help="Path to config.yaml configuration file",
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Display live inter-agent messaging, spawning, and tool events",
     )
     parser.add_argument(
         "--model",
         type=str,
         default=None,
-        help="Override generalist model name",
+        help="Override root agent model name",
     )
     parser.add_argument(
         "--provider",
@@ -53,6 +61,17 @@ def run_cli(args: list[str] | None = None) -> None:
         "--update-tools",
         action="store_true",
         help="Re-index and update tool embedding vectors",
+    )
+    parser.add_argument(
+        "-y", "--auto-approve",
+        action="store_true",
+        help="Automatically approve tool executions without prompting",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["interactive", "autonomous", "allowlist"],
+        default=None,
+        help="Tool permission enforcement mode (interactive, autonomous, allowlist)",
     )
     parser.add_argument(
         "-V", "--version",
@@ -102,15 +121,24 @@ def run_cli(args: list[str] | None = None) -> None:
 
     # Apply command-line overrides
     if parsed_args.model:
+        if config.root_agent:
+            config.root_agent.model = parsed_args.model
         config.generalist.model = parsed_args.model
     if parsed_args.provider:
+        if config.root_agent:
+            config.root_agent.provider = parsed_args.provider
         config.generalist.provider = parsed_args.provider
+    if parsed_args.auto_approve:
+        config.tool_permissions.mode = "autonomous"
+    elif parsed_args.mode:
+        config.tool_permissions.mode = parsed_args.mode
 
     tools = create_builtin_registry()
-
-    conductor_ref: list[Conductor] = []
+    system_ref: list[MultiAgentSystem] = []
 
     def confirm_tool_permission(tool_name: str, arguments: dict[str, Any], reason: str) -> bool:
+        if parsed_args.auto_approve or (config.tool_permissions.mode == "autonomous"):
+            return True
         console.print(f"\n[yellow]⚠ Tool Permission Required:[/yellow] [bold]{tool_name}[/bold]")
         console.print(f"  [dim]Reason:[/dim] {reason}")
         if arguments:
@@ -120,30 +148,48 @@ def run_cli(args: list[str] | None = None) -> None:
             if ans in ("y", "yes"):
                 return True
             elif ans in ("a", "always"):
-                if conductor_ref:
-                    conductor_ref[0].permissions.remember_decision(tool_name, "allow")
+                if system_ref:
+                    # Update permission on base config and all live agent conductors
+                    system_ref[0].config.tool_permissions.remembered_decisions[tool_name] = "allow"
+                    if tool_name not in system_ref[0].config.tool_permissions.allowed_tools:
+                        system_ref[0].config.tool_permissions.allowed_tools.append(tool_name)
+                    for agent in system_ref[0].agents.values():
+                        if hasattr(agent.conductor, "permissions"):
+                            agent.conductor.permissions.remember_decision(tool_name, "allow")
                 return True
             elif ans in ("b", "block"):
-                if conductor_ref:
-                    conductor_ref[0].permissions.remember_decision(tool_name, "deny")
+                if system_ref:
+                    system_ref[0].config.tool_permissions.remembered_decisions[tool_name] = "deny"
+                    for agent in system_ref[0].agents.values():
+                        if hasattr(agent.conductor, "permissions"):
+                            agent.conductor.permissions.remember_decision(tool_name, "deny")
                 return False
             return False
         except (EOFError, KeyboardInterrupt):
             return False
 
-    conductor = Conductor(
+    system = Conductor(
         config=config,
         tools=tools,
         workspace=workspace,
         confirm_callback=confirm_tool_permission,
     )
-    conductor_ref.append(conductor)
+    system_ref.append(system)
 
     if parsed_args.query:
         query_text = " ".join(parsed_args.query).strip()
-        for event in conductor.chat(query_text):
-            render_event(console, event)
+        if parsed_args.verbose:
+            for event in system.chat(query_text):
+                render_event(console, event)
+        else:
+            with console.status("[bold cyan]OpenJarvis agents coordinating...[/bold cyan]"):
+                events = list(system.chat(query_text))
+            for event in events:
+                if event.get("type") in ("final", "error"):
+                    render_event(console, event)
         return
 
-    run_repl(conductor, console)
-
+    if parsed_args.verbose:
+        run_repl(system, console, verbose=True)
+    else:
+        run_repl(system, console)

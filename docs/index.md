@@ -208,8 +208,8 @@ plt.show()
 
 - 🚀 **[Installation Guide →](getting-started/installation.md)**: Install via package managers or compiled standalone binaries.
 - ⚡ **[Quick Start Guide →](getting-started/quick-start.md)**: Walk through the first-run wizard and prompt execution.
-- ⚙️ **[Configuration Overview →](configuration/overview.md)**: Complete reference for `specialists.yaml`.
-- 👥 **[Specialists & Routing →](configuration/specialists.md)**: Master domain boundaries, delegation, and tool assignment.
+- ⚙️ **[Configuration Overview →](configuration/overview.md)**: Complete reference for `config.yaml`.
+- 👥 **[Agents & Profiles →](configuration/agents.md)**: Master agent personas, multi-agent consensus, and tool scoping.
 - 🛠️ **[Built-in Tools Manual →](tools/overview.md)**: Deep dive into all 49 tools across 9 modules.
 - 🔒 **[Security & Safety Model →](security.md)**: Safety classifier, permissions manager, and sandboxing.
 - 💻 **[CLI & REPL Reference →](usage/cli.md)**: Command flags, terminal keybindings, and session management.

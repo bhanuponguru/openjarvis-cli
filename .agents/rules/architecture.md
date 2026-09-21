@@ -1,11 +1,11 @@
 # Architecture & Component Guidelines — openjarvis-cli
 
-## 1. Conductor & State Graph
-- `openjarvis.conductor.Conductor`: Central coordinator that manages conversation sessions, speaker histories, and specialist delegation.
-- `openjarvis.graph`: Implements the Heterogeneous Cognitive Graph on LangGraph:
-  - `protocol.py`: Typed directive and observation messages (`ActDirectiveMessage`, `ActObservationMessage`).
-  - `blackboard.py`: `StateBlackboard` for sharing state across specialists with cycle detection and observation compaction.
-  - `engine.py`: Graph state machine driving execution steps.
+## 1. Multi-Agent System (MAS) & Conductor Graph
+- `openjarvis.multiagent.MultiAgentSystem`: Top-level asynchronous actor engine orchestrating dynamic agent graphs, task mailboxes, and strict bottom-up completion.
+- `openjarvis.multiagent.DynamicAgentGraph`: Manages parent-child topology, arbitrary communication edges, and enforces child exit preconditions before parent exit.
+- `openjarvis.artifacts.ArtifactStore`: Manages dual persistence of structured deliverables in memory and `.openjarvis/artifacts/`.
+- `openjarvis.conductor.Conductor`: Autonomous agent node engine executing inner LangGraph routing and specialist delegation.
+- `openjarvis.graph`: Directed Cognitive Graph components (`blackboard.py`, `protocol.py`, `engine.py`).
 
 ## 2. Built-in Tools Framework (`openjarvis.builtin_tools`)
 OpenJarvis CLI ships with 49 native tools organized into 9 modules:

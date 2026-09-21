@@ -191,13 +191,12 @@ Find files matching a filename or glob pattern in a directory tree.
 ### Reading a Configuration File
 
 ```text
-oj> Read my specialists.yaml and explain what it does
+oj> Read my .openjarvis/config.yaml and explain what it does
 
-  ↳ routing: generalist → code
-  ⚙ tool: read_file {"path": "specialists.yaml"}
-    → "max_hops: 10\ngeneralist:\n..."
+  ⚙ tool: read_file {"path": ".openjarvis/config.yaml"}
+    → "root_agent:\n  name: root\n..."
 
-Your `specialists.yaml` defines a generalist router and domain specialists for math and coding...
+Your `.openjarvis/config.yaml` defines the Root Agent coordinator and specialized agent profiles...
 ```
 
 ### Writing a Project Summary

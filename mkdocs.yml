@@ -72,7 +72,7 @@ nav:
       - First Steps: getting-started/first-steps.md
   - Configuration:
       - Overview: configuration/overview.md
-      - Specialists: configuration/specialists.md
+      - Agents & Profiles: configuration/agents.md
       - Providers: configuration/providers.md
       - Advanced: configuration/advanced.md
   - Built-in Tools:
@@ -88,7 +88,7 @@ nav:
       - Session Memory: tools/memory.md
   - Usage:
       - Command Line: usage/cli.md
-      - Routing Protocol: usage/routing.md
+      - Multi-Agent Topology & Consensus: usage/routing.md
   - Security & Permissions: security.md
   - Developer Guide: developer-guide.md
   - Troubleshooting: troubleshooting.md

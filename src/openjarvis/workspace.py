@@ -94,14 +94,21 @@ class Workspace:
             mem_dir.mkdir(parents=True, exist_ok=True)
         return mem_dir
 
+    def path(self, *parts: str) -> Path:
+        """Return a path relative to local_root if present, otherwise global_root."""
+        root = self.local_root or self.global_root
+        return root.joinpath(*parts)
+
     def ensure_dirs(self) -> None:
         """Ensure standard subdirectories exist in the global workspace."""
-        for sub in ("config", "memory", "vectors", "models"):
+        for sub in ("config", "memory", "vectors", "models", "artifacts"):
             with contextlib.suppress(OSError):
                 (self.global_root / sub).mkdir(parents=True, exist_ok=True)
-            if self.local_root:
+        if self.local_root:
+            for sub in ("config", "memory", "vectors", "models", "artifacts"):
                 with contextlib.suppress(OSError):
                     (self.local_root / sub).mkdir(parents=True, exist_ok=True)
+
 
 _CURRENT_WORKSPACE: Workspace | None = None
 

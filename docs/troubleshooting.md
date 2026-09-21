@@ -8,8 +8,8 @@ Solutions and diagnostic steps for common issues encountered when using OpenJarv
 
 ### Setup Wizard Launches Unexpectedly
 **Symptom:** OpenJarvis enters the 3-step interactive setup wizard instead of the chat prompt.
-- **Cause:** No configuration file was found at `OJ_CONFIG`, `./specialists.yaml`, `~/.config/openjarvis/specialists.yaml`, or `/etc/openjarvis/specialists.yaml`.
-- **Fix:** Complete the wizard to generate `~/.config/openjarvis/specialists.yaml`, or set `OJ_CONFIG=/path/to/specialists.yaml`.
+- **Cause:** No configuration file was found at `OJ_CONFIG`, `.openjarvis/config.yaml`, `~/.openjarvis/config.yaml`, or `/etc/openjarvis/config.yaml`.
+- **Fix:** Complete the wizard to generate `~/.openjarvis/config.yaml`, or set `OJ_CONFIG=/path/to/config.yaml`.
 
 ### Missing API Key Error
 **Symptom:** `Environment variable 'OPENAI_API_KEY' is not set.`

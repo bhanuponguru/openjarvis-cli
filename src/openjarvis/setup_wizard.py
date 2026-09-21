@@ -1,8 +1,9 @@
-"""Interactive setup wizard for first-run specialists.yaml creation."""
+"""Interactive setup wizard for first-run config.yaml creation."""
 
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import yaml
 from prompt_toolkit import prompt
@@ -11,11 +12,11 @@ from rich.console import Console
 
 from openjarvis.workspace import discover_workspace
 
-_USER_CONFIG = Path.home() / ".openjarvis" / "config" / "specialists.yaml"
+_USER_CONFIG = Path.home() / ".openjarvis" / "config.yaml"
 
 _PROVIDER_PRESETS: dict[str, dict[str, str]] = {
     "ollama": {
-        "base_url": "http://localhost:11434",
+        "base_url": "http://localhost:11434/v1",
         "model": "llama3",
     },
     "openai": {
@@ -24,12 +25,12 @@ _PROVIDER_PRESETS: dict[str, dict[str, str]] = {
         "api_key_env": "OPENAI_API_KEY",
     },
     "anthropic": {
-        "base_url": "https://api.anthropic.com",
+        "base_url": "https://api.anthropic.com/v1",
         "model": "claude-3-5-sonnet-20241022",
         "api_key_env": "ANTHROPIC_API_KEY",
     },
     "google": {
-        "base_url": "https://generativelanguage.googleapis.com",
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
         "model": "gemini-1.5-pro",
         "api_key_env": "GOOGLE_API_KEY",
     },
@@ -39,41 +40,56 @@ _PROVIDER_PRESETS: dict[str, dict[str, str]] = {
     },
 }
 
-_GENERALIST_PROMPT = (
-    "You are the ROUTER and DISPATCHER of OpenJarvis.\n"
-    "Your SOLE responsibility is to analyze the user request and route to the best specialist.\n"
-    "CRITICAL: You are NOT a general-purpose solver. Do NOT solve specialized tasks yourself.\n"
-    "Route strictly using exactly ONE tag on its own line at the end:\n"
-    "- [ROUTE: math] for calculations, arithmetic, algebra, equations, and statistics\n"
-    "- [ROUTE: code] for programming, debugging, algorithms, and software engineering\n"
-    "- [ROUTE: knowledge] for factual questions, research, and concept explanations\n"
-    "- [ROUTE: return] ONLY for basic conversational greetings or delivering the final synthesis."
+_ROOT_AGENT_PROMPT = (
+    "You are the Root Agent of OpenJarvis, directly responsible for user communication "
+    "and multi-agent orchestration. Spawn specialized child agents with `spawn_agent` "
+    "when needed, connect agents with `connect_agents`, monitor their findings, and call `complete_task` "
+    "when all children have exited and their work is synthesized."
 )
 
-_SPECIALISTS: dict[str, str] = {
-    "math": (
-        "You are EXCLUSIVELY the MATH specialist of OpenJarvis.\n"
-        "Your SOLE job is to solve mathematics, calculations, numerical equations, formal proofs, and statistics.\n"
-        "STRICT BOUNDARIES: Act ONLY on mathematical and quantitative tasks. "
-        "Do NOT write software application code, do NOT answer general trivia or history, and do NOT engage in casual conversation. "
-        "Focus strictly on mathematical derivation. You MUST end your response with [RETURN]."
-    ),
-    "code": (
-        "You are EXCLUSIVELY the CODE specialist of OpenJarvis.\n"
-        "Your SOLE job is software engineering: writing, analyzing, debugging, and explaining code, architecture, and algorithms.\n"
-        "STRICT BOUNDARIES: Act ONLY on programming tasks. Do NOT perform non-programming domain tasks, essays, or trivia. "
-        "For complex manual math derivations, delegate to math using [DELEGATE: math]. "
-        "Focus strictly on programming. End your response with [RETURN] or [DELEGATE: math]."
-    ),
-    "knowledge": (
-        "You are EXCLUSIVELY the KNOWLEDGE specialist of OpenJarvis.\n"
-        "Your SOLE job is answering factual questions, explaining concepts, and providing domain research.\n"
-        "STRICT BOUNDARIES: Act ONLY on factual and informational queries. "
-        "Do NOT write functional software or scripts, do NOT solve mathematical equations, and do NOT engage in casual conversation. "
-        "Focus strictly on factual explanations. You MUST end your response with [RETURN]."
-    ),
+_DEFAULT_AGENTS: dict[str, dict[str, object]] = {
+    "researcher": {
+        "role": "researcher",
+        "description": "Deep factual research, web queries, and knowledge synthesis.",
+        "system_prompt": (
+            "You are the RESEARCHER agent in OpenJarvis. Gather facts, search documentation, "
+            "report findings with `report_findings`, and exit with `exit_agent`."
+        ),
+        "tools": ["fetch_webpage", "search_web", "query_wikipedia"],
+    },
+    "coder": {
+        "role": "coder",
+        "description": "Software engineering, file editing, debugging, and code execution.",
+        "system_prompt": (
+            "You are the CODER agent in OpenJarvis. Write, debug, refactor, and test code. "
+            "Report findings with `report_findings`, and exit with `exit_agent`."
+        ),
+        "tools": [
+            "str_replace_editor",
+            "bash",
+            "execute_python",
+            "lint_python_code",
+            "git_status",
+            "git_diff",
+        ],
+    },
+    "math": {
+        "role": "math",
+        "description": "Calculations, numerical derivations, equations, and statistics.",
+        "system_prompt": (
+            "You are the MATH agent in OpenJarvis. Solve mathematical and numerical tasks. "
+            "Report findings with `report_findings`, and exit with `exit_agent`."
+        ),
+        "tools": [
+            "calculator",
+            "evaluate_expression",
+            "solve_linear_equation",
+            "solve_quadratic_equation",
+            "convert_units",
+            "compute_statistics",
+        ],
+    },
 }
-
 
 
 class _NonEmptyValidator(Validator):
@@ -105,17 +121,17 @@ def _choose(prompt_text: str, options: list[str], default: str) -> str:
 def run_wizard() -> Path:
     """Run the interactive first-run setup wizard and return the config path.
 
-    Creates a minimal specialists.yaml based on user answers.
+    Creates a complete config.yaml based on user answers.
 
     Returns:
         Path to the written config file.
     """
     console = Console()
     console.print()
-    console.rule("[bold]OpenJarvis Setup[/bold]")
+    console.rule("[bold]OpenJarvis Multi-Agent Setup[/bold]")
     console.print(
-        "\nWelcome! No [cyan]specialists.yaml[/cyan] config was found.\n"
-        "Let's create one so you can start using OpenJarvis.\n"
+        "\nWelcome! No [cyan]config.yaml[/cyan] configuration was found.\n"
+        "Let's create one so you can start using the OpenJarvis Multi-Agent System.\n"
     )
 
     # --- Provider ---
@@ -151,32 +167,92 @@ def run_wizard() -> Path:
     output_path = Path(raw_path).expanduser()
 
     # --- Generate config ---
-    generalist: dict = {
-        "system_prompt": _GENERALIST_PROMPT,
+    root_agent: dict[str, object] = {
+        "name": "root",
+        "role": "coordinator",
+        "system_prompt": _ROOT_AGENT_PROMPT,
         "provider": provider,
         "base_url": base_url,
         "model": model,
-        "delegates_to": list(_SPECIALISTS.keys()),
+        "temperature": 0.1,
+    }
+    if api_key_env:
+        root_agent["api_key_env"] = api_key_env
+
+    generalist: dict[str, object] = {
+        "name": "generalist",
+        "system_prompt": _ROOT_AGENT_PROMPT,
+        "provider": provider,
+        "base_url": base_url,
+        "model": model,
+        "delegates_to": list(_DEFAULT_AGENTS.keys()),
     }
     if api_key_env:
         generalist["api_key_env"] = api_key_env
 
-    specialists: dict = {}
-    for name, system_prompt in _SPECIALISTS.items():
+    agents: dict[str, object] = {}
+    for name, spec in _DEFAULT_AGENTS.items():
         entry: dict[str, object] = {
-            "system_prompt": system_prompt,
+            "name": name,
+            "role": spec["role"],
+            "description": spec["description"],
+            "system_prompt": spec["system_prompt"],
             "provider": provider,
             "base_url": base_url,
             "model": model,
-            "delegates_to": ["math"] if name == "code" else [],
+            "temperature": 0.0 if name in ("coder", "math") else 0.2,
+            "tools": spec["tools"],
         }
         if api_key_env:
             entry["api_key_env"] = api_key_env
-        specialists[name] = entry
+        agents[name] = entry
+
+    default_specialists: dict[str, dict[str, Any]] = {
+        "math": {
+            "description": "Calculations, arithmetic, algebra, calculus, equations, statistics.",
+            "system_prompt": "You are the MATH specialist. Solve mathematics and quantitative problems with rigor.",
+            "delegates_to": ["code"],
+        },
+        "code": {
+            "description": "Software engineering, writing, analyzing, debugging code.",
+            "system_prompt": "You are the CODE specialist. Write, debug, and refactor code.",
+            "delegates_to": ["math"],
+        },
+        "knowledge": {
+            "description": "Factual concepts, scientific explanations, definitions, and domain research.",
+            "system_prompt": "You are the KNOWLEDGE specialist. Deliver objective and concise factual information.",
+            "delegates_to": [],
+        },
+    }
+
+    specialists: dict[str, Any] = {}
+    for name, spec in default_specialists.items():
+        delegates = spec.get("delegates_to", [])
+        delegates_list = list(delegates) if isinstance(delegates, (list, tuple)) else []
+        spec_entry: dict[str, Any] = {
+            "name": name,
+            "description": spec["description"],
+            "system_prompt": spec["system_prompt"],
+            "provider": provider,
+            "base_url": base_url,
+            "model": model,
+            "delegates_to": delegates_list,
+        }
+        if api_key_env:
+            spec_entry["api_key_env"] = api_key_env
+        specialists[name] = spec_entry
 
     config_data = {
+        "root_agent": root_agent,
         "generalist": generalist,
+        "agents": agents,
         "specialists": specialists,
+        "limits": {
+            "max_active_agents": 8,
+            "max_spawn_depth": 3,
+            "max_agent_turns": 15,
+            "turn_timeout_seconds": 300.0,
+        },
     }
 
     discover_workspace().ensure_dirs()
@@ -185,6 +261,6 @@ def run_wizard() -> Path:
 
     console.print()
     console.print(f"[green]✓[/green] Config written to [bold]{output_path}[/bold]")
-    console.print("  You can edit it at any time to add or modify specialists.\n")
+    console.print("  You can edit it at any time to add or modify agents.\n")
 
     return output_path

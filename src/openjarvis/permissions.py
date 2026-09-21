@@ -15,6 +15,15 @@ from openjarvis.workspace import Workspace, get_current_workspace
 logger = logging.getLogger(__name__)
 
 
+META_TOOLS = frozenset({
+    "spawn_agent",
+    "connect_agents",
+    "report_findings",
+    "exit_agent",
+    "complete_task",
+})
+
+
 @dataclass
 class PermissionDecision:
     action: str  # "allow" | "deny" | "confirm"
@@ -106,6 +115,10 @@ class PermissionManager:
                 return PermissionDecision("allow", f"Tool '{tool_name}' was previously allowed by user", "remembered")
             elif dec == "deny":
                 return PermissionDecision("deny", f"Tool '{tool_name}' was previously blocked by user", "remembered")
+
+        # 3. MAS Meta-Tools (internal engine coordination primitives)
+        if tool_name in META_TOOLS:
+            return PermissionDecision("allow", f"Internal MAS tool '{tool_name}'", "system")
 
         # 3. Per-Tool-Per-Argument Pattern Rules
         if tool_name in self.config.rules:

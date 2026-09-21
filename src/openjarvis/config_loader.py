@@ -9,7 +9,9 @@ import yaml
 from yaml import YAMLError
 
 from openjarvis.model_types import (
+    AgentProfileConfig,
     ConductorConfig,
+    MultiAgentLimitsConfig,
     SpecialistConfig,
     ToolPermissionConfig,
     ToolRetrievalConfig,
@@ -18,8 +20,10 @@ from openjarvis.workspace import Workspace, discover_workspace
 
 logger = logging.getLogger(__name__)
 
-# Valid top-level keys for a `SpecialistConfig` dataclass
-_VALID_KEYS = {f.name for f in fields(SpecialistConfig)}
+# Valid top-level keys for dataclasses
+_VALID_SPECIALIST_KEYS = {f.name for f in fields(SpecialistConfig)}
+_VALID_AGENT_KEYS = {f.name for f in fields(AgentProfileConfig)}
+_VALID_LIMITS_KEYS = {f.name for f in fields(MultiAgentLimitsConfig)}
 
 
 def _build_specialist(name: str, spec: dict, section: str) -> SpecialistConfig:
@@ -27,11 +31,11 @@ def _build_specialist(name: str, spec: dict, section: str) -> SpecialistConfig:
     if not isinstance(spec, dict):
         raise ValueError(f"{section} '{name}' must be a mapping, got {type(spec).__name__}")
 
-    unknown = sorted(set(spec) - _VALID_KEYS)
+    unknown = sorted(set(spec) - _VALID_SPECIALIST_KEYS)
     if unknown:
         raise ValueError(
             f"{section} '{name}' has unknown key(s): {', '.join(unknown)}. "
-            f"Valid keys: {', '.join(sorted(_VALID_KEYS))}"
+            f"Valid keys: {', '.join(sorted(_VALID_SPECIALIST_KEYS))}"
         )
 
     spec = {**spec, "name": spec.get("name", name)}
@@ -47,6 +51,33 @@ def _build_specialist(name: str, spec: dict, section: str) -> SpecialistConfig:
         raise ValueError(f"{section} '{name}' key 'description' must be a string or null")
 
     return SpecialistConfig(**spec)
+
+
+def _build_agent_profile(name: str, spec: dict, section: str = "agent") -> AgentProfileConfig:
+    """Construct an AgentProfileConfig, reporting unknown keys clearly."""
+    if not isinstance(spec, dict):
+        raise ValueError(f"{section} '{name}' must be a mapping, got {type(spec).__name__}")
+
+    unknown = sorted(set(spec) - _VALID_AGENT_KEYS)
+    if unknown:
+        raise ValueError(
+            f"{section} '{name}' has unknown key(s): {', '.join(unknown)}. "
+            f"Valid keys: {', '.join(sorted(_VALID_AGENT_KEYS))}"
+        )
+
+    spec = {**spec, "name": spec.get("name", name)}
+    if "system_prompt" not in spec:
+        spec["system_prompt"] = f"You are the {name} agent in OpenJarvis."
+
+    return AgentProfileConfig(**spec)
+
+
+def _build_limits(raw: dict | None) -> MultiAgentLimitsConfig:
+    """Construct MultiAgentLimitsConfig from dict."""
+    if not raw or not isinstance(raw, dict):
+        return MultiAgentLimitsConfig()
+    filtered = {k: v for k, v in raw.items() if k in _VALID_LIMITS_KEYS}
+    return MultiAgentLimitsConfig(**filtered)
 
 
 def _build_tool_retrieval(raw: dict | None) -> ToolRetrievalConfig:
@@ -72,16 +103,13 @@ def locate_config() -> Path:
 
     Search order:
     1. OJ_CONFIG environment variable (highest priority)
-    2. Local project config: ./.openjarvis/config/specialists.yaml
-    3. Global user config: ~/.openjarvis/config/specialists.yaml
-    4. Current directory fallback: ./specialists.yaml
-    5. Legacy user config fallback: ~/.config/openjarvis/specialists.yaml
-    6. System config: /etc/openjarvis/specialists.yaml (Linux/macOS only)
+    2. Local workspace config: ./.openjarvis/config.yaml or ./.openjarvis/config/config.yaml
+    3. Global user config: ~/.openjarvis/config.yaml or ~/.openjarvis/config/config.yaml
+    4. System config: /etc/openjarvis/config.yaml (Linux/macOS only)
 
     Raises:
         FileNotFoundError: If config not found in any location.
     """
-    # 1. OJ_CONFIG env var (highest priority)
     if env_config := os.getenv("OJ_CONFIG"):
         config_path = Path(env_config)
         if config_path.exists():
@@ -90,59 +118,52 @@ def locate_config() -> Path:
             f"OJ_CONFIG points to non-existent file: {env_config}"
         )
 
-    # 2. Local project config (.openjarvis/config/specialists.yaml)
-    local_config = Path.cwd() / ".openjarvis" / "config" / "specialists.yaml"
-    if local_config.exists():
-        return local_config
+    # Local workspace candidates
+    for cand in [
+        Path.cwd() / ".openjarvis" / "config.yaml",
+        Path.cwd() / ".openjarvis" / "config" / "config.yaml",
+    ]:
+        if cand.exists():
+            return cand
 
-    # 3. Current directory config (./specialists.yaml)
-    cwd_config = Path.cwd() / "specialists.yaml"
-    if cwd_config.exists():
-        return cwd_config
+    # Global user candidates
+    for cand in [
+        Path.home() / ".openjarvis" / "config.yaml",
+        Path.home() / ".openjarvis" / "config" / "config.yaml",
+    ]:
+        if cand.exists():
+            return cand
 
-    # 4. Global user config (~/.openjarvis/config/specialists.yaml)
-    global_config = Path.home() / ".openjarvis" / "config" / "specialists.yaml"
-    if global_config.exists():
-        return global_config
-
-    # 5. Legacy user config directory (~/.config/openjarvis/specialists.yaml)
-    legacy_user_config = Path.home() / ".config" / "openjarvis" / "specialists.yaml"
-    if legacy_user_config.exists():
-        return legacy_user_config
-
-    # 6. System config (Linux/macOS only)
     if os.name != "nt":
-        system_config = Path("/etc/openjarvis/specialists.yaml")
+        system_config = Path("/etc/openjarvis/config.yaml")
         if system_config.exists():
             return system_config
 
-    # Config not found — build a helpful message listing all searched paths
     searched = [
         "  1. OJ_CONFIG environment variable (not set)",
-        f"  2. {local_config}",
-        f"  3. {global_config}",
-        f"  4. {cwd_config} (legacy)",
-        f"  5. {legacy_user_config} (legacy)",
+        f"  2. {Path.cwd() / '.openjarvis' / 'config.yaml'}",
+        f"  3. {Path.home() / '.openjarvis' / 'config.yaml'}",
     ]
     if os.name != "nt":
-        searched.append(f"  6. {system_config}")
+        searched.append(f"  4. {Path('/etc/openjarvis/config.yaml')}")
     searched_str = "\n".join(searched)
     raise FileNotFoundError(
-        f"specialists.yaml not found!\n\nSearched locations:\n{searched_str}\n\n"
+        f"OpenJarvis config.yaml not found!\n\nSearched locations:\n{searched_str}\n\n"
         "Run 'openjarvis' to launch the setup wizard, or set OJ_CONFIG=/path/to/config.yaml"
     )
 
 
 def merge_configs(base: ConductorConfig, override: ConductorConfig) -> ConductorConfig:
     """Merge local override config on top of base global config."""
-    # Generalist: override generalist if provided in override
-    generalist = override.generalist
+    root_agent = override.root_agent or base.root_agent
+    generalist = override.generalist if override.generalist.system_prompt else base.generalist
 
-    # Specialists: copy base specialists, update/add from override
+    agents = dict(base.agents)
+    agents.update(override.agents)
+
     specialists = dict(base.specialists)
     specialists.update(override.specialists)
 
-    # Validate delegation targets
     for name, spec in specialists.items():
         for target in spec.delegates_to:
             if target != "generalist" and target not in specialists:
@@ -151,19 +172,24 @@ def merge_configs(base: ConductorConfig, override: ConductorConfig) -> Conductor
                     f"defined in merged config. Known specialists: {', '.join(sorted(specialists))}, generalist"
                 )
 
-    # Max hops: override takes precedence if explicitly specified/different
     max_hops = override.max_hops if override.max_hops != 10 else base.max_hops
-
-    # Tool retrieval & permissions: override if enabled or defined
     tool_retrieval = override.tool_retrieval if override.tool_retrieval.enabled else base.tool_retrieval
-    tool_permissions = override.tool_permissions if override.tool_permissions.allowed_tools or override.tool_permissions.blocked_tools else base.tool_permissions
+    tool_permissions = (
+        override.tool_permissions
+        if override.tool_permissions.allowed_tools or override.tool_permissions.blocked_tools
+        else base.tool_permissions
+    )
+    limits = override.limits if override.limits != MultiAgentLimitsConfig() else base.limits
 
     return ConductorConfig(
+        root_agent=root_agent,
+        agents=agents,
         generalist=generalist,
         specialists=specialists,
         max_hops=max_hops,
         tool_retrieval=tool_retrieval,
         tool_permissions=tool_permissions,
+        limits=limits,
     )
 
 
@@ -178,10 +204,51 @@ def _load_single_config(p: Path) -> ConductorConfig:
     if raw is None:
         raise ValueError(f"Config file {str(p)!r} is empty or contains no YAML document")
 
-    if "generalist" not in raw:
-        raise ValueError(f"Config {p} must have a 'generalist' section")
+    root_raw = raw.get("root_agent")
+    gen_raw = raw.get("generalist")
 
-    generalist = _build_specialist("generalist", raw["generalist"], "generalist")
+    if not root_raw and not gen_raw:
+        raise ValueError(f"Config {p} must have a 'root_agent' or 'generalist' section")
+
+    if root_raw and gen_raw:
+        root_agent = _build_agent_profile("root", root_raw, "root_agent")
+        generalist = _build_specialist("generalist", gen_raw, "generalist")
+    elif root_raw:
+        root_agent = _build_agent_profile("root", root_raw, "root_agent")
+        generalist = SpecialistConfig(
+            name=root_agent.name,
+            system_prompt=root_agent.system_prompt,
+            description=root_agent.description,
+            provider=root_agent.provider,
+            base_url=root_agent.base_url,
+            model=root_agent.model,
+            api_key_env=root_agent.api_key_env,
+            temperature=root_agent.temperature,
+            max_tokens=root_agent.max_tokens,
+            timeout=root_agent.timeout,
+            tools=root_agent.tools,
+        )
+    else:
+        assert gen_raw is not None
+        generalist = _build_specialist("generalist", gen_raw, "generalist")
+        root_agent = AgentProfileConfig(
+            name=generalist.name,
+            system_prompt=generalist.system_prompt,
+            description=generalist.description,
+            provider=generalist.provider,
+            base_url=generalist.base_url,
+            model=generalist.model,
+            api_key_env=generalist.api_key_env,
+            temperature=generalist.temperature,
+            max_tokens=generalist.max_tokens,
+            timeout=generalist.timeout,
+            tools=generalist.tools,
+        )
+
+    agents = {
+        name: _build_agent_profile(name, spec, "agent")
+        for name, spec in (raw.get("agents") or {}).items()
+    }
 
     specialists = {
         name: _build_specialist(name, spec, "specialist")
@@ -202,13 +269,17 @@ def _load_single_config(p: Path) -> ConductorConfig:
 
     tool_retrieval = _build_tool_retrieval(raw.get("tool_retrieval"))
     tool_permissions = _build_tool_permissions(raw.get("tool_permissions"))
+    limits = _build_limits(raw.get("limits"))
 
     return ConductorConfig(
+        root_agent=root_agent,
+        agents=agents,
         generalist=generalist,
         specialists=specialists,
         max_hops=max_hops,
         tool_retrieval=tool_retrieval,
         tool_permissions=tool_permissions,
+        limits=limits,
     )
 
 
@@ -239,8 +310,15 @@ def load_config(
         return _load_single_config(config_path)
 
     ws = workspace or discover_workspace()
-    global_file = ws.global_root / "config" / "specialists.yaml"
-    local_file = ws.local_root / "config" / "specialists.yaml" if ws.local_root else None
+    global_file = ws.global_root / "config.yaml"
+    if not global_file.exists():
+        global_file = ws.global_root / "config" / "config.yaml"
+
+    local_file: Path | None = None
+    if ws.local_root:
+        local_file = ws.local_root / "config.yaml"
+        if not local_file.exists():
+            local_file = ws.local_root / "config" / "config.yaml"
 
     if global_file.exists() and local_file and local_file.exists():
         global_cfg = _load_single_config(global_file)
@@ -250,11 +328,9 @@ def load_config(
     if local_file and local_file.exists():
         return _load_single_config(local_file)
 
-    cwd_file = Path.cwd() / "specialists.yaml"
-    if cwd_file.exists():
-        return _load_single_config(cwd_file)
+    if global_file.exists():
+        return _load_single_config(global_file)
 
-    # Fall back to standard locate_config()
     p = locate_config()
     return _load_single_config(p)
 

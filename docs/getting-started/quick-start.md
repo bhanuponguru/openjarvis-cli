@@ -24,24 +24,26 @@ For full installation options, see the [Installation Guide](installation.md).
 When launched without a configuration file, OpenJarvis automatically starts an **interactive setup wizard**:
 
 ```text
-════════ OpenJarvis Setup ════════
+════════ OpenJarvis Multi-Agent Setup ════════
 
-Welcome! No specialists.yaml config was found.
-Let's create one so you can start using OpenJarvis.
+Welcome! No config.yaml configuration was found.
+Let's create one so you can start using the OpenJarvis Multi-Agent System.
 
 Step 1/3 — Choose your LLM provider
-  ollama  — Local models via Ollama (free, private)
-  openai  — OpenAI API (requires API key)
-  custom  — Any OpenAI-compatible endpoint
+  ollama     — Local models via Ollama (free, private)
+  openai     — OpenAI API (requires API key)
+  anthropic  — Anthropic API (requires API key)
+  google     — Google Gemini API (requires API key)
+  custom     — Any OpenAI-compatible endpoint
 
-Provider (ollama/openai/custom): ollama
+Provider (ollama/openai/anthropic/google/custom): ollama
 API base URL [http://localhost:11434/v1]: 
 Model name [llama3]: 
 
 Step 2/3 — Where to save the config
-Save location [~/.config/openjarvis/specialists.yaml]: 
+Save location [~/.openjarvis/config.yaml]: 
 
-✓ Config written to ~/.config/openjarvis/specialists.yaml
+✓ Config written to ~/.openjarvis/config.yaml
 
 oj> 
 ```
@@ -69,62 +71,54 @@ OpenJarvis works with any OpenAI-compatible API. You can configure:
   export OPENAI_API_KEY="sk-..."
   ```
 
-### Option C: Groq / OpenRouter / Custom
+### Option C: Anthropic / Google Gemini / Custom
 - Export your respective key:
   ```bash
-  export GROQ_API_KEY="gsk_..."
+  export ANTHROPIC_API_KEY="sk-ant-..."
+  export GOOGLE_API_KEY="AIza..."
   ```
 
 ---
 
-## Step 4: Example Configuration (`specialists.yaml`)
+## Step 4: Example Configuration (`.openjarvis/config.yaml`)
 
-If you want to manually create or customize your configuration, create `specialists.yaml`:
+If you want to manually create or customize your configuration, create `.openjarvis/config.yaml`:
 
 ```yaml
-max_hops: 10
-
-generalist:
-  name: "generalist"
+root_agent:
+  name: "root"
+  role: "coordinator"
   system_prompt: |
-    You are OpenJarvis. Route requests using:
-    [ROUTE: math] - Math calculations, proofs, and algebra
-    [ROUTE: code] - Programming and debugging
-    [ROUTE: knowledge] - Factual questions and research
-    [ROUTE: return] - Final answer or tool results
+    You are the Root Agent of OpenJarvis. Coordinate multi-agent tasks,
+    spawn specialized child agents with `spawn_agent`, and call `complete_task`
+    when work is done.
   provider: "openai"
   base_url: "https://api.openai.com/v1"
-  model: "gpt-4o-mini"
+  model: "gpt-4o"
   api_key_env: "OPENAI_API_KEY"
-  temperature: 0.0
+  temperature: 0.1
 
-specialists:
-  math:
-    name: "math"
-    system_prompt: "You are the MATH specialist. Solve calculations step-by-step. End with [RETURN]."
-    base_url: "https://api.openai.com/v1"
-    model: "gpt-4o-mini"
-    api_key_env: "OPENAI_API_KEY"
-    temperature: 0.0
-    delegates_to: []
+agents:
+  researcher:
+    name: "researcher"
+    role: "researcher"
+    system_prompt: "You are the RESEARCHER agent. Report findings with `report_findings` and exit with `exit_agent`."
+    provider: "openai"
+    model: "gpt-4o"
+    tools: ["fetch_webpage", "search_web"]
 
-  code:
-    name: "code"
-    system_prompt: "You are the CODE specialist. Write clean code. End with [RETURN] or [DELEGATE: math]."
-    base_url: "https://api.openai.com/v1"
-    model: "gpt-4o-mini"
-    api_key_env: "OPENAI_API_KEY"
-    temperature: 0.0
-    delegates_to: ["math"]
+  coder:
+    name: "coder"
+    role: "coder"
+    system_prompt: "You are the CODER agent. Write and verify code, then exit with `exit_agent`."
+    provider: "openai"
+    model: "gpt-4o"
+    tools: ["str_replace_editor", "bash", "execute_python"]
 
-  knowledge:
-    name: "knowledge"
-    system_prompt: "You are the KNOWLEDGE specialist. Answer factual questions. End with [RETURN]."
-    base_url: "https://api.openai.com/v1"
-    model: "gpt-4o-mini"
-    api_key_env: "OPENAI_API_KEY"
-    temperature: 0.2
-    delegates_to: []
+limits:
+  max_active_agents: 8
+  max_spawn_depth: 3
+  max_agent_turns: 15
 ```
 
 ---
