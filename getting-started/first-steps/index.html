@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#first-steps-with-openjarvis" class="md-skip">
+        <a href="#first-steps" class="md-skip">
           Skip to content
         </a>
       
@@ -648,10 +648,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#interactive-chat" class="md-nav__link">
+  <a href="#interactive-repl" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Interactive Chat
+        Interactive REPL
       
     </span>
   </a>
@@ -659,22 +659,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-interactions" class="md-nav__link">
+  <a href="#example-execution-traces" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example Interactions
+        Example Execution Traces
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Example Interactions">
+    <nav class="md-nav" aria-label="Example Execution Traces">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-mathematics-calculation" class="md-nav__link">
+  <a href="#1-arithmetic-symbolic-computation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Mathematics &amp; Calculation
+        1. Arithmetic &amp; Symbolic Computation
       
     </span>
   </a>
@@ -682,10 +682,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-live-web-search-factual-lookups" class="md-nav__link">
+  <a href="#2-live-web-search-extraction" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Live Web Search &amp; Factual Lookups
+        2. Live Web Search &amp; Extraction
       
     </span>
   </a>
@@ -693,10 +693,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-software-engineering-code-generation" class="md-nav__link">
+  <a href="#3-repository-inspection-file-operations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Software Engineering &amp; Code Generation
+        3. Repository Inspection &amp; File Operations
       
     </span>
   </a>
@@ -709,10 +709,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#best-practices" class="md-nav__link">
+  <a href="#event-trace-indicators" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Best Practices
+        Event Trace Indicators
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#non-interactive-scripted-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Non-Interactive &amp; Scripted Usage
       
     </span>
   </a>
@@ -1512,10 +1523,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#interactive-chat" class="md-nav__link">
+  <a href="#interactive-repl" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Interactive Chat
+        Interactive REPL
       
     </span>
   </a>
@@ -1523,22 +1534,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-interactions" class="md-nav__link">
+  <a href="#example-execution-traces" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example Interactions
+        Example Execution Traces
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Example Interactions">
+    <nav class="md-nav" aria-label="Example Execution Traces">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-mathematics-calculation" class="md-nav__link">
+  <a href="#1-arithmetic-symbolic-computation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Mathematics &amp; Calculation
+        1. Arithmetic &amp; Symbolic Computation
       
     </span>
   </a>
@@ -1546,10 +1557,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-live-web-search-factual-lookups" class="md-nav__link">
+  <a href="#2-live-web-search-extraction" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Live Web Search &amp; Factual Lookups
+        2. Live Web Search &amp; Extraction
       
     </span>
   </a>
@@ -1557,10 +1568,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-software-engineering-code-generation" class="md-nav__link">
+  <a href="#3-repository-inspection-file-operations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Software Engineering &amp; Code Generation
+        3. Repository Inspection &amp; File Operations
       
     </span>
   </a>
@@ -1573,10 +1584,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#best-practices" class="md-nav__link">
+  <a href="#event-trace-indicators" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Best Practices
+        Event Trace Indicators
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#non-interactive-scripted-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Non-Interactive &amp; Scripted Usage
       
     </span>
   </a>
@@ -1614,112 +1636,99 @@
   
 
 
-<h1 id="first-steps-with-openjarvis">First Steps with OpenJarvis</h1>
-<p>Now that OpenJarvis is installed and configured, let's explore how to make the most of your interactive assistant.</p>
+<h1 id="first-steps">First Steps</h1>
+<p>This guide demonstrates basic interaction patterns, multi-agent coordination, and tool execution in OpenJarvis CLI.</p>
 <hr />
-<h2 id="interactive-chat">Interactive Chat</h2>
-<p>Start an interactive session:</p>
+<h2 id="interactive-repl">Interactive REPL</h2>
+<p>Start an interactive terminal session:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>openjarvis
 </code></pre></div>
-<p>You will see the interactive prompt:</p>
+<p>The interactive prompt accepts multi-turn queries, tasks, and slash directives:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>OpenJarvis (type 'exit' or 'quit' to stop)
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>oj&gt; 
 </code></pre></div>
-<p>Type your prompt and press <code>Enter</code>. OpenJarvis analyzes the task, selects appropriate specialists, runs any needed tools, and presents the synthesized result.</p>
+<p>Submit a prompt by pressing <code>Enter</code>. To insert a newline without submitting, press <code>Escape</code> followed by <code>Enter</code> (or <code>Alt+Enter</code>).</p>
 <hr />
-<h2 id="example-interactions">Example Interactions</h2>
-<h3 id="1-mathematics-calculation">1. Mathematics &amp; Calculation</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>oj&gt; Solve for x: 3*x + 15 = 45 and factorize the answer
+<h2 id="example-execution-traces">Example Execution Traces</h2>
+<h3 id="1-arithmetic-symbolic-computation">1. Arithmetic &amp; Symbolic Computation</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>oj&gt; Solve for x: 3*x + 15 = 45 and factorize the result
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  ↳ routing: generalist → math
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>  ⚙ tool: solve_equation {"equation": "3*x + 15 = 45", "variable": "x"}
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    → "[10]"
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  ⚙ tool: prime_factorize {"n": 10}
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    → "[2, 5]"
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>For the equation `3x + 15 = 45`:
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>- Solving gives **x = 10**.
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>- The prime factorization of 10 is **2 × 5**.
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  [root] ⚙ spawn_agent {"role": "math", "task": "Solve 3*x + 15 = 45 and factorize x"}
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    → Agent 'agent-math' spawned
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  [agent-math] ⚙ solve_equation {"equation": "3*x + 15 = 45", "variable": "x"}
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    → "[10]"
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>  [agent-math] ⚙ prime_factorize {"n": 10}
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    → "[2, 5]"
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>  [agent-math] ⚙ report_findings {"recipient": "root", "findings": "x = 10, prime factors: [2, 5]"}
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    → Findings delivered to 'root'
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>  [agent-math] ⚙ exit_agent {"status": "success"}
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    → Agent 'agent-math' terminated
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>  [root] ⚙ complete_task {"summary": "Solved equation: x = 10, prime factorization: 2 * 5"}
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>For the equation `3x + 15 = 45`:
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>- **x = 10**
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>- Prime factorization: **2 × 5**
 </code></pre></div>
-<h3 id="2-live-web-search-factual-lookups">2. Live Web Search &amp; Factual Lookups</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>oj&gt; What are the primary features released in Python 3.13?
+<h3 id="2-live-web-search-extraction">2. Live Web Search &amp; Extraction</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>oj&gt; Search for Python 3.14 release schedule
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  ↳ routing: generalist → knowledge
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  ⚙ tool: search_web {"query": "Python 3.13 key features release"}
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    → [{"title": "What's New In Python 3.13", ...}]
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>Python 3.13 introduces several notable features:
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>1. An experimental free-threaded build (disabling the GIL).
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>2. A preliminary Just-In-Time (JIT) compiler.
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>3. Enhanced interactive REPL with multi-line editing and color support.
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>4. Improved error messages and typing improvements.
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  [root] ⚙ spawn_agent {"role": "researcher", "task": "Find Python 3.14 release schedule details"}
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    → Agent 'agent-researcher' spawned
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  [agent-researcher] ⚙ search_web {"query": "Python 3.14 release schedule PEP 745"}
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    → [{"title": "PEP 745 – Python 3.14 Release Schedule", "url": "https://peps.python.org/pep-0745/", ...}]
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>  [agent-researcher] ⚙ fetch_url {"url": "https://peps.python.org/pep-0745/"}
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    → "..."
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>  [agent-researcher] ⚙ report_findings {"recipient": "root", "findings": "Python 3.14 alpha/beta schedule and final release target"}
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    → Findings delivered to 'root'
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>  [agent-researcher] ⚙ exit_agent {"status": "success"}
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    → Agent 'agent-researcher' terminated
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>  [root] ⚙ complete_task {"summary": "Extracted release dates from PEP 745"}
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>Python 3.14 is scheduled under PEP 745 with the final release targeted for October 2025...
 </code></pre></div>
-<h3 id="3-software-engineering-code-generation">3. Software Engineering &amp; Code Generation</h3>
-<p><div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>oj&gt; Write a Python function to validate and format an email address
+<h3 id="3-repository-inspection-file-operations">3. Repository Inspection &amp; File Operations</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>oj&gt; Inspect src/openjarvis/permissions.py and list the supported permission modes
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>  ↳ routing: generalist → code
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>Here is a robust function to validate and normalize email addresses:
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>```python
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>import re
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>def normalize_email(email: str) -&gt; str | None:
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    """Validate and lower-case an email address. Returns None if invalid."""
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>    email = email.strip()
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>    if re.match(pattern, email):
-<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>        return email.lower()
-<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>    return None
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>  [root] ⚙ spawn_agent {"role": "coder", "task": "Inspect permissions.py for supported modes"}
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    → Agent 'agent-coder' spawned
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>  [agent-coder] ⚙ search_in_files {"pattern": "def check", "path": "src/openjarvis/permissions.py"}
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    → "Line 100: def check(self, tool_name: str, ...)"
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>  [agent-coder] ⚙ read_file {"file_path": "src/openjarvis/permissions.py", "start_line": 140, "line_count": 30}
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    → "..."
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>  [agent-coder] ⚙ report_findings {"recipient": "root", "findings": "PermissionManager supports: interactive, autonomous, allowlist"}
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    → Findings delivered to 'root'
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>  [agent-coder] ⚙ exit_agent {"status": "success"}
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>    → Agent 'agent-coder' terminated
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>  [root] ⚙ complete_task {"summary": "Extracted permission modes from permissions.py"}
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>`src/openjarvis/permissions.py` defines three operational modes:
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>1. `interactive`: Prompts user confirmation before executing unlisted tools.
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>2. `autonomous`: Automatically executes allowed tools, constrained by pattern rules and the safety classifier.
+<a id="__codelineno-4-18" name="__codelineno-4-18" href="#__codelineno-4-18"></a>3. `allowlist`: Restricts automatic execution strictly to tools in `allowed_tools`.
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>### 4. File Operations &amp; Local Inspection
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>```text
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>oj&gt; Read the first 10 lines of config.yaml
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>  ↳ routing: generalist → code
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>  ⚙ tool: read_file {"path": "config.yaml", "max_chars": 500}
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    → "max_hops: 10\ngeneralist:\n..."
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>Here are the first lines of `config.yaml`:
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>```yaml
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>max_hops: 10
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>generalist:
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>  name: "generalist"
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>---
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>## Understanding Routing
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>When OpenJarvis processes a request, it displays real-time routing hops in dim text:
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>```text
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>  ↳ routing: generalist → math
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>  ⚙ tool: evaluate_expression {"expression": "..."}
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>  ↳ routing: math → code
-</code></pre></div></p>
+<hr />
+<h2 id="event-trace-indicators">Event Trace Indicators</h2>
+<p>During execution, the CLI displays real-time event logs detailing agent lifecycle steps:</p>
 <ul>
-<li><code>↳ routing: generalist → &lt;specialist&gt;</code>: Indicates the generalist routed the task to a specialist.</li>
-<li><code>⚙ tool: &lt;name&gt;</code>: Indicates a specialist called a built-in tool via function calling.</li>
-<li><code>↳ routing: &lt;specialist&gt; → &lt;specialist&gt;</code>: Indicates approved delegation between specialists.</li>
+<li><code>[&lt;agent-id&gt;] ⚙ spawn_agent</code>: A parent conductor creates a child agent with a specific role and task.</li>
+<li><code>[&lt;agent-id&gt;] ⚙ connect_agents</code>: An agent establishes communication edges with another node in the graph topology.</li>
+<li><code>[&lt;agent-id&gt;] ⚙ &lt;tool_name&gt;</code>: An agent executes a registered tool.</li>
+<li><code>[&lt;agent-id&gt;] ⚙ report_findings</code>: An agent delivers intermediate results to a recipient mailbox.</li>
+<li><code>[&lt;agent-id&gt;] ⚙ exit_agent</code>: An agent terminates its execution node.</li>
+<li><code>[&lt;agent-id&gt;] ⚙ complete_task</code>: The root coordinator concludes task execution and outputs the final response.</li>
 </ul>
 <hr />
-<h2 id="best-practices">Best Practices</h2>
-<ol>
-<li><strong>Ask in Natural Language</strong>: You do not need special commands to trigger tools. The models recognize when calculations, web lookups, or file reads are required.</li>
-<li><strong>Multi-line Editing</strong>: Press <code>Escape</code> followed by <code>Enter</code> to create a new line before submitting.</li>
-<li><strong>Session Notes</strong>: You can ask OpenJarvis to remember information within a session:</li>
-<li><em>"Remember that my target deployment region is us-east-1"</em></li>
-<li><em>"What deployment region did I specify earlier?"</em></li>
-<li><strong>Exit</strong>: Type <code>exit</code>, <code>quit</code>, or press <code>Ctrl+D</code> to end the session.</li>
-</ol>
+<h2 id="non-interactive-scripted-usage">Non-Interactive &amp; Scripted Usage</h2>
+<p>To run OpenJarvis headlessly (e.g., inside automated CI workflows or shell scripts), provide the prompt with <code>-p</code> and enable automatic tool approvals with <code>-y</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>openjarvis<span class="w"> </span>-y<span class="w"> </span>-p<span class="w"> </span><span class="s2">"Run pytest on tests/test_tools.py and report status"</span>
+</code></pre></div>
 <hr />
 <h2 id="next-steps">Next Steps</h2>
 <ul>
-<li><strong><a href="../../configuration/overview/">Configuration Overview →</a></strong> — Customizing models and providers</li>
-<li><strong><a href="../../tools/overview/">Built-in Tools Reference →</a></strong> — Detailed parameters for all 49 tools</li>
-<li><strong><a href="../../troubleshooting/">Troubleshooting Guide →</a></strong> — Common questions and solutions</li>
+<li><strong><a href="../../configuration/overview/">Configuration Overview →</a></strong> — Customizing agent profiles and parameters.</li>
+<li><strong><a href="../../usage/routing/">Multi-Agent Consensus &amp; Topology →</a></strong> — In-depth guide to the actor architecture.</li>
+<li><strong><a href="../../security/">Security &amp; Guardrails →</a></strong> — Safety settings and argument validation.</li>
 </ul>
 
 

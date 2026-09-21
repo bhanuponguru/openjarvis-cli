@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#security-sandboxing-permissions" class="md-skip">
+        <a href="#security-permissions-guardrails" class="md-skip">
           Skip to content
         </a>
       
@@ -1311,10 +1311,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-permission-approval-modes" class="md-nav__link">
+  <a href="#1-operating-modes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Permission Approval Modes
+        1. Operating Modes
       
     </span>
   </a>
@@ -1322,10 +1322,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-granular-rules-path-constraints" class="md-nav__link">
+  <a href="#2-configuration-schema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Granular Rules &amp; Path Constraints
+        2. Configuration Schema
       
     </span>
   </a>
@@ -1333,10 +1333,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-subprocess-isolation-timeouts" class="md-nav__link">
+  <a href="#3-evaluation-precedence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Subprocess Isolation &amp; Timeouts
+        3. Evaluation Precedence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-persisted-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Persisted Permissions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-subprocess-boundaries-timeouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Subprocess Boundaries &amp; Timeouts
       
     </span>
   </a>
@@ -1459,10 +1481,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1-permission-approval-modes" class="md-nav__link">
+  <a href="#1-operating-modes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Permission Approval Modes
+        1. Operating Modes
       
     </span>
   </a>
@@ -1470,10 +1492,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-granular-rules-path-constraints" class="md-nav__link">
+  <a href="#2-configuration-schema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Granular Rules &amp; Path Constraints
+        2. Configuration Schema
       
     </span>
   </a>
@@ -1481,10 +1503,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-subprocess-isolation-timeouts" class="md-nav__link">
+  <a href="#3-evaluation-precedence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Subprocess Isolation &amp; Timeouts
+        3. Evaluation Precedence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-persisted-permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Persisted Permissions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-subprocess-boundaries-timeouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Subprocess Boundaries &amp; Timeouts
       
     </span>
   </a>
@@ -1511,54 +1555,127 @@
   
 
 
-<h1 id="security-sandboxing-permissions">Security, Sandboxing &amp; Permissions</h1>
-<p>OpenJarvis CLI implements an execution permission manager to ensure that autonomous tool executions (terminal bash commands, file modifications, code evaluation) remain safe and user-controlled.</p>
+<h1 id="security-permissions-guardrails">Security, Permissions &amp; Guardrails</h1>
+<p>OpenJarvis CLI implements an execution permission manager to ensure that autonomous tool invocations (terminal commands, file writes, code execution) adhere to configured safety policies.</p>
 <hr />
-<h2 id="1-permission-approval-modes">1. Permission Approval Modes</h2>
-<p>The permission manager intercepts every tool invocation before execution and supports three operating modes:</p>
+<h2 id="1-operating-modes">1. Operating Modes</h2>
+<p>The permission manager intercepts tool invocations prior to dispatch and evaluates them against the configured mode:</p>
 <table>
 <thead>
 <tr>
 <th style="text-align: left;">Mode</th>
-<th style="text-align: left;">Behavior</th>
-<th style="text-align: left;">Best Used For</th>
+<th style="text-align: left;">Evaluation Logic</th>
+<th style="text-align: left;">Default Action</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align: left;"><strong><code>prompt</code></strong> (Default)</td>
-<td style="text-align: left;">Interactively asks the user to approve each tool call before execution.</td>
-<td style="text-align: left;">General daily interactive terminal usage.</td>
+<td style="text-align: left;"><strong><code>interactive</code></strong> (Default)</td>
+<td style="text-align: left;">Evaluates blocklists, remembered decisions, and rules. If unapproved, prompts the user interactively in the terminal for confirmation.</td>
+<td style="text-align: left;">Prompt for user confirmation.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong><code>auto_allow</code></strong></td>
-<td style="text-align: left;">Automatically approves matching tools without prompting.</td>
-<td style="text-align: left;">Headless CI/CD automation or trusted local scripts.</td>
+<td style="text-align: left;"><strong><code>autonomous</code></strong></td>
+<td style="text-align: left;">Executes allowed tools automatically. If a safety classifier is loaded, evaluates risky commands before execution. Blocklists and deny rules take precedence.</td>
+<td style="text-align: left;">Auto-allow execution.</td>
 </tr>
 <tr>
-<td style="text-align: left;"><strong><code>deny_all</code></strong></td>
-<td style="text-align: left;">Rejects all tool executions; models can only respond with text.</td>
-<td style="text-align: left;">Strict read-only inspection or untrusted environments.</td>
+<td style="text-align: left;"><strong><code>allowlist</code></strong></td>
+<td style="text-align: left;">Only tools explicitly enumerated in <code>allowed_tools</code> execute without confirmation. All unlisted tools trigger confirmation prompts.</td>
+<td style="text-align: left;">Prompt if not explicitly allowlisted.</td>
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="2-granular-rules-path-constraints">2. Granular Rules &amp; Path Constraints</h2>
-<p>Permissions can be configured per-tool with exact argument constraints:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">permissions</span><span class="p">:</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="s">"prompt"</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">allow_patterns</span><span class="p">:</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">tool</span><span class="p">:</span><span class="w"> </span><span class="s">"str_replace_editor"</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">      </span><span class="nt">arg_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">"^(src|tests)/"</span><span class="w">  </span><span class="c1"># Only allow edits within src and tests</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">tool</span><span class="p">:</span><span class="w"> </span><span class="s">"execute_bash"</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="nt">arg_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">"^(git</span><span class="nv"> </span><span class="s">status|pytest|ruff)"</span><span class="w"> </span><span class="c1"># Allow safe dev commands</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">deny_patterns</span><span class="p">:</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">tool</span><span class="p">:</span><span class="w"> </span><span class="s">"execute_bash"</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">      </span><span class="nt">arg_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">"(rm</span><span class="nv"> </span><span class="s">-rf|mkfs|sudo)"</span><span class="w"> </span><span class="c1"># Block catastrophic commands</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Launch with autonomous execution (equivalent to -y / --auto-approve)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>openjarvis<span class="w"> </span>--mode<span class="w"> </span>autonomous
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># Launch with interactive confirmation prompts</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>openjarvis<span class="w"> </span>--mode<span class="w"> </span>interactive
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Headless / CI execution with auto-approval</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>openjarvis<span class="w"> </span>-y<span class="w"> </span>-p<span class="w"> </span><span class="s2">"Run pytest and lint checks"</span>
 </code></pre></div>
 <hr />
-<h2 id="3-subprocess-isolation-timeouts">3. Subprocess Isolation &amp; Timeouts</h2>
-<p>Tools that execute shell or subprocess commands (e.g. <code>execute_bash</code>, <code>run_python</code>) enforce strict timeouts (default: 30 seconds) to prevent infinite loops, hanging commands, or rogue subprocesses.</p>
+<h2 id="2-configuration-schema">2. Configuration Schema</h2>
+<p>Permission policies are defined under the <code>tool_permissions</code> block in <code>.openjarvis/config.yaml</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># .openjarvis/config.yaml</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">tool_permissions</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="s">"interactive"</span><span class="w">  </span><span class="c1"># interactive | autonomous | allowlist</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="c1"># Tools permitted to execute without prompts in allowlist mode</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">allowed_tools</span><span class="p">:</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">read_file</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">search_dir</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">search_in_files</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">find_file</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">git_status</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">git_diff</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">  </span><span class="c1"># Tools explicitly forbidden from executing</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="nt">blocked_tools</span><span class="p">:</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">delete_file</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">  </span><span class="c1"># Granular argument-level pattern rules (evaluated via fnmatch)</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">  </span><span class="nt">rules</span><span class="p">:</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">    </span><span class="nt">bash</span><span class="p">:</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">      </span><span class="nt">argument_patterns</span><span class="p">:</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">            </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="s">"git</span><span class="nv"> </span><span class="s">status*"</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">          </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">"allow"</span>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">            </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="s">"pytest*"</span>
+<a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a><span class="w">          </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">"allow"</span>
+<a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">            </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="s">"rm</span><span class="nv"> </span><span class="s">-rf*"</span>
+<a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="w">          </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">"deny"</span>
+<a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="w">      </span><span class="nt">default_action</span><span class="p">:</span><span class="w"> </span><span class="s">"confirm"</span>
+<a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
+<a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">    </span><span class="nt">str_replace_editor</span><span class="p">:</span>
+<a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a><span class="w">      </span><span class="nt">argument_patterns</span><span class="p">:</span>
+<a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span>
+<a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="w">            </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">"src/*"</span>
+<a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="w">          </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">"allow"</span>
+<a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">match</span><span class="p">:</span>
+<a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="w">            </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">"tests/*"</span>
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="w">          </span><span class="nt">action</span><span class="p">:</span><span class="w"> </span><span class="s">"allow"</span>
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="w">      </span><span class="nt">default_action</span><span class="p">:</span><span class="w"> </span><span class="s">"confirm"</span>
+</code></pre></div>
+<hr />
+<h2 id="3-evaluation-precedence">3. Evaluation Precedence</h2>
+<p>When a tool invocation is intercepted, <code>PermissionManager.check()</code> evaluates the request in the following order:</p>
+<ol>
+<li><strong>Global Blocklist</strong>: If <code>tool_name</code> is in <code>blocked_tools</code>, the execution is immediately denied (<code>action="deny"</code>).</li>
+<li><strong>Remembered Decisions</strong>: If the user previously selected "Always Allow" or "Always Block" in interactive mode, the persisted decision from <code>permissions.yaml</code> is applied.</li>
+<li><strong>MAS Meta-Tools</strong>: Internal multi-agent coordination tools (<code>spawn_agent</code>, <code>connect_agents</code>, <code>report_findings</code>, <code>exit_agent</code>, <code>complete_task</code>) are engine coordination primitives and are unconditionally allowed (<code>action="allow"</code>).</li>
+<li><strong>Argument Pattern Rules</strong>: If the tool has entry in <code>rules</code>, <code>argument_patterns</code> are evaluated sequentially using <code>fnmatch</code>. The first matching pattern returns its specified action (<code>allow</code>, <code>deny</code>, or <code>confirm</code>). If none match, <code>default_action</code> applies.</li>
+<li><strong>Global Allowlist</strong>: If <code>tool_name</code> is in <code>allowed_tools</code>, execution is allowed.</li>
+<li><strong>Safety Classifier (Autonomous Mode)</strong>: If running in <code>autonomous</code> mode and a safety classifier model is active, the classifier evaluates the tool name, arguments, and user intent.</li>
+<li><strong>Mode Default Fallback</strong>:</li>
+<li><code>autonomous</code>: Allows execution.</li>
+<li><code>allowlist</code>: Returns <code>confirm</code> (not in allowlist).</li>
+<li><code>interactive</code>: Returns <code>confirm</code>.</li>
+</ol>
+<hr />
+<h2 id="4-persisted-permissions">4. Persisted Permissions</h2>
+<p>Interactive decisions can be saved across sessions. When a user confirms or denies a tool in the terminal, the decision can be persisted to:</p>
+<ul>
+<li>Workspace scope: <code>.openjarvis/config/permissions.yaml</code></li>
+<li>Global scope: <code>~/.openjarvis/config/permissions.yaml</code></li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># .openjarvis/config/permissions.yaml</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">interactive</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nt">allowed_tools</span><span class="p">:</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">read_file</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">search_in_files</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="nt">blocked_tools</span><span class="p">:</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">delete_file</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="nt">remembered_decisions</span><span class="p">:</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">run_pytest</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">allow</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="nt">execute_bash</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">confirm</span>
+</code></pre></div>
+<hr />
+<h2 id="5-subprocess-boundaries-timeouts">5. Subprocess Boundaries &amp; Timeouts</h2>
+<p>Tools that invoke local subprocesses (<code>bash</code>, <code>run_shell</code>, <code>run_python</code>, <code>run_pytest</code>) enforce subprocess timeouts (default: 30 seconds) to prevent hung processes, unhandled loops, and unresponsive commands. Non-zero exit codes and standard error streams are returned directly into the agent context for error handling.</p>
 
 
 

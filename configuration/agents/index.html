@@ -837,10 +837,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#dynamic-runtime-agents" class="md-nav__link">
+  <a href="#dynamic-runtime-instantiation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dynamic Runtime Agents
+        Dynamic Runtime Instantiation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exit-hierarchy-invariants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit Hierarchy Invariants
       
     </span>
   </a>
@@ -1584,10 +1595,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#dynamic-runtime-agents" class="md-nav__link">
+  <a href="#dynamic-runtime-instantiation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dynamic Runtime Agents
+        Dynamic Runtime Instantiation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exit-hierarchy-invariants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit Hierarchy Invariants
       
     </span>
   </a>
@@ -1615,68 +1637,78 @@
 
 
 <h1 id="agents-profiles-configuration">Agents &amp; Profiles Configuration</h1>
-<p>OpenJarvis models every node in the Multi-Agent System (MAS) as an autonomous <strong>Conductor</strong> instance. Agents are declared under the <code>agents:</code> section in your configuration, alongside the top-level <code>root_agent:</code>.</p>
+<p>OpenJarvis models execution nodes in the Multi-Agent System (MAS) as autonomous <strong>Conductor</strong> instances. Profiles are declared under <code>agents:</code> and <code>root_agent:</code> in the configuration file.</p>
 <hr />
 <h2 id="agent-configuration-schema">Agent Configuration Schema</h2>
-<p>Each agent profile specifies its identity, persona, execution limits, and scoped access to tools and specialists:</p>
+<p>Each profile under <code>agents:</code> configures persona, model hyperparameters, execution boundaries, and permitted tools:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">agents</span><span class="p">:</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&lt;agent_name&gt;</span><span class="p">:</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"&lt;agent_name&gt;"</span><span class="w">            </span><span class="c1"># Unique identifier / role label</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="s">"&lt;role&gt;"</span><span class="w">                  </span><span class="c1"># Functional role (e.g. researcher, coder, math, planner)</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"..."</span><span class="w">              </span><span class="c1"># Human-readable summary of capability</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span><span class="w">                </span><span class="c1"># Instruction set defining mission, behavior, and boundaries</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"&lt;agent_name&gt;"</span><span class="w">            </span><span class="c1"># Profile identifier</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">role</span><span class="p">:</span><span class="w"> </span><span class="s">"&lt;role&gt;"</span><span class="w">                  </span><span class="c1"># Functional role label (e.g. researcher, coder, math)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"..."</span><span class="w">              </span><span class="c1"># Summary of role capabilities</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">system_prompt</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span><span class="w">                </span><span class="c1"># System prompt instructions defining role boundaries</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="no">You are the ...</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="s">"openai"</span><span class="w">              </span><span class="c1"># LLM provider (openai, anthropic, google, ollama, custom)</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nt">provider</span><span class="p">:</span><span class="w"> </span><span class="s">"openai"</span><span class="w">              </span><span class="c1"># Provider type (openai, anthropic, gemini, ollama)</span>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nt">base_url</span><span class="p">:</span><span class="w"> </span><span class="s">"https://api.openai.com/v1"</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="s">"gpt-4o"</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="nt">api_key_env</span><span class="p">:</span><span class="w"> </span><span class="s">"OPENAI_API_KEY"</span><span class="w">   </span><span class="c1"># Environment variable holding API key</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="nt">temperature</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0</span><span class="w">                </span><span class="c1"># Temperature (0.0 for deterministic, higher for creative)</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60.0</span><span class="w">                   </span><span class="c1"># Per-request timeout in seconds</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="nt">max_hops</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w">                    </span><span class="c1"># Hop limit for this agent's internal Conductor</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="nt">tools</span><span class="p">:</span><span class="w">                          </span><span class="c1"># Scoped tool list (null for full registry access)</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"str_replace_editor"</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"bash"</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"execute_python"</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">    </span><span class="nt">allowed_specialists</span><span class="p">:</span><span class="w">            </span><span class="c1"># Scoped domain specialists for inner delegation</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"math"</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="nt">temperature</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span><span class="w">                </span><span class="c1"># Sampling temperature</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="nt">max_tokens</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4096</span><span class="w">                </span><span class="c1"># Maximum generation tokens</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">60.0</span><span class="w">                   </span><span class="c1"># Per-request HTTP timeout in seconds</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="nt">max_hops</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w">                    </span><span class="c1"># Hop limit for this agent's internal conductor turn</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">    </span><span class="nt">tools</span><span class="p">:</span><span class="w">                          </span><span class="c1"># Permitted tool list (null permits all tools)</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"str_replace_editor"</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"bash"</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"run_python"</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">"run_pytest"</span>
 </code></pre></div>
 <hr />
 <h2 id="canonical-agent-profiles">Canonical Agent Profiles</h2>
-<p>OpenJarvis ships with four standard pre-configured agent profiles:</p>
 <h3 id="1-researcher-researcher">1. Researcher (<code>researcher</code>)</h3>
 <ul>
-<li><strong>Role</strong>: Factual verification, academic literature search, documentation retrieval.</li>
-<li><strong>Default Tools</strong>: <code>fetch_webpage</code>, <code>search_web</code>, <code>query_wikipedia</code>.</li>
-<li><strong>Mission</strong>: Ingests external web data, summarizes findings, and reports them to neighbor agents.</li>
+<li><strong>Role</strong>: Factual verification, web searches, and documentation lookup.</li>
+<li><strong>Default Tools</strong>: <code>search_web</code>, <code>fetch_url</code>, <code>fetch_wikipedia</code>, <code>read_file</code>.</li>
+<li><strong>Function</strong>: Ingests external web data, summarizes findings, and passes structured summaries to neighbor agents via <code>report_findings</code>.</li>
 </ul>
 <h3 id="2-coder-coder">2. Coder (<code>coder</code>)</h3>
 <ul>
-<li><strong>Role</strong>: Software engineering, testing, debugging, architecture, refactoring.</li>
-<li><strong>Default Tools</strong>: <code>str_replace_editor</code>, <code>bash</code>, <code>execute_python</code>, <code>lint_python_code</code>, <code>git_status</code>, <code>git_diff</code>.</li>
-<li><strong>Mission</strong>: Writes, inspects, and verifies code; produces software deliverables as artifacts upon exit.</li>
+<li><strong>Role</strong>: Software engineering, file editing, syntax verification, and test execution.</li>
+<li><strong>Default Tools</strong>: <code>str_replace_editor</code>, <code>bash</code>, <code>run_python</code>, <code>run_pytest</code>, <code>lint_python</code>, <code>git_status</code>, <code>git_diff</code>, <code>apply_patch</code>.</li>
+<li><strong>Function</strong>: Inspects, edits, and verifies source code. Generates code deliverables and test outputs.</li>
 </ul>
 <h3 id="3-math-specialist-math">3. Math Specialist (<code>math</code>)</h3>
 <ul>
-<li><strong>Role</strong>: Formal derivations, quantitative reasoning, arithmetic, statistical analysis.</li>
-<li><strong>Default Tools</strong>: <code>calculator</code>, <code>evaluate_expression</code>, <code>solve_linear_equation</code>, <code>solve_quadratic_equation</code>, <code>convert_units</code>, <code>compute_statistics</code>.</li>
-<li><strong>Mission</strong>: Solves numeric problems with symbolic precision and shares mathematical derivations.</li>
+<li><strong>Role</strong>: Quantitative reasoning, arithmetic, symbolic algebra, and unit conversion.</li>
+<li><strong>Default Tools</strong>: <code>evaluate_expression</code>, <code>solve_equation</code>, <code>convert_units</code>, <code>prime_factorize</code>.</li>
+<li><strong>Function</strong>: Solves numeric expressions and equation systems with symbolic precision.</li>
 </ul>
 <h3 id="4-planner-planner">4. Planner (<code>planner</code>)</h3>
 <ul>
-<li><strong>Role</strong>: High-level task decomposition, critical path analysis, dependency graphs.</li>
-<li><strong>Default Tools</strong>: <code>get_current_time</code>, <code>calculate_date_difference</code>.</li>
-<li><strong>Mission</strong>: Decomposes complex user goals into sub-tasks for sibling agents to execute.</li>
+<li><strong>Role</strong>: Task decomposition, timeline analysis, and schedule tracking.</li>
+<li><strong>Default Tools</strong>: <code>get_current_datetime</code>, <code>date_arithmetic</code>, <code>days_between</code>, <code>format_datetime</code>.</li>
+<li><strong>Function</strong>: Evaluates milestone dependencies and decomposes user goals into structured sub-tasks.</li>
 </ul>
 <hr />
-<h2 id="dynamic-runtime-agents">Dynamic Runtime Agents</h2>
-<p>In addition to static profiles declared in <code>.openjarvis/config.yaml</code>, the Root Agent (and intermediate agents) can dynamically instantiate custom agents at runtime using the <code>spawn_agent</code> tool:</p>
+<h2 id="dynamic-runtime-instantiation">Dynamic Runtime Instantiation</h2>
+<p>Agents can dynamically spawn subordinate agents using the <code>spawn_agent</code> meta-tool:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"auditor"</span><span class="p">,</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">"task"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Audit src/security.py for potential SQL and command injections"</span><span class="p">,</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">"agent_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"security_auditor_1"</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">}</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"coder"</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">"task"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Refactor src/permissions.py to support regex patterns"</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">"agent_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"coder_refactor_1"</span><span class="p">,</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">"connect_to"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"researcher_1"</span><span class="p">]</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">}</span>
 </code></pre></div>
-<p>If the role matches a declared profile in <code>agents:</code>, the spawned agent inherits that profile's configurations. If an undeclared role is requested, OpenJarvis automatically constructs a custom Conductor with a dedicated persona prompt matching the assignment.</p>
+<ul>
+<li><strong>Known Profile Resolution</strong>: If <code>role</code> matches a declared profile under <code>agents:</code> (or a recognized role alias such as <code>code</code> -&gt; <code>coder</code>), the child node inherits that profile's model, temperature, and permitted tool allowlist.</li>
+<li><strong>Dynamic Profile Fallback</strong>: If an undeclared role is passed, OpenJarvis constructs an agent node with root model defaults and generates a role-tailored persona prompt.</li>
+</ul>
+<hr />
+<h2 id="exit-hierarchy-invariants">Exit Hierarchy Invariants</h2>
+<ol>
+<li><strong>Child Lifetime Precedence</strong>: A parent agent cannot exit while any spawned child agents remain in an active state.</li>
+<li><strong>Deliverable Publishing</strong>: When a child agent calls <code>exit_agent</code>, its output artifact is saved to the content-addressable <code>ArtifactStore</code>, and notification envelopes are dispatched to connected neighbors.</li>
+<li><strong>Task Completion</strong>: The root coordinator must verify that all child nodes have exited before issuing <code>complete_task</code>.</li>
+</ol>
 
 
 

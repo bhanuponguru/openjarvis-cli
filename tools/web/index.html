@@ -1856,11 +1856,10 @@
 <p>You don't need to call tools manually — models invoke them automatically when answering prompts that require real-time knowledge or web content:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>oj&gt; What's the latest price of Bitcoin?
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  ↳ routing: generalist → knowledge
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  ⚙ tool: search_web {"query": "Bitcoin price current USD"}
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    → [{"title": "Bitcoin Price...", "url": "...", "snippet": "..."}]
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>The current price of Bitcoin is approximately $65,000 USD...
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  [agent-researcher] ⚙ search_web {"query": "Bitcoin price current USD"}
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    → [{"title": "Bitcoin Price...", "url": "...", "snippet": "..."}]
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>The current price of Bitcoin is approximately $65,000 USD...
 </code></pre></div>
 <hr />
 <h2 id="rate-limits-privacy">Rate Limits &amp; Privacy</h2>

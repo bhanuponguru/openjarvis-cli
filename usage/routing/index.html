@@ -1279,10 +1279,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#architecture-communication-graph" class="md-nav__link">
+  <a href="#1-actor-architecture-topology-graph" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Architecture &amp; Communication Graph
+        1. Actor Architecture &amp; Topology Graph
       
     </span>
   </a>
@@ -1290,15 +1290,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#multi-agent-meta-tools" class="md-nav__link">
+  <a href="#2-the-5-coordination-meta-tools" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Multi-Agent Meta-Tools
+        2. The 5 Coordination Meta-Tools
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Multi-Agent Meta-Tools">
+    <nav class="md-nav" aria-label="2. The 5 Coordination Meta-Tools">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1324,10 +1324,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-report_findings-consensus-mechanism" class="md-nav__link">
+  <a href="#3-report_findings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. report_findings (Consensus Mechanism)
+        3. report_findings
       
     </span>
   </a>
@@ -1335,10 +1335,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-exit_agent-strict-bottom-up-lifecycle" class="md-nav__link">
+  <a href="#4-exit_agent-non-root-agents" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. exit_agent (Strict Bottom-Up Lifecycle)
+        4. exit_agent (Non-Root Agents)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-complete_task-root-coordinator-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. complete_task (Root Coordinator Only)
       
     </span>
   </a>
@@ -1351,10 +1362,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#root-agent-user-interaction" class="md-nav__link">
+  <a href="#3-asynchronous-actor-engine-mailboxes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Root Agent &amp; User Interaction
+        3. Asynchronous Actor Engine &amp; Mailboxes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-strict-bottom-up-exit-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Strict Bottom-Up Exit Invariant
       
     </span>
   </a>
@@ -1512,10 +1534,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#architecture-communication-graph" class="md-nav__link">
+  <a href="#1-actor-architecture-topology-graph" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Architecture &amp; Communication Graph
+        1. Actor Architecture &amp; Topology Graph
       
     </span>
   </a>
@@ -1523,15 +1545,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#multi-agent-meta-tools" class="md-nav__link">
+  <a href="#2-the-5-coordination-meta-tools" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Multi-Agent Meta-Tools
+        2. The 5 Coordination Meta-Tools
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Multi-Agent Meta-Tools">
+    <nav class="md-nav" aria-label="2. The 5 Coordination Meta-Tools">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1557,10 +1579,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-report_findings-consensus-mechanism" class="md-nav__link">
+  <a href="#3-report_findings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. report_findings (Consensus Mechanism)
+        3. report_findings
       
     </span>
   </a>
@@ -1568,10 +1590,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#4-exit_agent-strict-bottom-up-lifecycle" class="md-nav__link">
+  <a href="#4-exit_agent-non-root-agents" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. exit_agent (Strict Bottom-Up Lifecycle)
+        4. exit_agent (Non-Root Agents)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-complete_task-root-coordinator-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. complete_task (Root Coordinator Only)
       
     </span>
   </a>
@@ -1584,10 +1617,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#root-agent-user-interaction" class="md-nav__link">
+  <a href="#3-asynchronous-actor-engine-mailboxes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Root Agent &amp; User Interaction
+        3. Asynchronous Actor Engine &amp; Mailboxes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-strict-bottom-up-exit-invariant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Strict Bottom-Up Exit Invariant
       
     </span>
   </a>
@@ -1615,51 +1659,93 @@
 
 
 <h1 id="multi-agent-topology-consensus-protocol">Multi-Agent Topology &amp; Consensus Protocol</h1>
-<p>OpenJarvis operates as a <strong>hierarchical, dynamic Multi-Agent System (MAS)</strong>. Rather than relying on a single static routing chain, tasks are executed across a dynamic graph of autonomous <strong>Conductor</strong> agents coordinated via an asynchronous actor engine.</p>
+<p>OpenJarvis operates as a hierarchical, dynamic Multi-Agent System (MAS). Complex tasks are resolved across a directed graph of autonomous <strong>Conductor</strong> actor nodes coordinated via an asynchronous message-passing engine.</p>
 <hr />
-<h2 id="architecture-communication-graph">Architecture &amp; Communication Graph</h2>
+<h2 id="1-actor-architecture-topology-graph">1. Actor Architecture &amp; Topology Graph</h2>
 <pre class="mermaid"><code>graph TD
-    User([User / CLI]) &lt;--&gt; Root["Root Agent (Conductor)"]
+    User([User Prompt / Task]) &lt;--&gt; Root["Root Coordinator (Conductor)"]
 
     subgraph MultiAgentGraph ["Dynamic Actor Graph"]
         Root -- "spawn_agent" --&gt; AgentA["Agent: Researcher"]
         Root -- "spawn_agent" --&gt; AgentB["Agent: Architect"]
         AgentA -- "connect_agents" --&gt; AgentB
 
-        AgentA -- "spawn_agent" --&gt; AgentC["Agent: DeepScraper"]
+        AgentA -- "spawn_agent" --&gt; AgentC["Agent: CodeWorker"]
 
         AgentC -. "report_findings / exit_agent (Artifact)" .-&gt; AgentA
         AgentA -. "report_findings / exit_agent (Artifact)" .-&gt; Root
         AgentB -. "report_findings / exit_agent (Artifact)" .-&gt; Root
     end
 
-    Root -- "final synthesized response + artifacts" --&gt; User</code></pre>
+    Root -- "complete_task (Response &amp; Artifacts)" --&gt; User</code></pre>
 <hr />
-<h2 id="multi-agent-meta-tools">Multi-Agent Meta-Tools</h2>
-<p>Agents coordinate through four primary meta-tools exposed directly into each Conductor's tool registry:</p>
+<h2 id="2-the-5-coordination-meta-tools">2. The 5 Coordination Meta-Tools</h2>
+<p>All agent conductor nodes are provisioned with engine-level meta-tools that manipulate the graph topology, exchange messages, and regulate lifecycle transitions:</p>
 <h3 id="1-spawn_agent">1. <code>spawn_agent</code></h3>
-<p>Spawns a subordinate agent to tackle a specialized sub-task:
-- <strong>Default Hierarchy</strong>: An edge between the spawner and spawnee is created automatically.
-- <strong>Role Profiles</strong>: Spawns can reference pre-configured profiles from <code>config.yaml</code> (<code>researcher</code>, <code>coder</code>, <code>math</code>, <code>planner</code>) or declare ad-hoc roles with custom objectives.
-- <strong>Safety Bounds</strong>: Rejects requests that exceed <code>max_spawn_depth</code> or <code>max_active_agents</code>.</p>
+<p>Instantiates a new subordinate Conductor actor node in the graph:
+- <strong>Parameters</strong>:
+  - <code>role</code> (string, required): Profile name (e.g. <code>researcher</code>, <code>coder</code>, <code>math</code>, <code>planner</code>) or custom role identifier.
+  - <code>task</code> (string, required): Task description and deliverables expectation for the spawned agent.
+  - <code>agent_id</code> (string, optional): Unique node identifier. Auto-generated if omitted.
+  - <code>connect_to</code> (list[string], optional): Additional agent IDs to link with in the graph.
+- <strong>Topology Behavior</strong>: A directed edge is automatically created between the spawner and the spawned node.
+- <strong>Constraints</strong>: Rejects invocations exceeding <code>limits.max_spawn_depth</code> or <code>limits.max_active_agents</code>.</p>
 <h3 id="2-connect_agents">2. <code>connect_agents</code></h3>
-<p>Wires communication edges between any two agents in the graph:
-- Enables cross-team collaboration (e.g. connecting a <code>coder</code> directly with an active <code>researcher</code>).</p>
-<h3 id="3-report_findings-consensus-mechanism">3. <code>report_findings</code> (Consensus Mechanism)</h3>
-<p>Enables peer-to-peer consensus across graph neighbors:
-- Agents broadcast significant evidence, calculations, or milestones to their connected neighbors.
-- Neighbors receive these findings in their actor queues and incorporate them into their ongoing turns.</p>
-<h3 id="4-exit_agent-strict-bottom-up-lifecycle">4. <code>exit_agent</code> (Strict Bottom-Up Lifecycle)</h3>
-<p>Concludes an agent's assignment and emits its deliverable:
-- <strong>Strict Bottom-Up Constraint</strong>: An agent <strong>cannot</strong> exit while any child agent it spawned remains active. Parents must wait for their children to finish and deliver their artifacts.
-- <strong>Artifact Emission</strong>: Upon exit, the agent generates a structured <code>AgentArtifact</code> (Markdown report, code patch, or data JSON).
-- <strong>Neighbor Broadcast</strong>: The exit artifact is automatically forwarded to all connected neighbor agents and saved to <code>.openjarvis/artifacts/</code>.</p>
+<p>Creates a bidirectional communication channel between two nodes:
+- <strong>Parameters</strong>:
+  - <code>target_agent_id</code> (string, required): ID of the node to link with.
+- <strong>Behavior</strong>: Permits direct peer-to-peer message and findings transmission between siblings or cross-branch nodes.</p>
+<h3 id="3-report_findings">3. <code>report_findings</code></h3>
+<p>Dispatches intermediate findings, computational results, or status notifications to connected neighbors:
+- <strong>Parameters</strong>:
+  - <code>summary</code> (string, required): High-level summary of the finding or milestone.
+  - <code>details</code> (string | dict, optional): Detailed data, code snippets, diffs, or structured payloads.
+  - <code>target_neighbors</code> (list[string], optional): Target recipient subset. Broadcasts to all connected neighbors if omitted.
+- <strong>Consensus Behavior</strong>: Neighbors ingest reports into their mailboxes, allowing ongoing turns to incorporate peer findings.</p>
+<h3 id="4-exit_agent-non-root-agents">4. <code>exit_agent</code> (Non-Root Agents)</h3>
+<p>Terminates a worker node and registers its final deliverables:
+- <strong>Parameters</strong>:
+  - <code>summary</code> (string, required): Summary of accomplished objectives.
+  - <code>artifact</code> (string | dict, required): Final deliverable payload (code, report, structured JSON).
+  - <code>artifact_type</code> (string, optional): One of <code>markdown</code>, <code>code</code>, <code>json</code>, <code>text</code>. Default: <code>markdown</code>.
+- <strong>Bottom-Up Exit Enforcement</strong>: Rejects termination if any child agent spawned by this node remains active.
+- <strong>Artifact Ingestion</strong>: Saves deliverable to <code>ArtifactStore</code> (SHA-256 CAS) and broadcasts exit notifications to all connected neighbors.</p>
+<h3 id="5-complete_task-root-coordinator-only">5. <code>complete_task</code> (Root Coordinator Only)</h3>
+<p>Concludes the execution graph and returns the final synthesized response to the user:
+- <strong>Parameters</strong>:
+  - <code>reply</code> (string, required): Final synthesized textual response.
+  - <code>artifact</code> (string | dict, optional): Synthesized deliverable artifact.
+  - <code>artifact_type</code> (string, optional): Format of the deliverable (<code>markdown</code>, <code>code</code>, <code>json</code>, <code>text</code>).
+- <strong>Graph Invariant</strong>: Blocked if any child agents remain active. The root coordinator must await the exit of all subordinate nodes before concluding.</p>
 <hr />
-<h2 id="root-agent-user-interaction">Root Agent &amp; User Interaction</h2>
-<p>The <strong>Root Agent</strong> is the persistent coordinator of the multi-agent graph:
-1. <strong>User Communication</strong>: Directly receives user prompts and determines the orchestration strategy.
-2. <strong>Supervision</strong>: Spawns specialist workers, monitors incoming findings, and handles edge connections.
-3. <strong>Turn Completion</strong>: When all child agents have completed and exited, the Root Agent synthesizes their artifacts and calls <code>complete_task</code> to deliver the final response and deliverables to the user.</p>
+<h2 id="3-asynchronous-actor-engine-mailboxes">3. Asynchronous Actor Engine &amp; Mailboxes</h2>
+<ol>
+<li><strong>Isolation</strong>: Each <code>AgentNode</code> maintains a private <code>AgentMailbox</code> running an independent Conductor instance.</li>
+<li><strong>Envelope Processing</strong>: Messages are encapsulated within typed <code>Envelope</code> structures:</li>
+<li><code>task_assignment</code>: Initial task payload on spawn.</li>
+<li><code>peer_message</code>: Direct inter-agent communication.</li>
+<li><code>findings_report</code>: Milestone broadcasts sent via <code>report_findings</code>.</li>
+<li><code>agent_exit</code>: Termination notifications carrying artifact references.</li>
+<li><code>consensus_request</code> &amp; <code>consensus_vote</code>: Distributed coordination proposals.</li>
+<li><strong>Turn Execution</strong>: An actor consumes pending mail, executes LLM generation and tool dispatches up to <code>max_agent_turns</code>, and emits state change events.</li>
+</ol>
+<hr />
+<h2 id="4-strict-bottom-up-exit-invariant">4. Strict Bottom-Up Exit Invariant</h2>
+<p>The engine strictly enforces a bottom-up lifecycle:</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; Spawning
+    Spawning --&gt; Working: Task received
+    Working --&gt; SpawningSubordinates: spawn_agent
+    SpawningSubordinates --&gt; SubordinatesActive: Sub-agents running
+    SubordinatesActive --&gt; AwaitingSubordinateExit: Parent attempts exit (BLOCKED)
+    SubordinatesActive --&gt; SubordinatesExited: All child exit_agent completed
+    SubordinatesExited --&gt; Working: Synthesize findings
+    Working --&gt; Exited: exit_agent (deliverable published)
+    Exited --&gt; [*]</code></pre>
+<p>If a parent attempts to exit while child nodes are still running:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"blocked"</span><span class="p">,</span><span class="w"> </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Cannot exit yet: child agents ['agent-coder-1'] are still active."</span><span class="p">}</span>
+</code></pre></div>
+The parent must wait until the child finishes, emits <code>exit_agent</code>, and delivers its artifact.</p>
 
 
 
