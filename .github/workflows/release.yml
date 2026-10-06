@@ -180,5 +180,5 @@ jobs:
             echo "::error::Neither UV_PUBLISH_TOKEN nor PYPI_API_TOKEN secret is configured."
             exit 1
           fi
-          uv publish --token "$TOKEN" dist/*
+          uv publish --check-url https://pypi.org/simple/ --token "$TOKEN" dist/*
 
