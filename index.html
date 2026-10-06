@@ -1699,7 +1699,7 @@
 
 <h1 id="openjarvis-cli">OpenJarvis CLI</h1>
 <blockquote>
-<p><strong>Autonomous Multi-Agent Orchestration CLI &amp; Terminal Client</strong> — <em>v0.3.0</em></p>
+<p><strong>Autonomous Multi-Agent Orchestration CLI &amp; Terminal Client</strong> — <em>v0.3.1</em></p>
 </blockquote>
 <p>OpenJarvis CLI is an open-source, vendor-agnostic agentic orchestration engine and interactive terminal client. It executes complex tasks across a dynamic Multi-Agent System (MAS) of autonomous Conductor nodes coordinated via an asynchronous actor engine, strictly enforced bottom-up exit hierarchy, neighbor-based consensus, and content-addressable artifact storage.</p>
 <hr />
@@ -1912,22 +1912,34 @@
 </code></pre></div>
 <hr />
 <h2 id="getting-started">Getting Started</h2>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Standalone Binary</label><label for="__tabbed_1_2">From Source (uv)</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:4"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">uv tool (Recommended)</label><label for="__tabbed_1_2">pip / pipx</label><label for="__tabbed_1_3">Standalone Binary</label><label for="__tabbed_1_4">From Source</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<p>Download the standalone executable from <a href="https://github.com/bhanuponguru/openjarvis-cli/releases">GitHub Releases</a>:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>tar<span class="w"> </span>xzf<span class="w"> </span>openjarvis-v0.3.0-linux-x86_64.tar.gz
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">cd</span><span class="w"> </span>openjarvis-*
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>chmod<span class="w"> </span>+x<span class="w"> </span>openjarvis
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>./openjarvis
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>tool<span class="w"> </span>install<span class="w"> </span>openjarvis-cli
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>openjarvis
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip<span class="w"> </span>install<span class="w"> </span>openjarvis-cli
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="c1"># or with pipx:</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>pipx<span class="w"> </span>install<span class="w"> </span>openjarvis-cli
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>openjarvis
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<p>Download the pre-compiled standalone executable from <a href="https://github.com/bhanuponguru/openjarvis-cli/releases">GitHub Releases</a>:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>tar<span class="w"> </span>xzf<span class="w"> </span>openjarvis-v0.3.1-linux-x86_64.tar.gz
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nb">cd</span><span class="w"> </span>openjarvis-*
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>chmod<span class="w"> </span>+x<span class="w"> </span>openjarvis
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>./openjarvis
 </code></pre></div></p>
 </div>
 <div class="tabbed-block">
 <p>Clone the repository and launch directly:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/bhanuponguru/openjarvis-cli.git
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nb">cd</span><span class="w"> </span>openjarvis-cli
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>uv<span class="w"> </span>sync
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>uv<span class="w"> </span>run<span class="w"> </span>openjarvis
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/bhanuponguru/openjarvis-cli.git
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">cd</span><span class="w"> </span>openjarvis-cli
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>uv<span class="w"> </span>sync
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>uv<span class="w"> </span>run<span class="w"> </span>openjarvis
 </code></pre></div></p>
 </div>
 </div>
