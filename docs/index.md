@@ -183,8 +183,22 @@ The visualization script has been written to `plot_growth.py`.
 
 ## Getting Started
 
+=== "uv tool (Recommended)"
+    ```bash
+    uv tool install openjarvis-cli
+    openjarvis
+    ```
+
+=== "pip / pipx"
+    ```bash
+    pip install openjarvis-cli
+    # or with pipx:
+    pipx install openjarvis-cli
+    openjarvis
+    ```
+
 === "Standalone Binary"
-    Download the standalone executable from [GitHub Releases](https://github.com/bhanuponguru/openjarvis-cli/releases):
+    Download the pre-compiled standalone executable from [GitHub Releases](https://github.com/bhanuponguru/openjarvis-cli/releases):
     ```bash
     tar xzf openjarvis-v{{ version }}-linux-x86_64.tar.gz
     cd openjarvis-*
@@ -192,7 +206,7 @@ The visualization script has been written to `plot_growth.py`.
     ./openjarvis
     ```
 
-=== "From Source (uv)"
+=== "From Source"
     Clone the repository and launch directly:
     ```bash
     git clone https://github.com/bhanuponguru/openjarvis-cli.git

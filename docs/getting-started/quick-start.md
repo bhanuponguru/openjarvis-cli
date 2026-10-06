@@ -6,7 +6,21 @@ Get OpenJarvis CLI running in under 2 minutes.
 
 ## 1. Installation
 
-Download a pre-compiled standalone binary or run from source with `uv`:
+Install via `uv` or `pip`, download a standalone binary, or run from source:
+
+=== "uv tool (Recommended)"
+    ```bash
+    uv tool install openjarvis-cli
+    openjarvis
+    ```
+
+=== "pip / pipx"
+    ```bash
+    pip install openjarvis-cli
+    # or with pipx:
+    pipx install openjarvis-cli
+    openjarvis
+    ```
 
 === "Standalone Binary"
     ```bash
@@ -16,7 +30,7 @@ Download a pre-compiled standalone binary or run from source with `uv`:
     ./openjarvis
     ```
 
-=== "From Source (uv)"
+=== "From Source"
     ```bash
     git clone https://github.com/bhanuponguru/openjarvis-cli.git
     cd openjarvis-cli
@@ -24,7 +38,7 @@ Download a pre-compiled standalone binary or run from source with `uv`:
     uv run openjarvis
     ```
 
-For system packages and alternative targets, see the [Installation Guide](installation.md).
+For full installation options and system packages, see the [Installation Guide](installation.md).
 
 ---
 

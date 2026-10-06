@@ -1,10 +1,48 @@
 # Installation Guide
 
-OpenJarvis can be run using pre-built standalone binaries (zero Python required) or run directly from source using `uv`.
+OpenJarvis CLI can be installed as an isolated Python application from PyPI using `uv` or `pip`, run using pre-built standalone binaries (zero Python required), or run directly from source.
 
 ---
 
-## Option 1: Standalone Binary (Zero Python Required)
+## Option 1: Via PyPI (`uv` / `pip` / `pipx`)
+
+OpenJarvis CLI is distributed on PyPI as `openjarvis-cli`.
+
+### Using `uv` (Recommended)
+
+[`uv`](https://docs.astral.sh/uv/) installs `openjarvis` into an isolated tool environment and places the executable on your `PATH`:
+
+```bash
+uv tool install openjarvis-cli
+```
+
+To run OpenJarvis or its short alias:
+```bash
+openjarvis
+# or:
+oj
+```
+
+To upgrade to the latest release:
+```bash
+uv tool upgrade openjarvis-cli
+```
+
+### Using `pipx`
+
+```bash
+pipx install openjarvis-cli
+```
+
+### Using standard `pip`
+
+```bash
+pip install openjarvis-cli
+```
+
+---
+
+## Option 2: Standalone Binary (Zero Python Required)
 
 Pre-built binaries include all dependencies and embedded documentation. No Python runtime or build tools are required.
 
@@ -40,9 +78,9 @@ sudo mv openjarvis /usr/local/bin/
 
 ---
 
-## Option 2: Running from Source with `uv`
+## Option 3: Running from Source with `uv`
 
-If you are developing or prefer running from source:
+If you are developing or prefer running directly from the git repository:
 
 ```bash
 # Clone the repository
@@ -50,7 +88,7 @@ git clone https://github.com/bhanuponguru/openjarvis-cli.git
 cd openjarvis-cli
 
 # Install dependencies and launch
-uv sync
+uv sync --group dev --group docs --group build
 uv run openjarvis
 ```
 

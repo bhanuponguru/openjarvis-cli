@@ -2,6 +2,7 @@
 
 > Asynchronous, vendor-agnostic multi-agent orchestration CLI and terminal client coordinating task execution across dynamic agent graphs.
 
+[![PyPI](https://img.shields.io/pypi/v/openjarvis-cli.svg)](https://pypi.org/project/openjarvis-cli/)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-mkdocs--material-blue.svg)](https://openjarvis-cli.bhanuponguru.tech)
@@ -25,7 +26,20 @@ OpenJarvis is an agentic orchestration CLI and terminal client. It coordinates t
 
 ## Installation
 
-### Option 1: Standalone Binary
+### Option 1: Via PyPI (`uv` / `pip` / `pipx`)
+
+```bash
+# Recommended: Install as an isolated CLI tool with uv
+uv tool install openjarvis-cli
+
+# Or install with pip
+pip install openjarvis-cli
+
+# Or install with pipx
+pipx install openjarvis-cli
+```
+
+### Option 2: Standalone Binary (Zero Python Required)
 Download precompiled standalone binaries for Linux, macOS, or Windows from [GitHub Releases](https://github.com/bhanuponguru/openjarvis-cli/releases). No Python runtime is required.
 
 ```bash
@@ -35,7 +49,7 @@ chmod +x openjarvis
 ./openjarvis
 ```
 
-### Option 2: From Source with `uv`
+### Option 3: From Source with `uv`
 ```bash
 git clone https://github.com/bhanuponguru/openjarvis-cli.git
 cd openjarvis-cli
