@@ -158,7 +158,7 @@ jobs:
     name: Publish to PyPI
     needs: [build-packages, create-release]
     runs-on: ubuntu-latest
-    if: "${{ secrets.PYPI_API_TOKEN != '' }}"
+    if: "${{ secrets.UV_PUBLISH_TOKEN != '' || secrets.PYPI_API_TOKEN != '' }}"
     steps:
       - name: Download distribution packages
         uses: actions/download-artifact@v4
@@ -173,6 +173,6 @@ jobs:
 
       - name: Publish package distributions to PyPI
         env:
-          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+          UV_PUBLISH_TOKEN: ${{ secrets.UV_PUBLISH_TOKEN || secrets.PYPI_API_TOKEN }}
         run: uv publish dist/*
 
